@@ -385,7 +385,7 @@
       updateCart();
     }
 
-    // Отправка заказа в бот
+      // Отправка заказа в бот
     function sendOrder() {
       if (cart.length === 0) {
         alert('Ваш кошик порожній!');
@@ -393,11 +393,23 @@
       }
 
       const orderData = {
-        items: cart,
-        total: cart.reduce((sum, item) => sum + item.price, 0)
+        items: cart.map(item => ({
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity || 1,
+          flavor: item.selectedFlavor || item.flavor || ''
+        })),
+        total: cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0),
+        comment: document.getElementById('commentInput')?.value || '',
+        delivery: {
+          name: document.getElementById('nameInput')?.value || '',
+          phone: document.getElementById('phoneInput')?.value || '',
+          method: document.getElementById('deliveryMethod')?.value || 'Нова Пошта',
+          city: document.getElementById('cityInput')?.value || '',
+          branch: document.getElementById('branchInput')?.value || ''
+        }
       };
 
-      // Отправляем данные в Telegram бот
       tg.sendData(JSON.stringify(orderData));
     }
   </script>
