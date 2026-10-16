@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Store Mini App</title>
+  <title>Kraken-Lab Shop</title>
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
@@ -16,23 +16,38 @@
     body {
       background-color: #121212;
       color: #ffffff;
-      padding-bottom: 70px;
+      padding-bottom: 75px;
     }
-    /* Баннер */
+
+    /* Экраны/Страницы */
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+    }
+
+    /* Шапка / Баннер */
     .banner {
       width: 100%;
-      height: 180px;
+      height: 160px;
       background: linear-gradient(135deg, #1f2937, #111827);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       border-bottom: 1px solid #222;
-      position: relative;
     }
     .banner h2 {
       font-size: 22px;
       color: #3b82f6;
     }
+    .banner p {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
     /* Категории */
     .categories {
       display: flex;
@@ -48,11 +63,14 @@
       border-radius: 8px;
       white-space: nowrap;
       font-size: 14px;
+      cursor: pointer;
     }
     .cat-btn.active {
       border-color: #3b82f6;
+      background: #2563eb;
       color: #fff;
     }
+
     /* Сетка товаров */
     .products-grid {
       display: grid;
@@ -71,7 +89,7 @@
     }
     .card-img {
       width: 100%;
-      height: 130px;
+      height: 120px;
       background: #252525;
       border-radius: 8px;
       margin-bottom: 10px;
@@ -79,6 +97,7 @@
       align-items: center;
       justify-content: center;
       color: #666;
+      font-size: 13px;
     }
     .card-title {
       font-size: 13px;
@@ -93,7 +112,7 @@
       margin-top: 8px;
     }
     .price {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: bold;
       color: #ffffff;
     }
@@ -101,11 +120,62 @@
       background: #3b82f6;
       border: none;
       color: white;
-      padding: 6px 10px;
+      padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
+      font-weight: bold;
     }
-    /* Нижнее меню */
+
+    /* Стили для корзины и других страниц */
+    .page-title {
+      padding: 15px;
+      font-size: 20px;
+      border-bottom: 1px solid #222;
+    }
+    .cart-list {
+      padding: 15px;
+    }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1a1a1a;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #282828;
+    }
+    .cart-summary {
+      padding: 15px;
+      background: #181818;
+      margin: 15px;
+      border-radius: 10px;
+      border: 1px solid #282828;
+    }
+    .checkout-btn {
+      width: 100%;
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .search-input {
+      width: 90%;
+      margin: 15px auto;
+      display: block;
+      padding: 12px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: white;
+    }
+
+    /* Нижняя навигация */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -117,6 +187,7 @@
       display: flex;
       justify-content: space-around;
       align-items: center;
+      z-index: 100;
     }
     .nav-item {
       display: flex;
@@ -124,7 +195,10 @@
       align-items: center;
       color: #888;
       font-size: 11px;
-      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 20%;
     }
     .nav-item.active {
       color: #3b82f6;
@@ -133,71 +207,199 @@
       font-size: 18px;
       margin-bottom: 2px;
     }
+    .badge {
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 10px;
+      position: absolute;
+      top: 6px;
+      right: 22%;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Баннер -->
-  <div class="banner">
-    <h2>Kraken-Lab Shop</h2>
-  </div>
-
-  <!-- Категории -->
-  <div class="categories">
-    <button class="cat-btn active">Всі товари</button>
-    <button class="cat-btn">Рідина</button>
-    <button class="cat-btn">POD-Системи</button>
-    <button class="cat-btn">Картриджі</button>
-  </div>
-
-  <!-- Витрина -->
-  <div class="products-grid">
-    <div class="card">
-      <div class="card-img">Фото товара</div>
-      <div class="card-title">INBOTTLE EVO 30ml 50mg</div>
-      <div class="card-bottom">
-        <span class="price">350.00 ₴</span>
-        <button class="add-btn">🛒</button>
-      </div>
+  <!-- 1. Главная страница -->
+  <div id="page-home" class="page active">
+    <div class="banner">
+      <h2>Kraken-Lab Shop</h2>
+      <p>Офіційний магазин продукції</p>
     </div>
 
-    <div class="card">
-      <div class="card-img">Фото товара</div>
-      <div class="card-title">HYPE HARD 30ML 70MG</div>
-      <div class="card-bottom">
-        <span class="price">320.00 ₴</span>
-        <button class="add-btn">🛒</button>
+    <div class="categories">
+      <button class="cat-btn active">Всі товари</button>
+      <button class="cat-btn">Рідина</button>
+      <button class="cat-btn">POD-Системи</button>
+      <button class="cat-btn">Картриджі</button>
+    </div>
+
+    <div class="products-grid">
+      <div class="card">
+        <div class="card-img">INBOTTLE</div>
+        <div class="card-title">INBOTTLE EVO 30ml 50mg</div>
+        <div class="card-bottom">
+          <span class="price">350.00 ₴</span>
+          <button class="add-btn" onclick="addToCart('INBOTTLE EVO 30ml', 350)">+🛒</button>
+        </div>
       </div>
+
+      <div class="card">
+        <div class="card-img">HYPE HARD</div>
+        <div class="card-title">HYPE HARD 30ML 70MG</div>
+        <div class="card-bottom">
+          <span class="price">320.00 ₴</span>
+          <button class="add-btn" onclick="addToCart('HYPE HARD 30ML', 320)">+🛒</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Страница Каталога -->
+  <div id="page-catalog" class="page">
+    <h2 class="page-title">Каталог товарів</h2>
+    <div class="categories" style="flex-direction: column; padding: 15px;">
+      <button class="cat-btn">🧪 Рідини для POD-систем</button>
+      <button class="cat-btn">🔋 POD-Системи</button>
+      <button class="cat-btn">⚡ Картриджі та випарники</button>
+    </div>
+  </div>
+
+  <!-- 3. Поиск -->
+  <div id="page-search" class="page">
+    <h2 class="page-title">Пошук</h2>
+    <input type="text" class="search-input" placeholder="Введіть назву товару...">
+  </div>
+
+  <!-- 4. Корзина -->
+  <div id="page-cart" class="page">
+    <h2 class="page-title">Кошик</h2>
+    <div id="cart-items" class="cart-list">
+      <p style="color: #888; text-align: center; margin-top: 20px;">Кошик порожній</p>
+    </div>
+    <div class="cart-summary">
+      <p>Разом к сплаті: <strong id="total-price">0.00 ₴</strong></p>
+      <button class="checkout-btn" onclick="sendOrder()">Оформити замовлення</button>
+    </div>
+  </div>
+
+  <!-- 5. Профиль -->
+  <div id="page-profile" class="page">
+    <h2 class="page-title">Мій Профіль</h2>
+    <div style="padding: 20px;">
+      <p>Користувач: <span id="user-name">Гість</span></p>
+      <p style="margin-top: 10px; color: #888;">Історія замовлень порожня.</p>
     </div>
   </div>
 
   <!-- Нижняя навигация -->
   <div class="bottom-nav">
-    <div class="nav-item active">
+    <button class="nav-item active" onclick="switchPage('home', this)">
       <span class="nav-icon">🏠</span>
       <span>Головна</span>
-    </div>
-    <div class="nav-item">
+    </button>
+    <button class="nav-item" onclick="switchPage('catalog', this)">
       <span class="nav-icon">⣿</span>
       <span>Каталог</span>
-    </div>
-    <div class="nav-item">
+    </button>
+    <button class="nav-item" onclick="switchPage('search', this)">
       <span class="nav-icon">🔍</span>
       <span>Пошук</span>
-    </div>
-    <div class="nav-item">
+    </button>
+    <button class="nav-item" style="position: relative;" onclick="switchPage('cart', this)">
+      <span id="cart-badge" class="badge" style="display:none;">0</span>
       <span class="nav-icon">🛒</span>
       <span>Кошик</span>
-    </div>
-    <div class="nav-item">
+    </button>
+    <button class="nav-item" onclick="switchPage('profile', this)">
       <span class="nav-icon">👤</span>
       <span>Профіль</span>
-    </div>
+    </button>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
+
+    // Загрузка имени пользователя из Telegram
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+    }
+
+    let cart = [];
+
+    // Переключение страниц
+    function switchPage(pageId, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById('page-' + pageId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // Добавление в корзину
+    function addToCart(title, price) {
+      cart.push({ title, price });
+      updateCart();
+      tg.HapticFeedback.impactOccurred('medium'); // Вибрация при добавлении
+    }
+
+    // Обновление корзины
+    function updateCart() {
+      const container = document.getElementById('cart-items');
+      const totalEl = document.getElementById('total-price');
+      const badge = document.getElementById('cart-badge');
+
+      if (cart.length === 0) {
+        container.innerHTML = '<p style="color: #888; text-align: center; margin-top: 20px;">Кошик порожній</p>';
+        totalEl.innerText = '0.00 ₴';
+        badge.style.display = 'none';
+        return;
+      }
+
+      badge.style.display = 'block';
+      badge.innerText = cart.length;
+
+      let total = 0;
+      container.innerHTML = '';
+      
+      cart.forEach((item, index) => {
+        total += item.price;
+        container.innerHTML += `
+          <div class="cart-item">
+            <div>
+              <strong>${item.title}</strong>
+              <div style="font-size: 13px; color: #888;">${item.price} ₴</div>
+            </div>
+            <button style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px;" onclick="removeFromCart(${index})">✕</button>
+          </div>
+        `;
+      });
+
+      totalEl.innerText = total.toFixed(2) + ' ₴';
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      updateCart();
+    }
+
+    // Отправка заказа в бот
+    function sendOrder() {
+      if (cart.length === 0) {
+        alert('Ваш кошик порожній!');
+        return;
+      }
+
+      const orderData = {
+        items: cart,
+        total: cart.reduce((sum, item) => sum + item.price, 0)
+      };
+
+      // Отправляем данные в Telegram бот
+      tg.sendData(JSON.stringify(orderData));
+    }
   </script>
 </body>
 </html>
