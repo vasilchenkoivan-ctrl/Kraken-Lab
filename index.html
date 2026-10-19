@@ -29,11 +29,17 @@
     body.modal-open {
       overflow: hidden;
     }
-    button, input {
+    button,
+    input {
       font: inherit;
     }
     button {
       cursor: pointer;
+    }
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
     }
     header {
       width: min(100% - 32px, var(--content-width));
@@ -151,6 +157,11 @@
       background: linear-gradient(145deg, #242429, #121214);
       font-size: 43px;
     }
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
     .product-info {
       padding: 12px;
     }
@@ -222,6 +233,12 @@
       background: linear-gradient(145deg, #242429, #121214);
       border-radius: 14px;
       font-size: 28px;
+      overflow: hidden;
+    }
+    .cart-item-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .cart-item-info {
       flex: 1;
@@ -582,7 +599,7 @@
     <div class="badge">Магазин</div>
   </header>
   <main>
-    <section id="catalog-page">
+    <section id="catalog-page" aria-label="Каталог товаров">
       <section class="hero">
         <div class="eyebrow">KRAKEN LAB</div>
         <h1>Твой магазин.<br>Всё в одном месте.</h1>
@@ -593,51 +610,88 @@
     class="search"
     type="search"
     placeholder="Поиск по каталогу..."
+    aria-label="Поиск по каталогу"
     autocomplete="off"
   >
   <h2 class="section-title">Категории</h2>
-  <div class="categories" id="categories"></div>
+  <div
+    class="categories"
+    id="categories"
+    role="group"
+    aria-label="Фильтр по категориям"
+  ></div>
   <h2 class="section-title" id="products-title">Все товары</h2>
-  <div class="products" id="products"></div>
+  <div
+    class="products"
+    id="products"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
   <p class="notice">
-    Демоверсия интерфейса. Оформление заказов и хранение данных
-    подключим на следующих этапах.
+    Товары загружаются из базы данных. Добавлять и изменять их можно через Telegram-бота.
   </p>
 </section>
-<section id="cart-page" class="cart">
+<section id="cart-page" class="cart" aria-label="Корзина">
   <h2 class="section-title">Корзина</h2>
-  <div id="cart-empty" class="cart-empty">
-    <div class="cart-empty-icon">🛒</div>
+  <div id="cart-empty" class="cart-empty" aria-live="polite">
+    <div class="cart-empty-icon" aria-hidden="true">🛒</div>
     <h3>Корзина пуста</h3>
     <p>Добавьте товары из каталога, чтобы они появились здесь.</p>
   </div>
   <div id="cart-content">
-    <div id="cart-list" class="cart-list"></div>
+    <div
+      id="cart-list"
+      class="cart-list"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
     <div class="cart-summary">
       <div class="summary-row">
         <span>Итого</span>
-        <strong id="cart-total">0 ₴</strong>
+        <strong id="cart-total" aria-live="polite">0 ₴</strong>
       </div>
-      <button class="checkout" type="button">
+      <button
+        class="checkout"
+        type="button"
+        aria-label="Перейти к оформлению заказа"
+      >
         Перейти к оформлению
       </button>
     </div>
   </div>
 </section>
   </main>
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-page="home">
-      <span>⌂</span>Главная
+  <nav class="bottom-nav" aria-label="Основная навигация">
+    <button
+      class="nav-item active"
+      data-page="home"
+      aria-label="Главная"
+      aria-current="page"
+    >
+      <span aria-hidden="true">⌂</span>Главная
     </button>
-    <button class="nav-item" data-page="catalog">
-      <span>▦</span>Каталог
-    </button>
-    <button class="nav-item" data-page="cart">
-      <span>🛒</span>Корзина <b class="cart-count" id="cart-count">0</b>
-    </button>
-    <button class="nav-item" data-page="profile">
-      <span>♙</span>Профиль
-    </button>
+<button
+  class="nav-item"
+  data-page="catalog"
+  aria-label="Каталог"
+>
+  <span aria-hidden="true">▦</span>Каталог
+</button>
+<button
+  class="nav-item"
+  data-page="cart"
+  aria-label="Корзина"
+>
+  <span aria-hidden="true">🛒</span>Корзина
+  <b class="cart-count" id="cart-count" aria-live="polite">0</b>
+</button>
+<button
+  class="nav-item"
+  data-page="profile"
+  aria-label="Профиль"
+>
+  <span aria-hidden="true">♙</span>Профиль
+</button>
   </nav>
   <div
     id="checkout-modal"
@@ -645,15 +699,23 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="checkout-title"
+    aria-describedby="checkout-description"
+    aria-hidden="true"
   >
     <div class="modal-dialog">
       <div class="modal-header">
         <div>
           <h2 id="checkout-title">Оформление заказа</h2>
-          <p>Заполните данные, и мы свяжемся с вами для подтверждения.</p>
+          <p id="checkout-description">
+            Заполните данные, и мы свяжемся с вами для подтверждения.
+          </p>
         </div>
-        <button class="modal-close" type="button" aria-label="Закрыть">×</button>
-      </div>
+    <button
+      class="modal-close"
+      type="button"
+      aria-label="Закрыть окно оформления заказа"
+    >×</button>
+  </div>
   <form id="checkout-form" class="checkout-form" novalidate>
     <div class="form-field">
       <label for="customer-name">Имя</label>
@@ -665,8 +727,14 @@
         autocomplete="name"
         minlength="2"
         required
+        aria-describedby="customer-name-error"
       >
-      <span class="field-error" data-error-for="customer-name"></span>
+      <span
+        id="customer-name-error"
+        class="field-error"
+        data-error-for="customer-name"
+        role="alert"
+      ></span>
     </div>
     <div class="form-field">
       <label for="customer-phone">Телефон</label>
@@ -677,8 +745,14 @@
         placeholder="+380 00 000 00 00"
         autocomplete="tel"
         required
+        aria-describedby="customer-phone-error"
       >
-      <span class="field-error" data-error-for="customer-phone"></span>
+      <span
+        id="customer-phone-error"
+        class="field-error"
+        data-error-for="customer-phone"
+        role="alert"
+      ></span>
     </div>
     <div class="form-field">
       <label for="customer-address">Адрес доставки</label>
@@ -690,58 +764,108 @@
         autocomplete="street-address"
         minlength="5"
         required
+        aria-describedby="customer-address-error"
       >
-      <span class="field-error" data-error-for="customer-address"></span>
+      <span
+        id="customer-address-error"
+        class="field-error"
+        data-error-for="customer-address"
+        role="alert"
+      ></span>
     </div>
-    <button class="modal-submit" type="submit">
+    <button
+      class="modal-submit"
+      type="submit"
+      aria-label="Подтвердить заказ"
+    >
       Подтвердить заказ
     </button>
   </form>
-  <div id="order-success" class="order-success" aria-live="polite">
-    <div class="order-success-icon">✅</div>
+  <div
+    id="order-success"
+    class="order-success"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    <div class="order-success-icon" aria-hidden="true">✅</div>
     <h3>Заказ принят</h3>
     <p>Спасибо! Мы свяжемся с вами для подтверждения заказа.</p>
   </div>
 </div>
   </div>
   <script>
-    const categories = [
-      "Все товары",
-      "Жидкости",
-      "Картриджи",
-      "Устройства",
-      "Аксессуары"
-    ];
-    const products = [
+    /*
+      ВАЖНО:
+      Статический HTML-файл не может безопасно подключаться к Telegram-боту
+      напрямую, потому что токен бота нельзя размещать в браузере.
+      Для работы добавления товаров через Telegram-бота нужен серверный API.
+      Ожидаемый API:
+      GET /api/products
+      Ответ:
+      [
+        {
+          "id": 1,
+          "name": "Название товара",
+          "category": "Жидкости",
+          "price": 350,
+          "image": "💧",
+          "imageUrl": ""
+        }
+      ]
+      POST /api/orders
+      Тело:
+      {
+        "name": "...",
+        "phone": "...",
+        "address": "...",
+        "items": [
+          {
+            "id": 1,
+            "quantity": 2
+          }
+        ]
+      }
+      Telegram-бот должен добавлять товары в базу данных, например:
+      /add Название товара | Жидкости | 350 | 💧
+      После добавления бот сохраняет товар в базе, а сайт получает его через GET /api/products.
+    */
+    const fallbackProducts = [
       {
         id: 1,
         name: "Пример товара №1",
         category: "Жидкости",
         price: 350,
-        image: "💧"
+        image: "💧",
+        imageUrl: ""
       },
       {
         id: 2,
         name: "Пример товара №2",
         category: "Картриджи",
         price: 250,
-        image: "📦"
+        image: "📦",
+        imageUrl: ""
       },
       {
         id: 3,
         name: "Пример товара №3",
         category: "Устройства",
         price: 850,
-        image: "⚡"
+        image: "⚡",
+        imageUrl: ""
       },
       {
         id: 4,
         name: "Пример товара №4",
         category: "Аксессуары",
         price: 150,
-        image: "🔌"
+        image: "🔌",
+        imageUrl: ""
       }
     ];
+    let products = [];
+    let categories = ["Все товары"];
     let activeCategory = "Все товары";
     let cart = {};
     let currentPage = "home";
@@ -757,15 +881,50 @@
     const checkoutModalElement = document.getElementById("checkout-modal");
     const checkoutFormElement = document.getElementById("checkout-form");
     const orderSuccessElement = document.getElementById("order-success");
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
     function formatPrice(price) {
-      return `${price} ₴`;
+      return `${Number(price).toLocaleString("ru-RU")} ₴`;
+    }
+    function getProductImage(product, className = "") {
+      if (product.imageUrl) {
+        return `
+          <img
+            class="${className}"
+            src="${escapeHtml(product.imageUrl)}"
+            alt="${escapeHtml(product.name)}"
+            loading="lazy"
+          >
+        `;
+      }
+      return escapeHtml(product.image || "📦");
+    }
+    function rebuildCategories() {
+      const productCategories = products
+        .map(product => product.category)
+        .filter(Boolean);
+      categories = [
+        "Все товары",
+        ...new Set(productCategories)
+      ];
+      if (!categories.includes(activeCategory)) {
+        activeCategory = "Все товары";
+      }
     }
     function renderCategories() {
       categoriesElement.innerHTML = categories.map(category => `
         <button
           class="category ${category === activeCategory ? "active" : ""}"
-          data-category="${category}"
-        >${category}</button>
+          data-category="${escapeHtml(category)}"
+          aria-label="Показать категорию: ${escapeHtml(category)}"
+          aria-pressed="${category === activeCategory}"
+        >${escapeHtml(category)}</button>
       `).join("");
       categoriesElement.querySelectorAll("button").forEach(button => {
         button.addEventListener("click", () => {
@@ -778,28 +937,38 @@
     function renderProducts() {
       const query = searchElement.value.trim().toLowerCase();
       const filtered = products.filter(product => {
+        const name = String(product.name || "").toLowerCase();
+        const category = String(product.category || "").toLowerCase();
         const matchesCategory =
           activeCategory === "Все товары" ||
           product.category === activeCategory;
         const matchesSearch =
-          product.name.toLowerCase().includes(query) ||
-          product.category.toLowerCase().includes(query);
+          name.includes(query) ||
+          category.includes(query);
         return matchesCategory && matchesSearch;
       });
       if (!filtered.length) {
         productsElement.innerHTML =
-          '<div class="empty">Ничего не найдено</div>';
+          '<div class="empty" role="status">Ничего не найдено</div>';
         return;
       }
       productsElement.innerHTML = filtered.map(product => `
         <article class="product">
-          <div class="product-image">${product.image}</div>
+          <div class="product-image">
+            ${getProductImage(product)}
+          </div>
           <div class="product-info">
-            <div class="product-category">${product.category}</div>
-            <h3>${product.name}</h3>
+            <div class="product-category">
+              ${escapeHtml(product.category)}
+            </div>
+            <h3>${escapeHtml(product.name)}</h3>
             <div class="product-bottom">
               <div class="price">${formatPrice(product.price)}</div>
-              <button class="add" data-add="${product.id}" aria-label="Добавить в корзину">+</button>
+              <button
+                class="add"
+                data-add="${Number(product.id)}"
+                aria-label="Добавить товар «${escapeHtml(product.name)}» в корзину"
+              >+</button>
             </div>
           </div>
         </article>
@@ -807,13 +976,25 @@
       productsElement.querySelectorAll("[data-add]").forEach(button => {
         button.addEventListener("click", () => {
           const id = Number(button.dataset.add);
+          const product = products.find(item => Number(item.id) === id);
+          if (!product) {
+            return;
+          }
           cart[id] = (cart[id] || 0) + 1;
           updateCartCount();
           renderCart();
           button.textContent = "✓";
+          button.setAttribute(
+            "aria-label",
+            `Товар «${product.name}» добавлен в корзину`
+          );
           setTimeout(() => {
             if (button.isConnected) {
               button.textContent = "+";
+              button.setAttribute(
+                "aria-label",
+                `Добавить товар «${product.name}» в корзину`
+              );
             }
           }, 700);
         });
@@ -823,7 +1004,7 @@
       const cartItems = Object.entries(cart)
         .filter(([, quantity]) => quantity > 0)
         .map(([id, quantity]) => {
-          const product = products.find(item => item.id === Number(id));
+          const product = products.find(item => Number(item.id) === Number(id));
           return { product, quantity };
         })
         .filter(item => item.product);
@@ -838,34 +1019,46 @@
       cartContentElement.style.display = "block";
       cartListElement.innerHTML = cartItems.map(({ product, quantity }) => `
         <article class="cart-item">
-          <div class="cart-item-image">${product.image}</div>
+          <div class="cart-item-image">
+            ${getProductImage(product)}
+          </div>
           <div class="cart-item-info">
-            <div class="cart-item-category">${product.category}</div>
-            <div class="cart-item-name">${product.name}</div>
-            <div class="cart-item-price">${formatPrice(product.price * quantity)}</div>
+            <div class="cart-item-category">
+              ${escapeHtml(product.category)}
+            </div>
+            <div class="cart-item-name">
+              ${escapeHtml(product.name)}
+            </div>
+            <div class="cart-item-price">
+              ${formatPrice(Number(product.price) * quantity)}
+            </div>
           </div>
           <div class="cart-item-actions">
             <button
               class="quantity-button"
-              data-decrease="${product.id}"
-              aria-label="Уменьшить количество"
+              data-decrease="${Number(product.id)}"
+              aria-label="Уменьшить количество товара «${escapeHtml(product.name)}»"
             >−</button>
-            <span class="quantity">${quantity}</span>
+            <span
+              class="quantity"
+              aria-label="Количество товара «${escapeHtml(product.name)}»: ${quantity}"
+            >${quantity}</span>
             <button
               class="quantity-button"
-              data-increase="${product.id}"
-              aria-label="Увеличить количество"
+              data-increase="${Number(product.id)}"
+              aria-label="Увеличить количество товара «${escapeHtml(product.name)}»"
             >+</button>
             <button
               class="remove"
-              data-remove="${product.id}"
-              aria-label="Удалить товар"
+              data-remove="${Number(product.id)}"
+              aria-label="Удалить товар «${escapeHtml(product.name)}» из корзины"
             >×</button>
           </div>
         </article>
       `).join("");
       const total = cartItems.reduce(
-        (sum, { product, quantity }) => sum + product.price * quantity,
+        (sum, { product, quantity }) =>
+          sum + Number(product.price) * quantity,
         0
       );
       cartTotalElement.textContent = formatPrice(total);
@@ -910,6 +1103,15 @@
       const isCartPage = page === "cart";
       catalogPageElement.style.display = isCartPage ? "none" : "block";
       cartPageElement.classList.toggle("visible", isCartPage);
+      document.querySelectorAll(".nav-item").forEach(item => {
+        const isCurrent = item.dataset.page === page;
+        item.classList.toggle("active", isCurrent);
+        if (isCurrent && page !== "profile") {
+          item.setAttribute("aria-current", "page");
+        } else {
+          item.removeAttribute("aria-current");
+        }
+      });
       if (page === "home" || page === "catalog") {
         activeCategory = "Все товары";
         renderCategories();
@@ -932,6 +1134,7 @@
       checkoutFormElement.reset();
       clearFormErrors();
       checkoutModalElement.classList.add("visible");
+      checkoutModalElement.setAttribute("aria-hidden", "false");
       document.body.classList.add("modal-open");
       setTimeout(() => {
         document.getElementById("customer-name").focus();
@@ -939,6 +1142,7 @@
     }
     function closeCheckoutModal() {
       checkoutModalElement.classList.remove("visible");
+      checkoutModalElement.setAttribute("aria-hidden", "true");
       document.body.classList.remove("modal-open");
     }
     function setFieldError(input, message) {
@@ -946,6 +1150,7 @@
         `[data-error-for="${input.id}"]`
       );
       input.classList.add("invalid");
+      input.setAttribute("aria-invalid", "true");
       errorElement.textContent = message;
       errorElement.classList.add("visible");
     }
@@ -954,6 +1159,7 @@
         `[data-error-for="${input.id}"]`
       );
       input.classList.remove("invalid");
+      input.setAttribute("aria-invalid", "false");
       errorElement.textContent = "";
       errorElement.classList.remove("visible");
     }
@@ -988,13 +1194,50 @@
       }
       return isValid;
     }
+    async function loadProducts() {
+      try {
+        const response = await fetch("/api/products", {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          },
+          cache: "no-store"
+        });
+        if (!response.ok) {
+          throw new Error("Не удалось загрузить товары.");
+        }
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error("API вернул неправильный формат товаров.");
+        }
+        products = data;
+      } catch (error) {
+        console.warn(error.message);
+        products = fallbackProducts;
+      }
+      rebuildCategories();
+      renderCategories();
+      renderProducts();
+      renderCart();
+    }
+    async function sendOrder(order) {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(order)
+      });
+      if (!response.ok) {
+        throw new Error("Не удалось отправить заказ.");
+      }
+      return response.json();
+    }
     searchElement.addEventListener("input", renderProducts);
     document.querySelectorAll(".nav-item").forEach(button => {
       button.addEventListener("click", () => {
         const page = button.dataset.page;
-        document.querySelectorAll(".nav-item").forEach(item => {
-          item.classList.toggle("active", item === button);
-        });
         if (page === "profile") {
           alert("Профиль и история заказов появятся после подключения базы данных.");
           return;
@@ -1002,36 +1245,71 @@
         showPage(page);
       });
     });
-    document.querySelector(".checkout").addEventListener("click", openCheckoutModal);
-    document.querySelector(".modal-close").addEventListener("click", closeCheckoutModal);
+    document.querySelector(".checkout").addEventListener(
+      "click",
+      openCheckoutModal
+    );
+    document.querySelector(".modal-close").addEventListener(
+      "click",
+      closeCheckoutModal
+    );
     checkoutModalElement.addEventListener("click", event => {
       if (event.target === checkoutModalElement) {
         closeCheckoutModal();
       }
     });
     document.addEventListener("keydown", event => {
-      if (event.key === "Escape" && checkoutModalElement.classList.contains("visible")) {
+      if (
+        event.key === "Escape" &&
+        checkoutModalElement.classList.contains("visible")
+      ) {
         closeCheckoutModal();
       }
     });
     checkoutFormElement.querySelectorAll("input").forEach(input => {
       input.addEventListener("input", () => clearFieldError(input));
     });
-    checkoutFormElement.addEventListener("submit", event => {
+    checkoutFormElement.addEventListener("submit", async event => {
       event.preventDefault();
       if (!validateCheckoutForm()) {
         return;
       }
-      checkoutFormElement.style.display = "none";
-      orderSuccessElement.classList.add("visible");
-      cart = {};
-      updateCartCount();
-      renderCart();
-      setTimeout(closeCheckoutModal, 2200);
+      const cartItems = Object.entries(cart)
+        .filter(([, quantity]) => quantity > 0)
+        .map(([id, quantity]) => ({
+          id: Number(id),
+          quantity
+        }));
+      const formData = new FormData(checkoutFormElement);
+      const order = {
+        name: formData.get("name"),
+        phone: formData.get("phone"),
+        address: formData.get("address"),
+        items: cartItems
+      };
+      const submitButton = checkoutFormElement.querySelector(
+        'button[type="submit"]'
+      );
+      submitButton.disabled = true;
+      submitButton.textContent = "Отправляем...";
+      try {
+        await sendOrder(order);
+        checkoutFormElement.style.display = "none";
+        orderSuccessElement.classList.add("visible");
+        cart = {};
+        updateCartCount();
+        renderCart();
+        setTimeout(closeCheckoutModal, 2200);
+      } catch (error) {
+        alert(
+          "Не удалось отправить заказ. Проверьте подключение сервера и попробуйте ещё раз."
+        );
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Подтвердить заказ";
+      }
     });
-    renderCategories();
-    renderProducts();
-    renderCart();
+    loadProducts();
   </script>
 </body>
 </html>
