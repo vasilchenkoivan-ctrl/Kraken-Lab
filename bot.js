@@ -41,11 +41,6 @@ bot.start((ctx) => {
         userKeyboard
     );
 });
-
-        userKeyboard
-    );
-});
-
 bot.command('admin', (ctx) => {
     if (ctx.from.id !== ADMIN_ID) {
         return ctx.reply('❌ У вас нет прав администратора.');
