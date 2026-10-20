@@ -1,24 +1,41 @@
-const { Telegraf, Markup } = require('telegraf');
+const { Telegraf } = require('telegraf');
+const express = require('express');
+const { createClient } = require('@supabase/supabase-js');
 
+// Подключение к базе данных Supabase
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+// Инициализация бота и Express-сервера
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-// Ссылка на твой Mini App на Vercel
-const WEB_APP_URL = 'https://krakenlab.vercel.app'; 
+app.use(express.json());
 
+// Веб-сервер для того, чтобы Render видел открытый порт
+app.get('/', (req, res) => {
+  res.send('Kraken Lab Bot is Live!');
+});
+
+// Команда /start в Telegram
 bot.start((ctx) => {
-  ctx.reply(
-    `Привет, ${ctx.from.first_name || 'друг'}! 👋\n\nДобро пожаловать в Kraken LAB! Нажми кнопку ниже, чтобы открыть магазин.`,
-    Markup.inlineKeyboard([
-      [Markup.button.webApp('🛒 Открыть Магазин', WEB_APP_URL)]
-    ])
-  );
+  ctx.reply('Привет! Добро пожаловать в Kraken Lab 🛒', {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '🛒 Открыть Магазин', web_app: { url: 'https://google.com' } }]
+      ]
+    }
+  });
 });
 
-bot.launch().then(() => {
-  console.log('Kraken LAB Bot успешно запущен!');
-}).catch((err) => {
-  console.error('Ошибка запуска бота:', err);
+// Запуск веб-сервера
+app.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
 });
 
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+// Запуск бота
+bot.launch();
+console.log('Kraken LAB Bot успешно запущен!');
