@@ -31,8 +31,8 @@ bot.start((ctx) => {
   });
 });
 
-// Запуск веб-сервера
-app.listen(PORT, () => {
+// ВАЖНО: добавляем '0.0.0.0', чтобы Render увидел порт снаружи
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is listening on port ${PORT}`);
 });
 
