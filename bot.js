@@ -32,7 +32,7 @@ const adminKeyboard = Markup.keyboard([
 
 bot.start((ctx) => {
     ctx.reply(
-        `Добро пожаловать в **Kraken LAB**! 🧪\n\nИспользуйте кнопки ниже для перехода в магазин или проверки заказа.`,
+        `Добро пожаловать в 🐙Kraken LAB🧪! 🧪\n\nИспользуйте кнопки ниже для перехода в магазин или проверки заказа.`,
         userKeyboard
     );
 });
@@ -117,7 +117,7 @@ bot.hears('🚀 Статус заказа', async (ctx) => {
 });
 
 bot.hears('👨‍💻 Менеджер', (ctx) => {
-    ctx.reply('По всем вопросам: @nnxray044');
+    ctx.reply('По всем вопросам: @telleportt ');
 });
 
 bot.hears('⬅️ Выйти из админки', (ctx) => {
