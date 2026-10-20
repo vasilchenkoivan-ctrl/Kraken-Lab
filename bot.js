@@ -1,4 +1,4 @@
-const { Telegraf, Markup, Sessions } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
 
@@ -9,44 +9,43 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const ADMIN_ID = Number(process.env.ADMIN_ID);
-const WEBAPP_URL = process.env.WEBAPP_URL || 'https://krakenlab.vercel.app'; // твой Mini App URL
+const WEBAPP_URL = process.env.WEBAPP_URL || 'https://google.com';
 
 const bot = new Telegraf(BOT_TOKEN);
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Временное хранение состояний админа для пошагового добавления товара
 const adminState = {};
 
-// Главное меню пользователей
+// Главные кнопки для клиентов
 const userKeyboard = Markup.keyboard([
     [Markup.button.webApp('🛍 Открыть магазин', WEBAPP_URL)],
     ['🚀 Статус заказа', '👨‍💻 Менеджер']
 ]).resize();
 
-// Главное меню админа
+// Главные кнопки для Админа
 const adminKeyboard = Markup.keyboard([
     ['➕ Добавить товар', '📦 Список товаров'],
     ['📊 Заказы', '⬅️ Выйти из админки']
 ]).resize();
 
-// --- КОМАНДЫ БОТА ---
+// --- КОМАНДЫ ---
 
 bot.start((ctx) => {
     ctx.reply(
-        `Добро пожаловать в **Kraken LAB**! 🧪\n\nНажмите кнопку ниже, чтобы открыть каталог товаров и оформить заказ.`,
+        `Добро пожаловать в **Kraken LAB**! 🧪\n\nИспользуйте кнопки ниже для перехода в магазин или проверки заказа.`,
         userKeyboard
     );
 });
 
-// Вход в админ-панель
 bot.command('admin', (ctx) => {
     if (ctx.from.id !== ADMIN_ID) {
-        return ctx.reply('❌ У вас нет прав доступа к админ-панели.');
+        return ctx.reply('❌ У вас нет прав администратора.');
     }
     ctx.reply('👑 **Панель администратора Kraken LAB**', adminKeyboard);
 });
 
-// Слушаем текстовые кнопки админки
+// --- КНОПКИ АДМИНКИ ---
+
 bot.hears('➕ Добавить товар', (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     adminState[ctx.from.id] = { step: 'TITLE' };
@@ -61,7 +60,7 @@ bot.hears('📦 Список товаров', async (ctx) => {
         return ctx.reply('В базе пока нет товаров.');
     }
 
-    let text = '📦 **Список товаров в базе:**\n\n';
+    let text = '📦 **Список товаров:**\n\n';
     products.forEach((p) => {
         text += `🔹 **ID ${p.id}**: ${p.title} — ${p.price} грн\n`;
     });
@@ -90,9 +89,9 @@ bot.hears('📊 Заказы', async (ctx) => {
 
         await ctx.reply(
             `🛒 **Заказ #${order.id}**\n` +
-            `Пользователь: @${order.user_name || 'id' + order.user_id}\n` +
+            `Клиент: @${order.user_name || 'id' + order.user_id}\n` +
             `Сумма: ${order.total_price} грн\n` +
-            `Текущий статус: **${order.status}**`,
+            `Статус: **${order.status}**`,
             buttons
         );
     }
@@ -110,7 +109,7 @@ bot.hears('🚀 Статус заказа', async (ctx) => {
         return ctx.reply('У вас пока нет активных заказов.');
     }
 
-    let msg = '📋 **Ваши последние заказы:**\n\n';
+    let msg = '📋 **Ваши заказы:**\n\n';
     orders.forEach((o) => {
         msg += `📦 **Заказ #${o.id}** на сумму ${o.total_price} грн\nСтатус: **${o.status}**\n\n`;
     });
@@ -118,14 +117,14 @@ bot.hears('🚀 Статус заказа', async (ctx) => {
 });
 
 bot.hears('👨‍💻 Менеджер', (ctx) => {
-    ctx.reply('По всем вопросам обращайтесь к нашему менеджеру: @nnxray044');
+    ctx.reply('По всем вопросам: @nnxray044');
 });
 
 bot.hears('⬅️ Выйти из админки', (ctx) => {
-    ctx.reply('Вы вышли из админ-панели.', userKeyboard);
+    ctx.reply('Вышли из админки.', userKeyboard);
 });
 
-// --- ОБРАБОТКА ПОШАГОВОГО ВВОДА ТОВАРА И ЗАГРУЗКИ ФОТО ---
+// --- ПОШАГОВЫЙ ВВОД ТОВАРА ---
 
 bot.on('text', async (ctx, next) => {
     const state = adminState[ctx.from.id];
@@ -145,24 +144,21 @@ bot.on('text', async (ctx, next) => {
 
     if (state.step === 'PRICE') {
         const price = parseFloat(ctx.message.text);
-        if (isNaN(price)) return ctx.reply('Пожалуйста, введите корректное число для цены.');
+        if (isNaN(price)) return ctx.reply('Введите число для цены.');
         state.price = price;
         state.step = 'PHOTO';
-        return ctx.reply('📷 Теперь отправьте изображение товара прямо в чат (картинкой или ссылкой):');
+        return ctx.reply('📷 Отправьте ФОТО товара прямо в чат (картинкой из галереи или ссылкой):');
     }
 
     if (state.step === 'PHOTO') {
-        // Если отправили ссылку текстом
         state.image_url = ctx.message.text;
         await saveProduct(ctx);
     }
 });
 
-// Обработка отправки Фото из галереи
 bot.on('photo', async (ctx) => {
     const state = adminState[ctx.from.id];
     if (state && state.step === 'PHOTO') {
-        // Берем самое высокое разрешение фото
         const photo = ctx.message.photo[ctx.message.photo.length - 1];
         const fileLink = await ctx.telegram.getFileLink(photo.file_id);
         state.image_url = fileLink.href;
@@ -172,7 +168,7 @@ bot.on('photo', async (ctx) => {
 
 async function saveProduct(ctx) {
     const state = adminState[ctx.from.id];
-    ctx.reply('⌛ Сохраняю товар в базу...');
+    ctx.reply('⌛ Сохраняю товар...');
 
     const { error } = await supabase.from('products').insert([
         {
@@ -186,14 +182,13 @@ async function saveProduct(ctx) {
     delete adminState[ctx.from.id];
 
     if (error) {
-        console.error(error);
-        return ctx.reply(`❌ Ошибка сохранения: ${error.message}`);
+        return ctx.reply(`❌ Ошибка: ${error.message}`);
     }
 
-    ctx.reply('✅ Товар успешно добавлен в магазин!', adminKeyboard);
+    ctx.reply('✅ Товар успешно сохранён!', adminKeyboard);
 }
 
-// --- ОБРАБОТКА СМЕНЫ СТАТУСА ЗАКАЗА (CALLBACK) ---
+// --- ОБРАБОТКА ИЗМЕНЕНИЯ СТАТУСА ---
 
 bot.action(/^status_(\d+)_(.+)$/, async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
@@ -201,7 +196,6 @@ bot.action(/^status_(\d+)_(.+)$/, async (ctx) => {
     const orderId = ctx.match[1];
     const newStatus = ctx.match[2];
 
-    // Обновляем статус в базе
     const { data: order, error } = await supabase
         .from('orders')
         .update({ status: newStatus })
@@ -209,37 +203,30 @@ bot.action(/^status_(\d+)_(.+)$/, async (ctx) => {
         .select()
         .single();
 
-    if (error) {
-        return ctx.answerCbQuery('Ошибка при обновлении!');
-    }
+    if (error) return ctx.answerCbQuery('Ошибка обновления!');
 
-    ctx.answerCbQuery(`Статус сменен на "${newStatus}"`);
+    ctx.answerCbQuery(`Статус изменен на "${newStatus}"`);
     ctx.editMessageText(
         `🛒 **Заказ #${order.id}**\n` +
-        `Пользователь: @${order.user_name || 'id' + order.user_id}\n` +
+        `Клиент: @${order.user_name || 'id' + order.user_id}\n` +
         `Сумма: ${order.total_price} грн\n` +
-        `Текущий статус: **${order.status}**`
+        `Статус: **${order.status}**`
     );
 
-    // Уведомляем клиента в личку (как у XSMOK!)
     try {
         await bot.telegram.sendMessage(
             order.user_id,
             `🔔 **Статус заказа #${order.id} изменён на:**\n👉 ${newStatus}`
         );
-    } catch (e) {
-        console.log('Не удалось отправить уведомление пользователю');
-    }
+    } catch (e) {}
 });
 
-// --- SERVER & BOT LAUNCH ---
-
 const PORT = process.env.PORT || 10000;
-app.get('/', (req, res) => res.send('Kraken LAB Bot Server is running!'));
+app.get('/', (req, res) => res.send('Kraken LAB Server Active'));
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server listening on port ${PORT}`);
     bot.launch().then(() => {
-        console.log('Kraken LAB Bot successfully started!');
+        console.log('Kraken LAB Bot успешно запущен!');
     });
 });
