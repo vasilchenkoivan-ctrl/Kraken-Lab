@@ -4,146 +4,160 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kraken Lab — Магазин</title>
-    <!-- Подключаем Tailwind CSS для дизайна -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Подключаем Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-[#090d16] text-white min-h-screen pb-24">
+<body class="bg-[#090d16] text-white min-h-screen pb-24 selection:bg-blue-600 selection:text-white">
 
     <div class="p-4 max-w-md mx-auto space-y-6">
-        <h1 class="text-2xl font-bold text-center mb-4">🐙 Kraken Lab 🧪</h1>
+        <h1 class="text-2xl font-bold text-center mb-4 flex items-center justify-center gap-2">
+            <span>🐙</span> Kraken Lab <span>🧪</span>
+        </h1>
         
-        <!-- Контейнер куда будут подгружаться товары из базы -->
+        <!-- Контейнер для товаров -->
         <div id="products-container" class="space-y-4">
-            <p class="text-center text-gray-400">Завантаження каталогу...</p>
+            <div class="p-8 text-center text-gray-400">
+                <div class="inline-block animate-spin mb-2">⏳</div>
+                <p>Завантаження каталогу...</p>
+            </div>
         </div>
 
-        <!-- Информационный блок (Соцсети, Оплата, Оферта) -->
-        <div class="p-4 bg-[#121926] rounded-2xl space-y-4 border border-gray-800 mt-8">
+        <!-- Информационный блок -->
+        <div class="p-4 bg-[#121926] rounded-2xl space-y-4 border border-gray-800 mt-8 shadow-lg">
             <div>
                 <p class="text-xs text-gray-400 mb-2 font-medium">Соціальні мережі:</p>
-                <a href="https://t.me/KRAKENOTZYVY" target="_blank" class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm">
-                    ✈️
+                <a href="https://t.me/KRAKENOTZYVY" target="_blank" class="w-9 h-9 rounded-full bg-[#24A1DE] flex items-center justify-center text-white text-sm hover:opacity-90 transition-all shadow-md active:scale-95">
+                    <!-- Иконка Telegram -->
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.68-.55.84-1.12.52l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.04 5.54-5.01c.24-.21-.05-.33-.37-.12l-6.85 4.31-2.95-.92c-.64-.2-.65-.64.13-.95l11.52-4.44c.53-.19 1 .13.82.89z"/>
+                    </svg>
                 </a>
             </div>
 
             <div>
                 <p class="text-xs text-gray-400 mb-2 font-medium">Оплата:</p>
-                <div class="flex gap-2">
-                    <span class="px-2.5 py-1 bg-white text-black rounded text-[10px] font-bold">VISA</span>
-                    <span class="px-2.5 py-1 bg-white text-black rounded text-[10px] font-bold">Mastercard</span>
+                <div class="flex gap-2 flex-wrap">
+                    <span class="px-2.5 py-1 bg-white text-black rounded text-[10px] font-bold shadow-sm">VISA</span>
+                    <span class="px-2.5 py-1 bg-white text-black rounded text-[10px] font-bold shadow-sm">Mastercard</span>
+                    <span class="px-2.5 py-1 bg-gray-700 text-white rounded text-[10px] font-bold border border-gray-600 shadow-sm">Готівка (Нал)</span>
                 </div>
             </div>
 
             <div class="flex flex-wrap gap-2 pt-1">
-                <button onclick="alert('Розділ оплати')" class="px-3 py-1.5 bg-gray-800 rounded-xl text-xs text-gray-300">Оплата</button>
-                <button onclick="alert('Розділ доставки')" class="px-3 py-1.5 bg-gray-800 rounded-xl text-xs text-gray-300">Доставка</button>
-                <button onclick="alert('Публічна оферта')" class="px-3 py-1.5 bg-gray-800 rounded-xl text-xs text-gray-300">Оферта</button>
+                <button onclick="openModal('payment')" class="px-3 py-1.5 bg-gray-800 rounded-xl text-xs text-gray-300 hover:bg-gray-700 active:scale-95 transition-all">Оплата</button>
+                <button onclick="openModal('delivery')" class="px-3 py-1.5 bg-gray-800 rounded-xl text-xs text-gray-300 hover:bg-gray-700 active:scale-95 transition-all">Доставка</button>
+                <button onclick="openModal('offer')" class="px-3 py-1.5 bg-gray-800 rounded-xl text-xs text-gray-300 hover:bg-gray-700 active:scale-95 transition-all">Оферта</button>
             </div>
 
             <div>
-                <button onclick="alert('Політика конфіденційності')" class="w-full py-2 bg-gray-800 rounded-xl text-xs text-gray-300">
+                <button onclick="openModal('privacy')" class="w-full py-2 bg-gray-800 rounded-xl text-xs text-gray-300 hover:bg-gray-700 active:scale-95 transition-all">
                     Політика конфіденційності
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Модальное окно для инфо-страниц -->
+    <div id="infoModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-[#121926] border border-gray-800 w-full max-w-sm rounded-2xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-2xl">
+            <h3 id="modalTitle" class="text-lg font-bold border-b border-gray-800 pb-2">Інформація</h3>
+            <div id="modalText" class="text-sm text-gray-300 overflow-y-auto space-y-2 pr-1 whitespace-pre-line leading-relaxed">
+                Тут буде текст...
+            </div>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-semibold mt-auto active:scale-98 transition-all">
+                Закрити
+            </button>
+        </div>
+    </div>
+
     <script>
-        // Твои ключи Supabase (они публичные и безопасные для фронтенда)
-        const SUPABASE_URL = 'https://ovhuzqfchqngytfysiln.supabase.co
-'; // Замени на свой URL если нужно, или подтянется из окружения
-        const SUPABASE_ANON_KEY = 'sb_publishable_yKf0fucUXBU8M59ws2U5Zg_21ddos8i';
+        const SUPABASE_URL = 'https://osmeveovehxgktmprmsh.supabase.co';
+        const SUPABASE_ANON_KEY = 'Sb_publishable_yKf0fucUXBU8M59ws2U5Zg_21ddos8i';
 
-        // Инициализация Supabase
-        const { createClient } = supabase;
-        const _supabase = createClient(
-            window.SUPABASE_URL || "https://ovhuzqfch...supabase.co", // Твой URL из Vercel/Supabase
-            window.SUPABASE_KEY || "eyJhbG..." // Твой ключ
-        );
-
-        // Функция отрисовки товаров
+        // Прямой fetch-запрос к Supabase
         async function fetchAndRenderProducts() {
             const container = document.getElementById('products-container');
             
-            // Запрос к таблице products
-            const { data: products, error } = await _supabase
-                .from('products')
-                .select('*')
-                .order('id', { ascending: false });
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.desc`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
 
-            if (error) {
-                container.innerHTML = `<p class="text-red-500 text-center">Помилка завантаження: ${error.message}</p>`;
-                return;
-            }
-
-            if (!products || products.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-400">Товарів поки немає. Додайте їх через бота!</p>`;
-                return;
-            }
-
-            container.innerHTML = '';
-
-            products.forEach(product => {
-                const title = product.title || product.name || 'Товар';
-                const price = product.price || 0;
-                const oldPrice = product.old_price ? `<span class="line-through text-gray-500 text-xs mr-2">${product.old_price} грн</span>` : '';
-                const image = product.image ? `<img src="${product.image}" class="w-full h-48 object-cover rounded-xl mb-3" alt="${title}">` : '';
-                const description = product.description ? `<p class="text-sm text-gray-400 mt-1">${product.description}</p>` : '';
-
-                // Обработка вкусов (если они есть)
-                let flavors = [];
-                try {
-                    flavors = typeof product.flavors === 'string' ? JSON.parse(product.flavors) : (product.flavors || []);
-                } catch (e) {
-                    flavors = [];
+                if (!response.ok) {
+                    throw new Error(`Помилка API: ${response.statusText}`);
                 }
 
-                let flavorsHtml = '';
-                if (flavors.length > 0) {
-                    flavorsHtml = `
-                        <div class="mt-3">
-                            <p class="text-xs text-gray-400 mb-2 font-medium">Смаки</p>
-                            <div class="flex flex-wrap gap-2">
-                                ${flavors.map((flavor, idx) => `
-                                    <button onclick="selectFlavor(this, '${product.id}', '${flavor}')" 
-                                        class="flavor-btn-${product.id} px-3 py-1.5 rounded-xl text-xs font-medium transition-all${idx === 0 ? 'bg-blue-600 text-white border border-blue-400' : 'bg-gray-800 text-gray-300 border border-gray-700'}">
-                                        ${flavor}
-                                    </button>
-                                `).join('')}
+                const products = await response.json();
+
+                if (!products || products.length === 0) {
+                    container.innerHTML = `<p class="text-center text-gray-400 text-sm py-8 bg-[#121926] rounded-2xl border border-gray-800">Товарів поки немає в базі. Додайте їх через бота!</p>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                products.forEach(product => {
+                    const title = product.title || product.name || 'Товар';
+                    const price = product.price || 0;
+                    const oldPrice = product.old_price ? `<span class="line-through text-gray-500 text-xs mr-2">${product.old_price} грн</span>` : '';
+                    const image = product.image ? `<img src="${product.image}" class="w-full h-48 object-cover rounded-xl mb-3 shadow-md" alt="${title}">` : '';
+                    const description = product.description ? `<p class="text-sm text-gray-400 mt-1">${product.description}</p>` : '';
+
+                    let flavors = [];
+                    try {
+                        flavors = typeof product.flavors === 'string' ? JSON.parse(product.flavors) : (product.flavors || []);
+                    } catch (e) {
+                        flavors = [];
+                    }
+
+                    let flavorsHtml = '';
+                    if (flavors.length > 0) {
+                        flavorsHtml = `
+                            <div class="mt-3">
+                                <p class="text-xs text-gray-400 mb-2 font-medium">Смаки</p>
+                                <div class="flex flex-wrap gap-2">
+                                    ${flavors.map((flavor, idx) => `
+                                        <button onclick="selectFlavor(this, '${product.id}', '${flavor}')" 
+                                            class="flavor-btn-${product.id} px-3 py-1.5 rounded-xl text-xs font-medium transition-all${idx === 0 ? 'bg-blue-600 text-white border border-blue-400' : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'}">
+                                            ${flavor}
+                                        </button>
+                                    `).join('')}
+                                </div>
                             </div>
+                        `;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = "bg-[#121926] p-4 rounded-2xl border border-gray-800 shadow-md";
+                    card.innerHTML = `
+                        ${image}
+                        <h3 class="text-xl font-bold">${title}</h3>
+                        ${description}
+                        ${flavorsHtml}
+                        <div class="flex items-center justify-between mt-4 pt-2 border-t border-gray-800/50">
+                            <div>
+                                ${oldPrice}
+                                <span class="text-xl font-bold text-red-500">${price} грн</span>
+                            </div>
+                            <button onclick="addToCart('${title}')" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-xs font-semibold active:scale-95 transition-all">
+                                В кошик
+                            </button>
                         </div>
                     `;
-                }
+                    container.appendChild(card);
+                });
 
-                // Карточка товара
-                const card = document.createElement('div');
-                card.className = "bg-[#121926] p-4 rounded-2xl border border-gray-800";
-                card.innerHTML = `
-                    ${image}
-                    <h3 class="text-xl font-bold">${title}</h3>
-                    ${description}
-                    ${flavorsHtml}
-                    <div class="flex items-center justify-between mt-4 pt-2 border-t border-gray-800/50">
-                        <div>
-                            ${oldPrice}
-                            <span class="text-xl font-bold text-red-500">${price} грн</span>
-                        </div>
-                        <button onclick="addToCart('${title}')" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-xs font-semibold">
-                            В кошик
-                        </button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+            } catch (error) {
+                container.innerHTML = `<p class="text-red-400 text-center text-xs p-4 bg-[#121926] rounded-2xl border border-gray-800">Помилка завантаження: ${error.message}</p>`;
+            }
         }
 
         function selectFlavor(btn, productId, flavor) {
-            // Переключение активной кнопки вкуса
             const buttons = document.querySelectorAll(`.flavor-btn-${productId}`);
             buttons.forEach(b => {
-                b.className = b.className.replace('bg-blue-600 text-white border border-blue-400', 'bg-gray-800 text-gray-300 border border-gray-700');
+                b.className = b.className.replace('bg-blue-600 text-white border border-blue-400', 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700');
             });
             btn.className = "px-3 py-1.5 rounded-xl text-xs font-medium transition-all bg-blue-600 text-white border border-blue-400";
         }
@@ -152,7 +166,30 @@
             alert(`Товар "${title}" додано до кошика!`);
         }
 
-        // Запускаем загрузку при открытии страницы
+        // Тексты для модальных окон
+        const modalTexts = {
+            payment: "💳 Способи оплати:\n\n• Оплата банківською карткою (Visa / Mastercard)\n• Готівкою при отриманні у відділенні або кур'єру (Післяплата)",
+            delivery: "📦 ДОСТАВКА\n\nОформлюючи замовлення, виберіть доставку у відділення НП або до дверей службою “Нова Пошта”.\n\nДля отримання замовлення при собі потрібно мати документ, який підтверджує особу (паспорт або водійські права), а також знати номер накладної посилки.",
+            offer: "📄 ПУБЛІЧНА ОФЕРТА\n\n1. Загальні положення\nЦя оферта є офіційною пропозицією магазину Kraken Lab щодо продажу товарів наданих у даному Mini App.\n\n2. Оформлення замовлення\nПокупець самостійно оформлює замовлення через інтерфейс додатка. Після оформлення замовлення підтверджується оператором.\n\n3. Оплата та доставка\nЦіни вказані в гривнях. Доставка здійснюється службою Нова Пошта по всій території України.\n\n4. Повернення товару\nПовернення та обмін здійснюється відповідно до чинного законодавства України.",
+            privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\nМи поважаємо вашу приватність. Усі персональні дані (Ім'я, телефон, адреса доставки), які ви надаєте під час оформлення замовлення, используются виключно для виконання та доставки вашого замовлення і не передаються третім особам."
+        };
+
+        function openModal(type) {
+            const titles = {
+                payment: "Оплата",
+                delivery: "Доставка",
+                offer: "Публічна оферта",
+                privacy: "Політика конфіденційності"
+            };
+            document.getElementById('modalTitle').innerText = titles[type] || "Інформація";
+            document.getElementById('modalText').innerText = modalTexts[type];
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
         fetchAndRenderProducts();
     </script>
 </body>
