@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,150 +7,170 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Скрытие скроллбара для категорий */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-[#0b0e14] text-white min-h-screen pb-24 font-sans select-none antialiased">
 
-    <!-- Верхняя шапка -->
-    <header class="sticky top-0 z-40 bg-[#0b0e14]/90 backdrop-blur-md border-b border-gray-800/80 px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <span class="text-2xl">🐙</span>
-            <div>
-                <h1 class="text-base font-bold leading-none tracking-wide text-white">Kraken Lab</h1>
-                <p class="text-[10px] text-gray-400 font-medium">Premium Vape Shop</p>
+    <!-- Верхняя шапка / Поиск -->
+    <header class="sticky top-0 z-40 bg-[#0b0e14]/90 backdrop-blur-md border-b border-gray-800/80 px-4 py-3 space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🐙</span>
+                <div>
+                    <h1 class="text-base font-bold leading-none tracking-wide text-white">Kraken Lab</h1>
+                    <p class="text-[10px] text-gray-400 font-medium">Premium Vape Shop</p>
+                </div>
+            </div>
+            <div class="bg-gray-800/60 border border-gray-700/50 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#b8ff00] animate-pulse"></span>
+                <span class="text-[11px] font-semibold text-gray-300">Онлайн</span>
             </div>
         </div>
-        <div class="bg-gray-800/60 border border-gray-700/50 px-2.5 py-1 rounded-full flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-[11px] font-semibold text-gray-300">Онлайн</span>
+
+        <!-- Поисковая строка -->
+        <div id="search-box" class="relative hidden">
+            <input type="text" id="searchInput" oninput="filterProducts()" placeholder="Поиск по каталогу..." class="w-full bg-[#141b27] border border-gray-800 rounded-xl px-10 py-2 text-xs text-white focus:outline-none focus:border-[#b8ff00]">
+            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         </div>
     </header>
 
-    <!-- ВКЛАДКА: ГОЛОВНА / КАТАЛОГ -->
-    <main id="tab-catalog" class="tab-content p-4 space-y-5">
+    <!-- ВКЛАДКА: ГЛАВНАЯ / КАТАЛОГ -->
+    <main id="tab-catalog" class="tab-content p-4 space-y-4">
         
-        <!-- Поиск -->
-        <div id="search-box" class="relative hidden">
-            <input type="text" id="searchInput" oninput="filterProducts()" placeholder="Пошук товарів..." class="w-full bg-[#141b27] border border-gray-800 rounded-xl px-10 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
-            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        </div>
-
-        <!-- Карусель Категорий -->
-        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
-            <button onclick="setCategory('all')" class="cat-btn active bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shadow-lg shadow-blue-600/20">Всі товари</button>
-            <button onclick="setCategory('Рідини')" class="cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Рідини</button>
-            <button onclick="setCategory('Одноразки')" class="cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Одноразки</button>
-            <button onclick="setCategory('ПОД-системи')" class="cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">ПОД-системи</button>
-            <button onclick="setCategory('Картриджі')" class="cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Картриджі</button>
-        </div>
-
-        <!-- Контейнер Товаров -->
-        <div id="products-container" class="space-y-4">
-            <div class="p-8 text-center text-gray-400">
-                <div class="inline-block animate-spin mb-2 text-xl">⏳</div>
-                <p class="text-sm">Завантаження каталогу...</p>
+        <!-- Категории -->
+        <div>
+            <h2 class="text-sm font-bold text-gray-400 mb-2">Категории</h2>
+            <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                <button onclick="setCategory('all')" class="cat-btn active bg-[#b8ff00] text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-md shadow-[#b8ff00]/10">Все товары</button>
+                <button onclick="setCategory('Жидкости')" class="cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Жидкости</button>
+                <button onclick="setCategory('Картриджи')" class="cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Картриджи</button>
+                <button onclick="setCategory('Устройства')" class="cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Устройства</button>
+                <button onclick="setCategory('Аксессуары')" class="cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Аксессуары</button>
             </div>
         </div>
 
-        <!-- Информационный футер -->
-        <div class="p-4 bg-[#141b27] rounded-2xl space-y-4 border border-gray-800/80 mt-8 shadow-xl">
+        <h2 id="category-title" class="text-lg font-bold">Все товары</h2>
+
+        <!-- Сетка товаров (2 колонки) -->
+        <div id="products-container" class="grid grid-cols-2 gap-3">
+            <div class="col-span-2 p-8 text-center text-gray-400">
+                <div class="inline-block animate-spin mb-2 text-xl">⏳</div>
+                <p class="text-xs">Загрузка каталога...</p>
+            </div>
+        </div>
+
+        <!-- Информационный блок -->
+        <div class="p-4 bg-[#141b27] rounded-2xl space-y-4 border border-gray-800/80 mt-6 shadow-xl">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs text-gray-400 font-medium">Соціальні мережі:</p>
-                    <a href="https://t.me/KRAKENOTZYVY" target="_blank" class="w-9 h-9 rounded-full bg-[#24A1DE] flex items-center justify-center text-white text-sm hover:opacity-90 transition-all shadow-md active:scale-95 mt-1.5">
-                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.68-.55.84-1.12.52l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.04 5.54-5.01c.24-.21-.05-.33-.37-.12l-6.85 4.31-2.95-.92c-.64-.2-.65-.64.13-.95l11.52-4.44c.53-.19 1 .13.82.89z"/></svg>
+                    <p class="text-xs text-gray-400 font-medium">Социальные сети:</p>
+                    <a href="https://t.me/KRAKENOTZYVY" target="_blank" class="w-8 h-8 rounded-full bg-[#24A1DE] flex items-center justify-center text-white text-sm hover:opacity-90 transition-all shadow-md active:scale-95 mt-1.5">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.68-.55.84-1.12.52l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.04 5.54-5.01c.24-.21-.05-.33-.37-.12l-6.85 4.31-2.95-.92c-.64-.2-.65-.64.13-.95l11.52-4.44c.53-.19 1 .13.82.89z"/></svg>
                     </a>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-400 mb-1.5 font-medium text-right">Оплата:</p>
-                    <div class="flex gap-1.5">
-                        <span class="px-2 py-0.5 bg-white text-black rounded text-[10px] font-bold">VISA</span>
-                        <span class="px-2 py-0.5 bg-white text-black rounded text-[10px] font-bold">Mastercard</span>
-                        <span class="px-2 py-0.5 bg-gray-700 text-white rounded text-[10px] font-bold border border-gray-600">Нал</span>
+                    <p class="text-xs text-gray-400 mb-1 font-medium text-right">Оплата:</p>
+                    <div class="flex gap-1">
+                        <span class="px-1.5 py-0.5 bg-white text-black rounded text-[9px] font-bold">VISA</span>
+                        <span class="px-1.5 py-0.5 bg-white text-black rounded text-[9px] font-bold">Mastercard</span>
+                        <span class="px-1.5 py-0.5 bg-gray-700 text-white rounded text-[9px] font-bold border border-gray-600">Нал</span>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-2 pt-1 border-t border-gray-800/60">
-                <button onclick="openModal('payment')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-xs text-gray-300 font-medium active:scale-95 transition-all">Оплата</button>
-                <button onclick="openModal('delivery')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-xs text-gray-300 font-medium active:scale-95 transition-all">Доставка</button>
-                <button onclick="openModal('offer')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-xs text-gray-300 font-medium active:scale-95 transition-all">Оферта</button>
+            <div class="grid grid-cols-3 gap-1.5 pt-1 border-t border-gray-800/60">
+                <button onclick="openModal('payment')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Оплата</button>
+                <button onclick="openModal('delivery')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Доставка</button>
+                <button onclick="openModal('offer')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Оферта</button>
             </div>
 
-            <button onclick="openModal('privacy')" class="w-full py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-xs text-gray-300 font-medium active:scale-95 transition-all">
-                Політика конфіденційності
+            <button onclick="openModal('privacy')" class="w-full py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">
+                Политика конфиденциальности
             </button>
         </div>
     </main>
 
-    <!-- ВКЛАДКА: КОШИК -->
+    <!-- ВКЛАДКА: КОРЗИНА -->
     <main id="tab-cart" class="tab-content p-4 space-y-4 hidden">
-        <h2 class="text-xl font-bold">Кошик</h2>
+        <h2 class="text-xl font-bold">Корзина</h2>
         <div id="cart-items" class="space-y-3"></div>
-        <div id="cart-summary" class="bg-[#141b27] border border-gray-800 p-4 rounded-2xl space-y-3 hidden">
-            <div class="flex justify-between items-center text-base font-bold">
-                <span>Разом:</span>
-                <span id="cart-total-price" class="text-blue-500">0 грн</span>
+        <div id="cart-summary" class="bg-[#141b27] border border-gray-800 p-4 rounded-2xl space-y-3 hidden shadow-xl">
+            <div class="flex justify-between items-center text-sm font-bold">
+                <span>Итого:</span>
+                <span id="cart-total-price" class="text-[#b8ff00]">0 ₴</span>
             </div>
-            <button onclick="checkout()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/30 active:scale-98 transition-all">
-                Оформити замовлення
+            <button onclick="openCheckoutModal()" class="w-full py-3 bg-[#b8ff00] hover:opacity-90 text-black rounded-xl text-xs font-extrabold shadow-lg shadow-[#b8ff00]/20 active:scale-98 transition-all">
+                Оформить заказ
             </button>
         </div>
     </main>
 
-    <!-- ВКЛАДКА: ПРОФІЛЬ -->
+    <!-- ВКЛАДКА: ПРОФИЛЬ -->
     <main id="tab-profile" class="tab-content p-4 space-y-4 hidden">
-        <div class="bg-[#141b27] border border-gray-800 p-5 rounded-2xl text-center space-y-3">
-            <div class="w-16 h-16 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-2xl font-bold mx-auto border border-blue-500/30">
+        <div class="bg-[#141b27] border border-gray-800 p-5 rounded-2xl text-center space-y-3 shadow-xl">
+            <div class="w-16 h-16 rounded-full bg-[#b8ff00]/20 text-[#b8ff00] flex items-center justify-center text-2xl font-bold mx-auto border border-[#b8ff00]/30">
                 👤
             </div>
-            <h3 id="user-name" class="text-lg font-bold">Клієнт Kraken Lab</h3>
-            <p class="text-xs text-gray-400">Дякуємо, що ви з нами!</p>
+            <h3 id="user-name" class="text-lg font-bold">Клиент Kraken Lab</h3>
+            <p class="text-xs text-gray-400">Спасибо, что вы с нами!</p>
         </div>
     </main>
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ (ТАББАР) -->
-    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0b0e14]/95 backdrop-blur-lg border-t border-gray-800/80 px-2 py-2">
-        <div class="max-w-md mx-auto grid grid-cols-5 gap-1 text-center">
-            
-            <button onclick="switchTab('home')" id="nav-home" class="nav-btn active flex flex-col items-center justify-center py-1 rounded-xl text-blue-500 transition-all">
+    <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0b0e14]/95 backdrop-blur-lg border-t border-gray-800/80 px-2 py-1.5">
+        <div class="max-w-md mx-auto grid grid-cols-4 gap-1 text-center">
+            <button onclick="switchTab('home')" id="nav-home" class="nav-btn active flex flex-col items-center justify-center py-1 rounded-xl text-[#b8ff00] transition-all">
                 <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                <span class="text-[10px] font-medium">Головна</span>
+                <span class="text-[10px] font-medium">Главная</span>
             </button>
-
             <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
-                <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+                <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4v4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
                 <span class="text-[10px] font-medium">Каталог</span>
             </button>
-
-            <button onclick="switchTab('search')" id="nav-search" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
-                <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <span class="text-[10px] font-medium">Пошук</span>
-            </button>
-
             <button onclick="switchTab('cart')" id="nav-cart" class="nav-btn relative flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
-                <span id="cart-badge" class="absolute top-0 right-3 bg-blue-600 text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+                <span id="cart-badge" class="absolute top-0.5 right-4 bg-[#b8ff00] text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center hidden shadow-sm">0</span>
                 <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-                <span class="text-[10px] font-medium">Кошик</span>
+                <span class="text-[10px] font-medium">Корзина</span>
             </button>
-
             <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
                 <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                <span class="text-[10px] font-medium">Профіль</span>
+                <span class="text-[10px] font-medium">Профиль</span>
             </button>
-
         </div>
     </nav>
 
-    <!-- МОДАЛЬНОЕ ОКНО -->
+    <!-- МОДАЛЬНОЕ ОКНО ТОВАРА (ВЫБОР ВКУСОВ) -->
+    <div id="productModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-[#141b27] border border-gray-800 w-full max-w-sm rounded-2xl p-5 space-y-4 max-h-[85vh] flex flex-col shadow-2xl relative">
+            <button onclick="closeProductModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold hover:bg-gray-700">✕</button>
+            <div id="modalProductContent" class="space-y-4 overflow-y-auto pr-1"></div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ОФОРМЛЕНИЯ ЗАКАЗА -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-[#141b27] border border-gray-800 w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-2xl">
+            <h3 class="text-lg font-bold border-b border-gray-800 pb-2">📦 Подтверждение заказа</h3>
+            <div id="checkoutText" class="text-xs text-gray-300 bg-gray-900/60 p-3 rounded-xl whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto border border-gray-800"></div>
+            <div class="space-y-2 pt-2">
+                <button onclick="sendOrder()" class="w-full py-3 bg-[#b8ff00] hover:opacity-90 rounded-xl text-xs font-extrabold text-black shadow-lg shadow-[#b8ff00]/20 active:scale-98 transition-all">
+                    Отправить заказ менеджеру ✈️
+                </button>
+                <button onclick="closeCheckoutModal()" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-semibold text-gray-300">
+                    Вернуться назад
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ИНФО -->
     <div id="infoModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div class="bg-[#141b27] border border-gray-800 w-full max-w-sm rounded-2xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-2xl">
-            <h3 id="modalTitle" class="text-lg font-bold border-b border-gray-800 pb-2">Інформація</h3>
-            <div id="modalText" class="text-sm text-gray-300 overflow-y-auto space-y-2 pr-1 whitespace-pre-line leading-relaxed"></div>
-            <button onclick="closeModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-semibold mt-auto active:scale-98 transition-all">Закрити</button>
+            <h3 id="infoModalTitle" class="text-lg font-bold border-b border-gray-800 pb-2">Информация</h3>
+            <div id="infoModalText" class="text-sm text-gray-300 overflow-y-auto space-y-2 pr-1 whitespace-pre-line leading-relaxed"></div>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-[#b8ff00] hover:opacity-90 rounded-xl text-xs font-bold text-black mt-auto active:scale-98 transition-all">Закрыть</button>
         </div>
     </div>
 
@@ -161,35 +181,27 @@
         let allProducts = [];
         let selectedCategory = 'all';
         let cart = [];
-        let selectedFlavors = {};
+        let activeFlavors = {};
 
-        // Инициализация Telegram WebApp
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.expand();
             if (tg.initDataUnsafe?.user) {
-                document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name || 'Клієнт';
+                document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name || 'Клиент';
             }
         }
 
         async function fetchAndRenderProducts() {
             const container = document.getElementById('products-container');
-            
             try {
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.desc`, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
                 });
-
-                if (!response.ok) throw new Error(`Помилка API: ${response.statusText}`);
-
+                if (!response.ok) throw new Error(`Ошибка API: ${response.statusText}`);
                 allProducts = await response.json();
                 renderFilteredProducts();
-
             } catch (error) {
-                container.innerHTML = `<p class="text-red-400 text-center text-xs p-4 bg-[#141b27] rounded-2xl border border-gray-800">Помилка завантаження: ${error.message}</p>`;
+                container.innerHTML = `<p class="col-span-2 text-red-400 text-center text-xs p-4 bg-[#141b27] rounded-2xl border border-gray-800">Ошибка загрузки: ${error.message}</p>`;
             }
         }
 
@@ -200,12 +212,11 @@
             let filtered = allProducts.filter(p => {
                 const matchesCat = selectedCategory === 'all' || (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
                 const title = (p.title || p.name || '').toLowerCase();
-                const matchesSearch = title.includes(searchVal);
-                return matchesCat && matchesSearch;
+                return matchesCat && title.includes(searchVal);
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-400 text-sm py-8 bg-[#141b27] rounded-2xl border border-gray-800">Товарів не знайдено</p>`;
+                container.innerHTML = `<p class="col-span-2 text-center text-gray-400 text-sm py-8 bg-[#141b27] rounded-2xl border border-gray-800">Товаров не найдено</p>`;
                 return;
             }
 
@@ -214,84 +225,100 @@
             filtered.forEach(product => {
                 const title = product.title || product.name || 'Товар';
                 const price = product.price || 0;
-                const oldPrice = product.old_price ? `<span class="line-through text-gray-500 text-xs mr-2">${product.old_price} грн</span>` : '';
-                const image = product.image ? `<img src="${product.image}" class="w-full h-44 object-cover rounded-xl mb-3 shadow-md" alt="${title}">` : '';
-                const description = product.description ? `<p class="text-xs text-gray-400 mt-1 line-clamp-2">${product.description}</p>` : '';
-
+                const image = product.image ? `<img src="${product.image}" class="w-full h-32 object-cover rounded-xl mb-2 shadow-md pointer-events-none" alt="${title}">` : `<div class="w-full h-32 bg-gray-800/50 rounded-xl mb-2 flex items-center justify-center text-2xl">📦</div>`;
+                
                 let flavors = [];
                 try {
                     flavors = typeof product.flavors === 'string' ? JSON.parse(product.flavors) : (product.flavors || []);
                 } catch (e) { flavors = []; }
 
-                if (flavors.length > 0 && !selectedFlavors[product.id]) {
-                    selectedFlavors[product.id] = flavors[0];
-                }
-
-                let flavorsHtml = '';
-                if (flavors.length > 0) {
-                    flavorsHtml = `
-                        <div class="mt-3">
-                            <p class="text-[11px] text-gray-400 mb-1.5 font-medium">Обрати смак:</p>
-                            <div class="flex flex-wrap gap-1.5">
-                                ${flavors.map((flavor) => `
-                                    <button onclick="selectFlavor(this, '${product.id}', '${flavor}')" 
-                                        class="flavor-btn-${product.id} px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all${selectedFlavors[product.id] === flavor ? 'bg-blue-600 text-white border border-blue-400' : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'}">
-                                        ${flavor}
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
+                if (flavors.length > 0 && !activeFlavors[product.id]) {
+                    activeFlavors[product.id] = flavors[0];
                 }
 
                 const card = document.createElement('div');
-                card.className = "bg-[#141b27] p-4 rounded-2xl border border-gray-800 shadow-md";
+                card.className = "bg-[#141b27] p-3 rounded-2xl border border-gray-800/80 shadow-md flex flex-col justify-between cursor-pointer hover:border-gray-700 transition-all";
+                card.onclick = () => openProductModal(product.id);
+
                 card.innerHTML = `
-                    ${image}
-                    <h3 class="text-lg font-bold">${title}</h3>
-                    ${description}
-                    ${flavorsHtml}
-                    <div class="flex items-center justify-between mt-4 pt-2 border-t border-gray-800/50">
-                        <div>
-                            ${oldPrice}
-                            <span class="text-lg font-bold text-red-500">${price} грн</span>
-                        </div>
-                        <button onclick="addToCart('${product.id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all shadow-md shadow-blue-600/20">
-                            В кошик
-                        </button>
+                    <div>
+                        ${image}
+                        <h3 class="text-xs font-bold line-clamp-1 text-white">${title}</h3>
+                    </div>
+                    <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-800/50">
+                        <span class="text-sm font-extrabold text-white">${price} ₴</span>
+                        <button onclick="event.stopPropagation(); openProductModal('${product.id}')" class="w-8 h-8 rounded-full bg-[#b8ff00] text-black font-extrabold flex items-center justify-center shadow-md active:scale-95 transition-all text-base">+</button>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        function setCategory(cat) {
-            selectedCategory = cat;
-            document.querySelectorAll('.cat-btn').forEach(btn => {
-                btn.className = "cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all";
-            });
-            event.target.className = "cat-btn active bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shadow-lg shadow-blue-600/20";
-            renderFilteredProducts();
-        }
-
-        function filterProducts() {
-            renderFilteredProducts();
-        }
-
-        function selectFlavor(btn, productId, flavor) {
-            selectedFlavors[productId] = flavor;
-            const buttons = document.querySelectorAll(`.flavor-btn-${productId}`);
-            buttons.forEach(b => {
-                b.className = "px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700";
-            });
-            btn.className = "px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all bg-blue-600 text-white border border-blue-400";
-        }
-
-        function addToCart(productId) {
+        function openProductModal(productId) {
             const product = allProducts.find(p => p.id == productId);
             if (!product) return;
 
-            const flavor = selectedFlavors[productId] || '';
+            const title = product.title || product.name || 'Товар';
+            const price = product.price || 0;
+            const image = product.image ? `<img src="${product.image}" class="w-full h-48 object-cover rounded-xl mb-3 shadow-md" alt="${title}">` : '';
+            const description = product.description ? `<p class="text-xs text-gray-300">${product.description}</p>` : '';
+
+            let flavors = [];
+            try {
+                flavors = typeof product.flavors === 'string' ? JSON.parse(product.flavors) : (product.flavors || []);
+            } catch (e) { flavors = []; }
+
+            let flavorsHtml = '';
+            if (flavors.length > 0) {
+                if(!activeFlavors[product.id]) activeFlavors[product.id] = flavors[0];
+                flavorsHtml = `
+                    <div class="mt-2">
+                        <p class="text-xs text-gray-400 mb-2 font-medium">Выберите вкус:</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${flavors.map((flavor) => `
+                                <button onclick="selectModalFlavor(event, '${product.id}', '${flavor}')" 
+                                    class="modal-flavor-${product.id} px-3 py-1.5 rounded-xl text-xs font-medium transition-all${activeFlavors[product.id] === flavor ? 'bg-[#b8ff00] text-black font-bold border border-[#b8ff00]' : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'}">
+                                    ${flavor}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('modalProductContent').innerHTML = `
+                ${image}
+                <h3 class="text-base font-bold">${title}</h3>
+                ${description}
+                ${flavorsHtml}
+                <div class="flex items-center justify-between pt-3 border-t border-gray-800 mt-4">
+                    <span class="text-lg font-bold text-[#b8ff00]">${price} ₴</span>
+                    <button onclick="addModalItemToCart('${product.id}')" class="bg-[#b8ff00] hover:opacity-90 px-5 py-2.5 rounded-xl text-xs font-extrabold text-black shadow-lg active:scale-95 transition-all">
+                        В корзину
+                    </button>
+                </div>
+            `;
+            document.getElementById('productModal').style.display = 'flex';
+        }
+
+        function selectModalFlavor(event, productId, flavor) {
+            event.stopPropagation();
+            activeFlavors[productId] = flavor;
+            document.querySelectorAll(`.modal-flavor-${productId}`).forEach(b => {
+                b.className = `modal-flavor-${productId} px-3 py-1.5 rounded-xl text-xs font-medium transition-all bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700`;
+            });
+            event.target.className = `modal-flavor-${productId} px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-[#b8ff00] text-black border border-[#b8ff00]`;
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        function addModalItemToCart(productId) {
+            const product = allProducts.find(p => p.id == productId);
+            if (!product) return;
+
+            const flavor = activeFlavors[productId] || '';
             const cartItem = cart.find(item => item.id == productId && item.flavor == flavor);
 
             if (cartItem) {
@@ -307,7 +334,24 @@
             }
 
             updateCartUI();
+            closeProductModal();
             if(tg) tg.HapticFeedback?.impactOccurred('medium');
+        }
+
+        function setCategory(cat) {
+            selectedCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.className = "cat-btn bg-[#141b27] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all";
+            });
+            event.target.className = "cat-btn active bg-[#b8ff00] text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-md shadow-[#b8ff00]/10";
+            
+            const titles = { 'all': 'Все товары', 'Жидкости': 'Жидкости', 'Картриджи': 'Картриджи', 'Устройства': 'Устройства', 'Аксессуары': 'Аксессуары' };
+            document.getElementById('category-title').innerText = titles[cat] || 'Товары';
+            renderFilteredProducts();
+        }
+
+        function filterProducts() {
+            renderFilteredProducts();
         }
 
         function updateCartUI() {
@@ -325,7 +369,7 @@
             const cartSummary = document.getElementById('cart-summary');
 
             if (cart.length === 0) {
-                cartContainer.innerHTML = `<p class="text-center text-gray-400 text-sm py-8 bg-[#141b27] rounded-2xl border border-gray-800">Ваш кошик порожній</p>`;
+                cartContainer.innerHTML = `<p class="text-center text-gray-400 text-sm py-8 bg-[#141b27] rounded-2xl border border-gray-800">Ваша корзина пуста</p>`;
                 cartSummary.classList.add('hidden');
                 return;
             }
@@ -341,33 +385,31 @@
                 div.innerHTML = `
                     <div>
                         <h4 class="font-bold text-sm">${item.title}</h4>
-                        ${item.flavor ? `<p class="text-xs text-blue-400">Смак: ${item.flavor}</p>` : ''}
-                        <p class="text-xs font-bold text-red-500 mt-1">${item.price * item.count} грн</p>
+                        ${item.flavor ? `<p class="text-xs text-[#b8ff00]">Вкус: ${item.flavor}</p>` : ''}
+                        <p class="text-xs font-bold text-white mt-1">${item.price * item.count} ₴</p>
                     </div>
                     <div class="flex items-center gap-2 bg-gray-800/80 p-1 rounded-xl border border-gray-700/50">
                         <button onclick="changeCount(${index}, -1)" class="w-6 h-6 rounded-lg bg-gray-700 flex items-center justify-center text-xs font-bold">-</button>
                         <span class="text-xs font-bold w-4 text-center">${item.count}</span>
-                        <button onclick="changeCount(${index}, 1)" class="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-xs font-bold">+</button>
+                        <button onclick="changeCount(${index}, 1)" class="w-6 h-6 rounded-lg bg-[#b8ff00] text-black flex items-center justify-center text-xs font-bold">+</button>
                     </div>
                 `;
                 cartContainer.appendChild(div);
             });
 
-            document.getElementById('cart-total-price').innerText = `${total} грн`;
+            document.getElementById('cart-total-price').innerText = `${total} ₴`;
         }
 
         function changeCount(index, delta) {
             cart[index].count += delta;
-            if (cart[index].count <= 0) {
-                cart.splice(index, 1);
-            }
+            if (cart[index].count <= 0) cart.splice(index, 1);
             updateCartUI();
         }
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(b => {
-                b.classList.remove('text-blue-500', 'active');
+                b.classList.remove('text-[#b8ff00]', 'active');
                 b.classList.add('text-gray-400');
             });
 
@@ -376,49 +418,59 @@
             if (tab === 'home' || tab === 'catalog') {
                 document.getElementById('tab-catalog').classList.remove('hidden');
                 searchBox.classList.add('hidden');
-                document.getElementById(tab === 'home' ? 'nav-home' : 'nav-catalog').classList.add('text-blue-500', 'active');
+                document.getElementById(tab === 'home' ? 'nav-home' : 'nav-catalog').classList.add('text-[#b8ff00]', 'active');
             } else if (tab === 'search') {
                 document.getElementById('tab-catalog').classList.remove('hidden');
                 searchBox.classList.remove('hidden');
-                document.getElementById('nav-search').classList.add('text-blue-500', 'active');
+                document.getElementById('nav-search').classList.add('text-[#b8ff00]', 'active');
             } else if (tab === 'cart') {
                 document.getElementById('tab-cart').classList.remove('hidden');
-                document.getElementById('nav-cart').classList.add('text-blue-500', 'active');
+                document.getElementById('nav-cart').classList.add('text-[#b8ff00]', 'active');
             } else if (tab === 'profile') {
                 document.getElementById('tab-profile').classList.remove('hidden');
-                document.getElementById('nav-profile').classList.add('text-blue-500', 'active');
+                document.getElementById('nav-profile').classList.add('text-[#b8ff00]', 'active');
             }
         }
 
-        function checkout() {
+        function openCheckoutModal() {
             if (cart.length === 0) return;
-            let msg = "🛒 Нове замовлення из Mini App:\n\n";
+            let msg = "🛒 Новый заказ из Mini App:\n\n";
             let total = 0;
             cart.forEach(item => {
-                msg += `• ${item.title} ${item.flavor ? `(${item.flavor})` : ''} x${item.count} — ${item.price * item.count} грн\n`;
+                msg += `• ${item.title} ${item.flavor ? `(${item.flavor})` : ''} x${item.count} — ${item.price * item.count} ₴\n`;
                 total += item.price * item.count;
             });
-            msg += `\nВсього: ${total} грн`;
+            msg += `\nИтого к оплате: ${total} ₴`;
 
+            document.getElementById('checkoutText').innerText = msg;
+            document.getElementById('checkoutModal').style.display = 'flex';
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkoutModal').style.display = 'none';
+        }
+
+        function sendOrder() {
+            let msg = document.getElementById('checkoutText').innerText;
             if (tg) {
                 tg.sendData(msg);
                 tg.close();
             } else {
-                alert("Замовлення сформовано!\n\n" + msg);
+                window.open(`https://t.me/KRAKENOTZYVY?text=${encodeURIComponent(msg)}`, '_blank');
             }
         }
 
-        const modalTexts = {
-            payment: "💳 Способи оплати:\n\n• Оплата банківською карткою (Visa / Mastercard)\n• Готівкою при отриманні у відділенні або кур'єру (Післяплата)",
-            delivery: "📦 ДОСТАВКА\n\nОформлюючи замовлення, виберіть доставку у відділення НП або до дверей службою “Нова Пошта”.\n\nДля отримання замовлення при собі потрібно мати документ, який підтверджує особу (паспорт або водійські права), а також знати номер накладної посилки.",
-            offer: "📄 ПУБЛІЧНА ОФЕРТА\n\n1. Загальні положення\nЦя оферта є офіційною пропозицією магазину Kraken Lab щодо продажу товарів, наданих у даному Mini App.\n\n2. Оформлення замовлення\nПокупець самостійно оформлює замовлення через інтерфейс додатка.\n\n3. Обмеження відповідальності\nАдміністрація та магазин не несуть відповідальності за неналежне використання товарів Покупцем, за затримки або збої в доставці з вини транспортних/поштових служб, а також за будь-які непрямі збитки чи форс-мажорні обставини. Всі товари надаються за принципом «як є».\n\n4. Повернення та обмін\nПовернення та обмін товарів здійснюється відповідно до чинного законодавства України.",
-            privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\nМи поважаємо вашу приватність. Усі персональні дані використовуються виключно для виконання та доставки вашого замовлення."
+        const infoTexts = {
+            payment: "💳 Способы оплаты:\n\n• Оплата банковской картой (Visa / Mastercard)\n• Наличными при получении в отделении или курьеру (Наложенный платеж)",
+            delivery: "📦 ДОСТАВКА\n\nОформляя заказ, выберите доставку в отделение НП или до дверей службой “Новая Почта”.\n\nДля получения заказа при себе нужно иметь документ, удостоверяющий личность (паспорт или водительские права), а также знать номер накладной посылки.",
+            offer: "📄 ПУБЛИЧНАЯ ОФЕРТА\n\n1. Общие положения\nЭта оферта является официальным предложением магазина Kraken Lab по продаже товаров, представленных в данном Mini App.\n\n2. Оформление заказа\nПокупатель самостоятельно оформляет заказ через интерфейс приложения.\n\n3. Ограничение ответственности\nАдминистрация и магазин не несут ответственности за ненадлежащее использование товаров Покупателем, за задержки или сбои в доставке по вине транспортных/почтовых служб, а также за любые косвенные убытки или форс-мажорные обстоятельства. Все товары предоставляются по принципу «как есть».\n\n4. Возврат и обмен\nВозврат и обмен товаров осуществляется в соответствии с действующим законодательством.",
+            privacy: "🔒 ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ\n\nМы уважаем вашу приватность. Все персональные данные используются исключительно для выполнения и доставки вашего заказа и не передаются третьим лицам."
         };
 
         function openModal(type) {
-            const titles = { payment: "Оплата", delivery: "Доставка", offer: "Публічна оферта", privacy: "Політика конфіденційності" };
-            document.getElementById('modalTitle').innerText = titles[type] || "Інформація";
-            document.getElementById('modalText').innerText = modalTexts[type];
+            const titles = { payment: "Оплата", delivery: "Доставка", offer: "Публичная оферта", privacy: "Политика конфиденциальности" };
+            document.getElementById('infoModalTitle').innerText = titles[type] || "Информация";
+            document.getElementById('infoModalText').innerText = infoTexts[type];
             document.getElementById('infoModal').style.display = 'flex';
         }
 
