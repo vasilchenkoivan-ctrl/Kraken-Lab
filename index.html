@@ -13,7 +13,7 @@
 </head>
 <body class="bg-[#0b0e14] text-white min-h-screen pb-24 font-sans select-none antialiased">
 
-    <!-- Верхняя шапка / Поиск -->
+    <!-- Верхняя шапка -->
     <header class="sticky top-0 z-40 bg-[#0b0e14]/90 backdrop-blur-md border-b border-gray-800/80 px-4 py-3 space-y-3">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -36,7 +36,7 @@
         </div>
     </header>
 
-    <!-- ВКЛАДКА: ГЛАВНАЯ / КАТАЛОГ -->
+    <!-- ВКЛАДКА: КАТАЛОГ -->
     <main id="tab-catalog" class="tab-content p-4 space-y-4">
         
         <!-- Категории -->
@@ -102,7 +102,7 @@
                 <span id="cart-total-price" class="text-[#b8ff00]">0 ₴</span>
             </div>
             <button onclick="openCheckoutModal()" class="w-full py-3 bg-[#b8ff00] hover:opacity-90 text-black rounded-xl text-xs font-extrabold shadow-lg shadow-[#b8ff00]/20 active:scale-98 transition-all">
-                Оформить заказ
+                Перейти к оформлению
             </button>
         </div>
     </main>
@@ -151,14 +151,35 @@
 
     <!-- МОДАЛЬНОЕ ОКНО ОФОРМЛЕНИЯ ЗАКАЗА -->
     <div id="checkoutModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-[#141b27] border border-gray-800 w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-2xl">
-            <h3 class="text-lg font-bold border-b border-gray-800 pb-2">📦 Подтверждение заказа</h3>
-            <div id="checkoutText" class="text-xs text-gray-300 bg-gray-900/60 p-3 rounded-xl whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto border border-gray-800"></div>
-            <div class="space-y-2 pt-2">
+        <div class="bg-[#141b27] border border-gray-800 w-full max-w-sm rounded-2xl p-5 space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-base font-bold border-b border-gray-800 pb-2">📦 Оформление заказа</h3>
+            
+            <!-- Поля ввода (без ФИО) -->
+            <div class="space-y-2.5 text-xs">
+                <div>
+                    <label class="text-gray-400 font-medium mb-1 block">Номер телефона:</label>
+                    <input type="tel" id="order-phone" placeholder="+380XXXXXXXXX" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#b8ff00]">
+                </div>
+                <div>
+                    <label class="text-gray-400 font-medium mb-1 block">Город и № отделения Новой Почты:</label>
+                    <input type="text" id="order-address" placeholder="Киев, Отделение №15" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#b8ff00]">
+                </div>
+                <div>
+                    <label class="text-gray-400 font-medium mb-1 block">Способ оплаты:</label>
+                    <select id="order-payment" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#b8ff00]">
+                        <option value="Наложенный платеж">Наложенный платеж (При получении)</option>
+                        <option value="Оплата на карту">Оплата на карту (Реквизиты)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="checkoutText" class="text-[11px] text-gray-300 bg-gray-900/80 p-2.5 rounded-xl whitespace-pre-line border border-gray-800 my-2"></div>
+
+            <div class="space-y-2 pt-1">
                 <button onclick="sendOrder()" class="w-full py-3 bg-[#b8ff00] hover:opacity-90 rounded-xl text-xs font-extrabold text-black shadow-lg shadow-[#b8ff00]/20 active:scale-98 transition-all">
                     Отправить заказ менеджеру ✈️
                 </button>
-                <button onclick="closeCheckoutModal()" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-semibold text-gray-300">
+                <button onclick="closeCheckoutModal()" class="w-full py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-semibold text-gray-300">
                     Вернуться назад
                 </button>
             </div>
@@ -189,6 +210,20 @@
             if (tg.initDataUnsafe?.user) {
                 document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name || 'Клиент';
             }
+        }
+
+        function parseFlavors(flavorsData) {
+            if (!flavorsData) return [];
+            if (Array.isArray(flavorsData)) return flavorsData;
+            if (typeof flavorsData === 'string') {
+                try {
+                    const parsed = JSON.parse(flavorsData);
+                    if (Array.isArray(parsed)) return parsed;
+                } catch(e) {
+                    return flavorsData.split(',').map(s => s.trim()).filter(Boolean);
+                }
+            }
+            return [];
         }
 
         async function fetchAndRenderProducts() {
@@ -226,15 +261,6 @@
                 const title = product.title || product.name || 'Товар';
                 const price = product.price || 0;
                 const image = product.image ? `<img src="${product.image}" class="w-full h-32 object-cover rounded-xl mb-2 shadow-md pointer-events-none" alt="${title}">` : `<div class="w-full h-32 bg-gray-800/50 rounded-xl mb-2 flex items-center justify-center text-2xl">📦</div>`;
-                
-                let flavors = [];
-                try {
-                    flavors = typeof product.flavors === 'string' ? JSON.parse(product.flavors) : (product.flavors || []);
-                } catch (e) { flavors = []; }
-
-                if (flavors.length > 0 && !activeFlavors[product.id]) {
-                    activeFlavors[product.id] = flavors[0];
-                }
 
                 const card = document.createElement('div');
                 card.className = "bg-[#141b27] p-3 rounded-2xl border border-gray-800/80 shadow-md flex flex-col justify-between cursor-pointer hover:border-gray-700 transition-all";
@@ -261,12 +287,9 @@
             const title = product.title || product.name || 'Товар';
             const price = product.price || 0;
             const image = product.image ? `<img src="${product.image}" class="w-full h-48 object-cover rounded-xl mb-3 shadow-md" alt="${title}">` : '';
-            const description = product.description ? `<p class="text-xs text-gray-300">${product.description}</p>` : '';
+            const description = product.description ? `<p class="text-xs text-gray-300 mb-2">${product.description}</p>` : '';
 
-            let flavors = [];
-            try {
-                flavors = typeof product.flavors === 'string' ? JSON.parse(product.flavors) : (product.flavors || []);
-            } catch (e) { flavors = []; }
+            const flavors = parseFlavors(product.flavors);
 
             let flavorsHtml = '';
             if (flavors.length > 0) {
@@ -434,15 +457,15 @@
 
         function openCheckoutModal() {
             if (cart.length === 0) return;
-            let msg = "🛒 Новый заказ из Mini App:\n\n";
+            let summary = "Состав заказа:\n";
             let total = 0;
             cart.forEach(item => {
-                msg += `• ${item.title} ${item.flavor ? `(${item.flavor})` : ''} x${item.count} — ${item.price * item.count} ₴\n`;
+                summary += `• ${item.title} ${item.flavor ? `(${item.flavor})` : ''} x${item.count} = ${item.price * item.count} ₴\n`;
                 total += item.price * item.count;
             });
-            msg += `\nИтого к оплате: ${total} ₴`;
+            summary += `\nК оплате: ${total} ₴`;
 
-            document.getElementById('checkoutText').innerText = msg;
+            document.getElementById('checkoutText').innerText = summary;
             document.getElementById('checkoutModal').style.display = 'flex';
         }
 
@@ -451,18 +474,45 @@
         }
 
         function sendOrder() {
-            let msg = document.getElementById('checkoutText').innerText;
-            if (tg) {
-                tg.sendData(msg);
-                tg.close();
-            } else {
-                window.open(`https://t.me/KRAKENOTZYVY?text=${encodeURIComponent(msg)}`, '_blank');
+            const phone = document.getElementById('order-phone').value.trim();
+            const address = document.getElementById('order-address').value.trim();
+            const payment = document.getElementById('order-payment').value;
+
+            if (!phone || !address) {
+                alert("Заполните, пожалуйста, номер телефона и адрес Новой Почты!");
+                return;
             }
+
+            let text = `🛒 НОВЫЙ ЗАКАЗ — Kraken Lab\n\n`;
+            text += `📞 Телефон: ${phone}\n`;
+            text += `📦 Доставка: ${address}\n`;
+            text += `💳 Оплата: ${payment}\n\n`;
+            text += `--- Состав заказа ---\n`;
+
+            let total = 0;
+            cart.forEach(item => {
+                text += `• ${item.title} ${item.flavor ? `[Смак: ${item.flavor}]` : ''} x${item.count} = ${item.price * item.count} ₴\n`;
+                total += item.price * item.count;
+            });
+            text += `\nИтого: ${total} ₴`;
+
+            if (tg && tg.sendData) {
+                try { tg.sendData(text); } catch(e) {}
+            }
+
+            const managerUrl = `https://t.me/KRAKENOTZYVY?text=${encodeURIComponent(text)}`;
+            if (tg && tg.openTelegramLink) {
+                tg.openTelegramLink(managerUrl);
+            } else {
+                window.open(managerUrl, '_blank');
+            }
+            
+            closeCheckoutModal();
         }
 
         const infoTexts = {
             payment: "💳 Способы оплаты:\n\n• Оплата банковской картой (Visa / Mastercard)\n• Наличными при получении в отделении или курьеру (Наложенный платеж)",
-            delivery: "📦 ДОСТАВКА\n\nОформляя заказ, выберите доставку в отделение НП или до дверей службой “Новая Почта”.\n\nДля получения заказа при себе нужно иметь документ, удостоверяющий личность (паспорт или водительские права), а также знать номер накладной посылки.",
+            delivery: "📦 ДОСТАВКА\n\nОформляя заказ, выберите доставку в отделение НП или до дверей службой “Нова Пошта”.\n\nДля получения заказа при себе нужно иметь документ, удостоверяющий личность (паспорт или водительские права), а также знать номер накладной посылки.",
             offer: "📄 ПУБЛИЧНАЯ ОФЕРТА\n\n1. Общие положения\nЭта оферта является официальным предложением магазина Kraken Lab по продаже товаров, представленных в данном Mini App.\n\n2. Оформление заказа\nПокупатель самостоятельно оформляет заказ через интерфейс приложения.\n\n3. Ограничение ответственности\nАдминистрация и магазин не несут ответственности за ненадлежащее использование товаров Покупателем, за задержки или сбои в доставке по вине транспортных/почтовых служб, а также за любые косвенные убытки или форс-мажорные обстоятельства. Все товары предоставляются по принципу «как есть».\n\n4. Возврат и обмен\nВозврат и обмен товаров осуществляется в соответствии с действующим законодательством.",
             privacy: "🔒 ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ\n\nМы уважаем вашу приватность. Все персональные данные используются исключительно для выполнения и доставки вашего заказа и не передаются третьим лицам."
         };
