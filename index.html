@@ -143,12 +143,30 @@
             <p class="text-white font-medium">м. Київ, вул. Остафія Дашкевича</p>
         </div>
 
+        <!-- ПРОМОКОД -->
+        <div class="space-y-1.5">
+            <label class="text-xs text-gray-400 font-medium">Промокод</label>
+            <div class="flex gap-2">
+                <div class="bg-[#121a29] border border-gray-800 rounded-xl px-3 py-2.5 flex items-center gap-3 flex-1">
+                    <span class="text-gray-400">🏷️</span>
+                    <input type="text" id="promo-input" placeholder="Введіть промокод (напр. KRAKEN)" class="w-full bg-transparent text-sm text-white focus:outline-none placeholder:text-gray-600 uppercase">
+                </div>
+                <button onclick="applyPromo()" class="px-4 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-bold text-white transition-all">Застосувати</button>
+            </div>
+            <p id="promo-msg" class="text-[11px] text-gray-400"></p>
+        </div>
+
         <div class="bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-2 shadow-xl">
             <div class="flex justify-between items-center text-sm font-bold">
                 <span class="text-white">До сплати</span>
                 <span id="cart-total-price" class="text-[#b8ff00] text-base">0 грн</span>
             </div>
         </div>
+
+        <!-- Текст согласия с офертой -->
+        <p class="text-[11px] text-gray-400 text-center leading-relaxed">
+            Натискаючи кнопку «Оформити замовлення», ви погоджуєтеся з <span onclick="openInfoModal('offer')" class="text-[#b8ff00] underline cursor-pointer">публічною офертою</span> та <span onclick="openInfoModal('privacy')" class="text-[#b8ff00] underline cursor-pointer">політикою конфіденційності</span>.
+        </p>
 
         <button onclick="submitOrder()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-extrabold text-white shadow-lg shadow-blue-600/30 active:scale-98 transition-all">Оформити замовлення</button>
     </div>
@@ -157,11 +175,7 @@
 <!-- ВКЛАДКА: ІСТОРІЯ -->
 <main id="tab-history" class="tab-content p-4 space-y-4 hidden">
     <h2 class="text-xl font-bold">Історія замовлень</h2>
-    <div class="bg-[#121a29] border border-gray-800 p-6 rounded-2xl text-center space-y-2">
-        <p class="text-3xl">📦</p>
-        <p class="text-sm font-bold">У вас поки немає замовлень</p>
-        <p class="text-xs text-gray-400">Оформіть перше замовлення в каталозі!</p>
-    </div>
+    <div id="history-container" class="space-y-3"></div>
 </main>
 
 <!-- НАВИГАЦИЯ -->
@@ -206,6 +220,7 @@
     let currentDetailProduct = null;
     let selectedFlavor = '';
     let detailQuantity = 1;
+    let discountPercent = 0;
 
     const ukrainianCities = [
         "Київ", "Софіївська Борщагівка", "Харків", "Одеса", "Дніпро", "Запоріжжя", "Львів", 
@@ -247,6 +262,21 @@
             document.getElementById('np-fields').classList.remove('hidden');
             document.getElementById('pickup-fields').classList.add('hidden');
         }
+    }
+
+    function applyPromo() {
+        const code = document.getElementById('promo-input').value.trim().toUpperCase();
+        const msg = document.getElementById('promo-msg');
+        if (code === 'KRAKEN') {
+            discountPercent = 10;
+            msg.className = 'text-[11px] text-[#b8ff00] font-bold';
+            msg.innerText = '✅ Промокод активовано! Знижка 10%';
+        } else {
+            discountPercent = 0;
+            msg.className = 'text-[11px] text-red-400 font-bold';
+            msg.innerText = '❌ Невірний промокод';
+        }
+        updateCartUI();
     }
 
     async function fetchAndRenderProducts() {
@@ -399,10 +429,10 @@
 
         checkoutForm.classList.remove('hidden');
         cartContainer.innerHTML = '';
-        let total = 0;
+        let subtotal = 0;
 
         cart.forEach((item, index) => {
-            total += item.price * item.count;
+            subtotal += item.price * item.count;
             const div = document.createElement('div');
             div.className = "bg-[#121a29] p-3 rounded-2xl border border-gray-800 flex justify-between items-center";
             div.innerHTML = `
@@ -420,7 +450,12 @@
             cartContainer.appendChild(div);
         });
 
-        document.getElementById('cart-total-price').innerText = `${total} грн`;
+        let finalTotal = subtotal;
+        if (discountPercent > 0) {
+            finalTotal = Math.round(subtotal * (1 - discountPercent / 100));
+        }
+
+        document.getElementById('cart-total-price').innerText = `${finalTotal} грн` + (discountPercent > 0 ? ` (знижка ${discountPercent}%)` : '');
     }
 
     function changeCount(index, delta) {
@@ -447,10 +482,49 @@
         } else if (tab === 'history') {
             document.getElementById('tab-history').classList.remove('hidden');
             document.getElementById('nav-history').classList.add('text-[#b8ff00]', 'active');
+            renderHistoryUI();
         }
     }
 
-    // Надежная прямая отправка заказа через Telegram API
+    function renderHistoryUI() {
+        const container = document.getElementById('history-container');
+        const orders = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
+
+        if (orders.length === 0) {
+            container.innerHTML = `
+                <div class="bg-[#121a29] border border-gray-800 p-6 rounded-2xl text-center space-y-2">
+                    <p class="text-3xl">📦</p>
+                    <p class="text-sm font-bold">У вас поки немає замовлень</p>
+                    <p class="text-xs text-gray-400">Оформіть перше замовлення в каталозі!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = '';
+        orders.slice().reverse().forEach((order) => {
+            let itemsStr = order.items.map(i => `${i.title} (${i.flavor || 'без смаку'}) x ${i.count}`).join(', ');
+            const div = document.createElement('div');
+            div.className = "bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-2 shadow-xl";
+            div.innerHTML = `
+                <div class="flex justify-between items-center text-xs text-gray-400 border-b border-gray-800 pb-2">
+                    <span>📅 ${order.date}</span>
+                    <span class="text-[#b8ff00] font-bold">⏳ Прийнято в обробку</span>
+                </div>
+                <p class="text-xs text-white"><strong class="text-gray-400">Товари:</strong> ${itemsStr}</p>
+                <p class="text-xs text-white"><strong class="text-gray-400">Доставка:</strong> ${order.delivery}</p>
+                <div class="flex justify-between items-center pt-2 border-t border-gray-800 text-sm font-extrabold">
+                    <span class="text-gray-300">Сума:</span>
+                    <span class="text-[#b8ff00]">${order.total} ₴</span>
+                </div>
+                <a href="https://t.me/telleportt" target="_blank" class="block w-full py-2 bg-gray-800 hover:bg-gray-700 text-center rounded-xl text-xs font-bold text-gray-300 transition-all mt-2">
+                    💬 Уточнити статус у менеджера
+                </a>
+            `;
+            container.appendChild(div);
+        });
+    }
+
     async function submitOrder() {
         const name = document.getElementById('order-name').value.trim();
         const phone = document.getElementById('order-phone').value.trim();
@@ -468,46 +542,80 @@
 
         if (cart.length === 0) { alert("⚠️ Кошик порожній!"); return; }
 
-        let total = 0;
+        let subtotal = 0;
         let itemsList = '';
         cart.forEach((item, idx) => {
             itemsList += `${idx + 1}. ${item.title}${item.flavor ? ` (${item.flavor})` : ''} — ${item.count} шт. х ${item.price} ₴\n`;
-            total += item.price * item.count;
+            subtotal += item.price * item.count;
         });
+
+        let total = subtotal;
+        if (discountPercent > 0) {
+            total = Math.round(subtotal * (1 - discountPercent / 100));
+        }
+
+        const isPickup = deliveryType === 'Pickup';
+        const deliveryDesc = isPickup ? 'Самовивіз (Київ, вул. Остафія Дашкевича)' : `Нова Пошта (${city}, відд. ${department})`;
 
         let text = `🛒 **НОВЕ ЗАМОВЛЕННЯ ІЗ САЙТУ**\n\n`;
         text += `👤 **Клієнт:** ${name}\n`;
         text += `📞 **Телефон:** ${phone}\n`;
-        text += `🚚 **Доставка:** ${deliveryType === 'Pickup' ? 'Самовивіз (Київ)' : 'Нова Пошта'}\n`;
-        if (deliveryType === 'NovaPoshta') {
-            text += `📍 **Місто:** ${city}\n`;
-            text += `📦 **Відділення:** ${department}\n`;
+        text += `🚚 **Доставка:** ${deliveryDesc}\n`;
+        if (isPickup) {
+            text += `⏱️ **Статус:** Потрібно узгодити час самовивозу!\n`;
+        }
+        if (discountPercent > 0) {
+            text += `🏷️ **Промокод:** KRAKEN (-${discountPercent}%)\n`;
         }
         text += `\n📋 **Товари:**\n${itemsList}\n`;
         text += `💰 **Загальна сума:** ${total} ₴`;
 
         const BOT_TOKEN = '8523927755:AAFrRQKOkmipfgFs6lx6F7WHiNeZAyRd-T4';
         const ADMIN_ID = '1005867951';
+        const clientId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
 
         try {
-            const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            // 1. Отправляем админу
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: ADMIN_ID,
-                    text: text,
-                    parse_mode: 'Markdown'
-                })
+                body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'Markdown' })
             });
 
-            if (response.ok) {
-                alert("✅ Дякуємо! Ваше замовлення успішно оформлено.");
-                cart = [];
-                updateCartUI();
-                if (tg) tg.close();
-            } else {
-                alert("Помилка відправки. Спробуйте ще раз.");
+            // 2. Отправляем клиенту
+            if (clientId) {
+                let clientMsg = `✅ **Дякуємо, ${name}! Ваше замовлення успішно прийнято.**\n\n` +
+                    `📦 Спосіб: **${deliveryDesc}**\n`;
+                
+                if (isPickup) {
+                    clientMsg += `\n⏱️ Оскільки це **самовивіз**, будь ласка, напишіть менеджеру @telleportt, щоб узгодити зручний час!`;
+                } else {
+                    clientMsg += `Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом.`;
+                }
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: clientId, text: clientMsg, parse_mode: 'Markdown' })
+                }).catch(() => {});
             }
+
+            // 3. Сохраняем в историю
+            const newOrder = {
+                date: new Date().toLocaleDateString('uk-UA') + ' ' + new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'}),
+                items: [...cart],
+                delivery: deliveryDesc,
+                total: total
+            };
+            const existingOrders = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
+            existingOrders.push(newOrder);
+            localStorage.setItem('kraken_orders', JSON.stringify(existingOrders));
+
+            alert("✅ Дякуємо! Замовлення успішно оформлено.");
+            cart = [];
+            discountPercent = 0;
+            updateCartUI();
+            if (tg) tg.close();
         } catch (err) {
             alert("Помилка мережі: " + err.message);
         }
@@ -516,8 +624,8 @@
     const infoTexts = {
         payment: "💳 Способи оплати:\n\n• Оплата банківською карткою (Visa / Mastercard)\n• Готівкою при отриманні у відділенні або кур'єру (Післяплата)",
         delivery: "📦 ДОСТАВКА\n\nОформлюючи замовлення, виберіть доставку у відділення НП або до дверей службою “Нова Пошта”. Також доступний самовивіз (вул. Остафія Дашкевича), час обговорюйте з менеджером @Telleportt.",
-        offer: "📄 ПУБЛІЧНА ОФЕРТА\n\n1. Загальні положення\nЦя оферта є офіційною пропозицією магазину Kraken Lab щодо продажу товарів.",
-        privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\nМи поважаємо вашу приватність."
+        offer: "📄 ПУБЛІЧНА ОФЕРТА\n\n1. Загальні положення\nЦя оферта є офіційною пропозицією магазину Kraken Lab щодо продажу товарів через інтернет-платформу.\n\n2. Порядок оформлення замовлення\nПокупець формує замовлення в кошику міні-додатка Telegram та підтверджує його передачу.\n\n3. Умови повернення та обміну\nТовари належної якості підлягають обміну та поверненню згідно з чинним законодавством України.",
+        privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\n1. Ми збираємо мінімально необхідні дані (ім'я, телефон, адреса доставки) виключно для виконання замовлення.\n\n2. Ваші дані не передаються третім особам та надійно захищені."
     };
 
     function openInfoModal(type) {
