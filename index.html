@@ -66,6 +66,33 @@
             <p class="text-xs">Завантаження каталогу...</p>
         </div>
     </div>
+
+    <!-- Соцсети и инфо -->
+    <div class="p-4 bg-[#121a29] rounded-2xl space-y-4 border border-gray-800/80 mt-6 shadow-xl">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-gray-400 font-medium">Соціальні мережі:</p>
+                <a href="https://t.me/KrakenLabliquid" target="_blank" class="w-8 h-8 rounded-full bg-[#24A1DE] flex items-center justify-center text-white text-sm hover:opacity-90 transition-all shadow-md active:scale-95 mt-1.5">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.68-.55.84-1.12.52l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.04 5.54-5.01c.24-.21-.05-.33-.37-.12l-6.85 4.31-2.95-.92c-.64-.2-.65-.64.13-.95l11.52-4.44c.53-.19 1 .13.82.89z"/></svg>
+                </a>
+            </div>
+            <div>
+                <p class="text-xs text-gray-400 mb-1 font-medium text-right">Оплата:</p>
+                <div class="flex gap-1">
+                    <span class="px-1.5 py-0.5 bg-white text-black rounded text-[9px] font-bold">VISA</span>
+                    <span class="px-1.5 py-0.5 bg-white text-black rounded text-[9px] font-bold">Mastercard</span>
+                    <span class="px-1.5 py-0.5 bg-gray-700 text-white rounded text-[9px] font-bold border border-gray-600">Готівка</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1.5 pt-1 border-t border-gray-800/60">
+            <button onclick="openInfoModal('payment')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Оплата</button>
+            <button onclick="openInfoModal('delivery')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Доставка</button>
+            <button onclick="openInfoModal('offer')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Оферта</button>
+        </div>
+        <button onclick="openInfoModal('privacy')" class="w-full py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Політика конфіденційності</button>
+    </div>
 </main>
 
 <!-- ВКЛАДКА: ДЕТАЛИ -->
@@ -142,10 +169,24 @@
     </div>
 </main>
 
+<!-- ВКЛАДКА: ІСТОРІЯ -->
+<main id="tab-history" class="tab-content p-4 space-y-4 hidden">
+    <h2 class="text-xl font-bold">Історія замовлень</h2>
+    <div class="bg-[#121a29] border border-gray-800 p-6 rounded-2xl text-center space-y-2">
+        <p class="text-3xl">📦</p>
+        <p class="text-sm font-bold">У вас поки немає замовлень</p>
+        <p class="text-xs text-gray-400">Оформіть перше замовлення в каталозі!</p>
+    </div>
+</main>
+
 <!-- НАВИГАЦИЯ -->
 <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#090d16]/95 backdrop-blur-lg border-t border-gray-800/80 px-2 py-1.5">
-    <div class="max-w-md mx-auto grid grid-cols-3 gap-1 text-center">
-        <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn active flex flex-col items-center justify-center py-1 rounded-xl text-[#b8ff00] transition-all">
+    <div class="max-w-md mx-auto grid grid-cols-4 gap-1 text-center">
+        <button onclick="switchTab('home')" id="nav-home" class="nav-btn active flex flex-col items-center justify-center py-1 rounded-xl text-[#b8ff00] transition-all">
+            <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span class="text-[10px] font-medium">Головна</span>
+        </button>
+        <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
             <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4v4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
             <span class="text-[10px] font-medium">Каталог</span>
         </button>
@@ -154,8 +195,21 @@
             <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
             <span class="text-[10px] font-medium">Кошик</span>
         </button>
+        <button onclick="switchTab('history')" id="nav-history" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
+            <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <span class="text-[10px] font-medium">Історія</span>
+        </button>
     </div>
 </nav>
+
+<!-- МОДАЛЬНОЕ ОКНО -->
+<div id="infoModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div class="bg-[#121a29] border border-gray-800 w-full max-w-sm rounded-2xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-2xl">
+        <h3 id="infoModalTitle" class="text-lg font-bold border-b border-gray-800 pb-2">Інформація</h3>
+        <div id="infoModalText" class="text-sm text-gray-300 overflow-y-auto space-y-2 pr-1 whitespace-pre-line leading-relaxed"></div>
+        <button onclick="closeInfoModal()" class="w-full py-2.5 bg-[#b8ff00] hover:opacity-90 rounded-xl text-xs font-bold text-black mt-auto active:scale-98 transition-all">Закрити</button>
+    </div>
+</div>
 
 <script>
     const SPREADSHEET_ID = '1-al9u_eJ1l6GRV0h6A3gxgm_bZSI-AlUHVQWDMMbWJM';
@@ -168,12 +222,35 @@
     let selectedFlavor = '';
     let detailQuantity = 1;
 
+    const ukrainianCities = [
+        "Київ", "Софіївська Борщагівка", "Харків", "Одеса", "Дніпро", "Запоріжжя", "Львів", 
+        "Кривий Ріг", "Миколаїв", "Вінниця", "Херсон", "Полтава", 
+        "Чернігів", "Черкаси", "Житомир", "Суми", "Хмельницький", 
+        "Рівне", "Кропивницький", "Чернівці", "Кременчук", 
+        "Івано-Франківськ", "Тернопіль", "Біла Церква", "Луцьк", "Ужгород"
+    ];
+
     const tg = window.Telegram ? window.Telegram.WebApp : null;
     if (tg) {
         tg.expand();
         if (tg.initDataUnsafe?.user?.first_name) {
             document.getElementById('order-name').value = tg.initDataUnsafe.user.first_name + (tg.initDataUnsafe.user.last_name ? ' ' + tg.initDataUnsafe.user.last_name : '');
         }
+    }
+
+    function onCityInput() {
+        const val = document.getElementById('city-input').value.trim().toLowerCase();
+        const dropdown = document.getElementById('city-dropdown');
+        if (!val) { dropdown.classList.add('hidden'); return; }
+        const filtered = ukrainianCities.filter(c => c.toLowerCase().includes(val));
+        if (filtered.length === 0) { dropdown.classList.add('hidden'); return; }
+        dropdown.innerHTML = filtered.map(c => `<div onclick="selectCity('${c}')" class="px-3 py-2.5 hover:bg-gray-800 cursor-pointer text-xs text-white border-b border-gray-800/50">${c}</div>`).join('');
+        dropdown.classList.remove('hidden');
+    }
+
+    function selectCity(city) {
+        document.getElementById('city-input').value = city;
+        document.getElementById('city-dropdown').classList.add('hidden');
     }
 
     function changeDeliveryType() {
@@ -222,7 +299,7 @@
         });
 
         if (filtered.length === 0) {
-            container.innerHTML = `<div class="col-span-2 p-8 text-center text-gray-400 text-xs">Немає товарів</div>`;
+            container.innerHTML = `<div class="col-span-2 p-8 text-center text-gray-400 text-xs">Немає товарів у цій категорії</div>`;
             return;
         }
 
@@ -307,6 +384,19 @@
         switchTab('cart');
     }
 
+    function setCategory(cat) {
+        selectedCategory = cat;
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.className = "cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all";
+        });
+        if (event && event.target) {
+            event.target.className = "cat-btn active bg-[#b8ff00] text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-md shadow-[#b8ff00]/10";
+        }
+        const titles = { 'all': 'Всі товари', 'liquid': 'Рідини', 'cartridge': 'Картриджі', 'device': 'Пристрої', 'accessory': 'Аксесуари' };
+        document.getElementById('category-title').innerText = titles[cat] || 'Товари';
+        renderFilteredProducts();
+    }
+
     function updateCartUI() {
         const badge = document.getElementById('cart-badge');
         const totalCount = cart.reduce((s, i) => s + i.count, 0);
@@ -356,16 +446,22 @@
 
     function switchTab(tab) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('text-[#b8ff00]', 'active'));
+        document.querySelectorAll('.nav-btn').forEach(b => {
+            b.classList.remove('text-[#b8ff00]', 'active');
+            b.classList.add('text-gray-400');
+        });
 
-        if (tab === 'catalog') {
+        if (tab === 'home' || tab === 'catalog') {
             document.getElementById('tab-catalog').classList.remove('hidden');
-            document.getElementById('nav-catalog').classList.add('text-[#b8ff00]', 'active');
+            document.getElementById(tab === 'home' ? 'nav-home' : 'nav-catalog').classList.add('text-[#b8ff00]', 'active');
         } else if (tab === 'detail') {
             document.getElementById('tab-product-detail').classList.remove('hidden');
         } else if (tab === 'cart') {
             document.getElementById('tab-cart').classList.remove('hidden');
             document.getElementById('nav-cart').classList.add('text-[#b8ff00]', 'active');
+        } else if (tab === 'history') {
+            document.getElementById('tab-history').classList.remove('hidden');
+            document.getElementById('nav-history').classList.add('text-[#b8ff00]', 'active');
         }
     }
 
@@ -376,15 +472,15 @@
         const city = document.getElementById('city-input').value.trim();
         const department = document.getElementById('department-input').value.trim();
 
-        if (!name) { alert("⚠️ Будь ласка, введіть ваше Ім'я!"); return; }
-        if (!phone || phone === '+380') { alert("⚠️ Будь ласка, введіть номер телефону!"); return; }
+        if (!name) { alert("⚠️ Введіть ваше ім'я!"); return; }
+        if (!phone || phone === '+380') { alert("⚠️ Введіть номер телефону!"); return; }
 
         if (deliveryType === 'NovaPoshta') {
-            if (!city) { alert("⚠️ Будь ласка, вкажіть місто доставки!"); return; }
-            if (!department) { alert("⚠️ Будь ласка, вкажіть номер відділення Нової Пошти!"); return; }
+            if (!city) { alert("⚠️ Вкажіть місто доставки!"); return; }
+            if (!department) { alert("⚠️ Вкажіть номер відділення Нової Пошти!"); return; }
         }
 
-        if (cart.length === 0) { alert("⚠️ Ваш кошик порожній!"); return; }
+        if (cart.length === 0) { alert("⚠️ Кошик порожній!"); return; }
 
         let total = 0;
         let itemsList = '';
@@ -410,6 +506,23 @@
         } else {
             alert("Замовлення відправлено!\n\n" + text);
         }
+    }
+
+    const infoTexts = {
+        payment: "💳 Способи оплати:\n\n• Оплата банківською карткою (Visa / Mastercard)\n• Готівкою при отриманні у відділенні або кур'єру (Післяплата)",
+        delivery: "📦 ДОСТАВКА\n\nОформлюючи замовлення, виберіть доставку у відділення НП або до дверей службою “Нова Пошта”. Також доступний самовивіз (вул. Остафія Дашкевича), час обговорюйте з менеджером @Telleportt.",
+        offer: "📄 ПУБЛІЧНА ОФЕРТА\n\n1. Загальні положення\nЦя оферта є офіційною пропозицією магазину Kraken Lab щодо продажу товарів.",
+        privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\nМи поважаємо вашу приватність."
+    };
+
+    function openInfoModal(type) {
+        document.getElementById('infoModalTitle').innerText = "Інформація";
+        document.getElementById('infoModalText').innerText = infoTexts[type];
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+
+    function closeInfoModal() {
+        document.getElementById('infoModal').style.display = 'none';
     }
 
     fetchAndRenderProducts();
