@@ -225,8 +225,9 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://osmeveovehxgktmprmsh.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zbWV2ZW92ZWh4Z2t0bXBybXNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzNDk4OTgsImV4cCI6MjEwNzkyNTg5OH0.c02JXer1IQSpbTRJ81pnONTj-kSwOmC9XzLIGJZwGX8';
+        // Подключение к твоей Google Таблице
+        const SPREADSHEET_ID = '1-al9u_eJ1l6GRV0h6A3gxgm_bZSI-AlUHVQWDMMbWJM';
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
 
         let allProducts = [];
         let selectedCategory = 'all';
@@ -236,7 +237,7 @@
         let detailQuantity = 1;
 
         const ukrainianCities = [
-            "Київ", "Харків", "Одеса", "Дніпро", "Запоріжжя", "Львів", 
+            "Київ", "Софіївська Борщагівка", "Харків", "Одеса", "Дніпро", "Запоріжжя", "Львів", 
             "Кривий Ріг", "Миколаїв", "Вінниця", "Херсон", "Полтава", 
             "Чернігів", "Черкаси", "Житомир", "Суми", "Хмельницький", 
             "Рівне", "Кропивницький", "Чернівці", "Кременчук", 
@@ -277,7 +278,6 @@
             }
         }
 
-        // ПОИСК ВКУСОВ ПО ВСЕМ ВОЗМОЖНЫМ КОЛОНКАМ
         function parseFlavors(product) {
             const raw = product.flavors || product.taste || product.flavor || product.options || product.tastes;
             if (!raw) return [];
@@ -296,36 +296,49 @@
         async function fetchAndRenderProducts() {
             const container = document.getElementById('products-container');
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.desc`, {
-                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-                });
-                if (!response.ok) throw new Error(`Помилка API: ${response.statusText}`);
-                allProducts = await response.json();
+                const response = await fetch(SHEET_URL);
+                const text = await response.text();
+                
+                const jsonString = text.substring(47, text.length - 2);
+                const data = JSON.parse(jsonString);
+
+                const rows = data.table.rows;
+                allProducts = rows.map((row, index) => {
+                    const c = row.c;
+                    return {
+                        id: index + 1,
+                        title: c[0] ? c[0].v : '',
+                        category: c[1] ? c[1].v : '',
+                        price: c[2] ? c[2].v : 0,
+                        flavors: c[3] ? c[3].v : '',
+                        image: c[4] ? c[4].v : ''
+                    };
+                }).filter(p => p.title);
+
                 renderFilteredProducts();
             } catch (error) {
                 container.innerHTML = `<p class="col-span-2 text-red-400 text-center text-xs p-4 bg-[#121a29] rounded-2xl border border-gray-800">Помилка завантаження: ${error.message}</p>`;
             }
         }
 
-        // ГИБКАЯ УМНАЯ ФИЛЬТРАЦИЯ КАТЕГОРИЙ
         function renderFilteredProducts() {
             const container = document.getElementById('products-container');
             
             let filtered = allProducts.filter(p => {
                 if (selectedCategory === 'all') return true;
-                const cat = (p.category || p.cat || '').toLowerCase();
+                const cat = (p.category || '').toLowerCase();
                 
                 if (selectedCategory === 'liquid') {
-                    return cat.includes('жид') || cat.includes('рідин') || cat.includes('liqv') || cat.includes('juice');
+                    return cat.includes('liquid') || cat.includes('жид') || cat.includes('рідин');
                 }
                 if (selectedCategory === 'cartridge') {
-                    return cat.includes('карт') || cat.includes('cartridge') || cat.includes('испар');
+                    return cat.includes('cartridge') || cat.includes('карт');
                 }
                 if (selectedCategory === 'device') {
-                    return cat.includes('пристр') || cat.includes('устрой') || cat.includes('pod') || cat.includes('девайс');
+                    return cat.includes('device') || cat.includes('пристр') || cat.includes('устрой');
                 }
                 if (selectedCategory === 'accessory') {
-                    return cat.includes('аксес') || cat.includes('acc');
+                    return cat.includes('accessory') || cat.includes('аксес');
                 }
                 return true;
             });
@@ -337,7 +350,7 @@
 
             container.innerHTML = '';
             filtered.forEach(product => {
-                const title = product.title || product.name || 'Товар';
+                const title = product.title || 'Товар';
                 const price = product.price || 0;
                 const image = product.image ? `<img src="${product.image}" class="w-full h-32 object-cover rounded-xl mb-2 shadow-md pointer-events-none" alt="${title}">` : `<div class="w-full h-32 bg-gray-800/50 rounded-xl mb-2 flex items-center justify-center text-2xl">📦</div>`;
 
@@ -368,9 +381,8 @@
             const flavors = parseFlavors(product);
             selectedFlavor = flavors.length > 0 ? flavors[0] : '';
 
-            const title = product.title || product.name || 'Товар';
+            const title = product.title || 'Товар';
             const price = product.price || 0;
-            const oldPrice = product.old_price ? `<span class="line-through text-gray-500 text-xs mr-1">${product.old_price} грн</span>` : '';
             const image = product.image ? `<img src="${product.image}" class="w-full h-64 object-cover rounded-3xl shadow-xl border border-gray-800" alt="${title}">` : `<div class="w-full h-48 bg-gray-800/50 rounded-3xl flex items-center justify-center text-4xl mb-2">📦</div>`;
 
             let flavorsHtml = '';
@@ -393,14 +405,12 @@
                 ${image}
                 <div class="space-y-1">
                     <h2 class="text-2xl font-extrabold text-white">${title}</h2>
-                    <p class="text-xs text-gray-400 font-medium">30 мл • 5.0%</p>
                 </div>
 
                 ${flavorsHtml}
 
                 <div class="flex items-center justify-between pt-4 border-t border-gray-800/80 mt-6">
                     <div>
-                        ${oldPrice}
                         <p class="text-2xl font-extrabold text-red-500"><span id="detail-total-price">${price}</span> грн</p>
                         <p class="text-[10px] text-gray-500">ціна за шт.</p>
                     </div>
@@ -446,7 +456,7 @@
             } else {
                 cart.push({
                     id: currentDetailProduct.id,
-                    title: currentDetailProduct.title || currentDetailProduct.name,
+                    title: currentDetailProduct.title,
                     price: currentDetailProduct.price,
                     image: currentDetailProduct.image,
                     flavor: selectedFlavor,
@@ -454,7 +464,7 @@
                 });
             }
 
-            showToast(currentDetailProduct.title || currentDetailProduct.name, selectedFlavor, currentDetailProduct.image);
+            showToast(currentDetailProduct.title, selectedFlavor, currentDetailProduct.image);
             updateCartUI();
             if(tg) tg.HapticFeedback?.impactOccurred('medium');
         }
@@ -567,7 +577,6 @@
             }
         }
 
-        // НАДЕЖНАЯ ОТПРАВКА ЗАКАЗА И ОТКРЫТИЕ ДИАЛОГА
         function submitOrder() {
             const name = document.getElementById('order-name').value.trim();
             const phone = document.getElementById('order-phone').value.trim();
@@ -609,12 +618,10 @@
             text += `📞 Тел: ${phone}\n\n`;
             text += `👨‍💻 Менеджер: @Telleportt`;
 
-            // 1. Пытаемся отправить данные боту
             if (tg && tg.sendData) {
                 try { tg.sendData(text); } catch(e) {}
             }
 
-            // 2. Открываем прямой чат с менеджером @Telleportt с готовым сообщением
             const managerUrl = `https://t.me/Telleportt?text=${encodeURIComponent(text)}`;
             if (tg && tg.openTelegramLink) {
                 tg.openTelegramLink(managerUrl);
