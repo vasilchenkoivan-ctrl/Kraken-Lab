@@ -13,10 +13,11 @@
 </head>
 <body class="bg-[#090d16] text-white min-h-screen pb-28 font-sans select-none antialiased">
 
-    <!-- Уведомление "Товар добавлено в корзину" -->
+    <!-- Уведомление "Товар додано до кошика" -->
     <div id="toast-notification" class="fixed top-3 left-4 right-4 z-50 bg-[#121a29]/95 border border-gray-700/80 rounded-2xl p-3 flex items-center justify-between shadow-2xl backdrop-blur-md transform -translate-y-24 transition-transform duration-300">
         <div class="flex items-center gap-3">
-            <img id="toast-img" src="" class="w-10 h-10 object-cover rounded-xl border border-gray-700" alt="">
+            <img id="toast-img" src="" class="w-10 h-10 object-cover rounded-xl border border-gray-700 hidden" alt="">
+            <div id="toast-icon" class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-xl">📦</div>
             <div>
                 <h4 class="text-xs font-bold text-white">Товар додано до кошика</h4>
                 <p id="toast-title" class="text-[11px] text-gray-400 font-medium"></p>
@@ -48,10 +49,10 @@
             <h2 class="text-sm font-bold text-gray-400 mb-2">Категорії</h2>
             <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
                 <button onclick="setCategory('all')" class="cat-btn active bg-[#b8ff00] text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-md shadow-[#b8ff00]/10">Всі товари</button>
-                <button onclick="setCategory('Жидкости')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Рідини</button>
-                <button onclick="setCategory('Картриджи')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Картриджі</button>
-                <button onclick="setCategory('Устройства')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Пристрої</button>
-                <button onclick="setCategory('Аксессуары')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Аксесуари</button>
+                <button onclick="setCategory('liquid')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Рідини</button>
+                <button onclick="setCategory('cartridge')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Картриджі</button>
+                <button onclick="setCategory('device')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Пристрої</button>
+                <button onclick="setCategory('accessory')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Аксесуари</button>
             </div>
         </div>
 
@@ -158,7 +159,6 @@
                 </div>
             </div>
 
-            <!-- Блок самовывоза с нужным текстом про время и менеджера -->
             <div id="pickup-fields" class="bg-[#121a29] border border-gray-800 p-3.5 rounded-xl hidden text-xs text-gray-300 space-y-1">
                 <p class="font-bold text-[#b8ff00] text-sm">📍 Самовивіз із магазину Kraken Lab</p>
                 <p class="text-white font-medium">м. Київ, вул. Остафія Дашкевича</p>
@@ -277,8 +277,9 @@
             }
         }
 
+        // ПОИСК ВКУСОВ ПО ВСЕМ ВОЗМОЖНЫМ КОЛОНКАМ
         function parseFlavors(product) {
-            const raw = product.flavors || product.taste || product.flavor || product.options;
+            const raw = product.flavors || product.taste || product.flavor || product.options || product.tastes;
             if (!raw) return [];
             if (Array.isArray(raw)) return raw;
             if (typeof raw === 'string') {
@@ -286,7 +287,7 @@
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed)) return parsed;
                 } catch(e) {
-                    return raw.split(',').map(s => s.trim()).filter(Boolean);
+                    return raw.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
                 }
             }
             return [];
@@ -306,12 +307,31 @@
             }
         }
 
+        // ГИБКАЯ УМНАЯ ФИЛЬТРАЦИЯ КАТЕГОРИЙ
         function renderFilteredProducts() {
             const container = document.getElementById('products-container');
-            let filtered = allProducts.filter(p => selectedCategory === 'all' || (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase()));
+            
+            let filtered = allProducts.filter(p => {
+                if (selectedCategory === 'all') return true;
+                const cat = (p.category || p.cat || '').toLowerCase();
+                
+                if (selectedCategory === 'liquid') {
+                    return cat.includes('жид') || cat.includes('рідин') || cat.includes('liqv') || cat.includes('juice');
+                }
+                if (selectedCategory === 'cartridge') {
+                    return cat.includes('карт') || cat.includes('cartridge') || cat.includes('испар');
+                }
+                if (selectedCategory === 'device') {
+                    return cat.includes('пристр') || cat.includes('устрой') || cat.includes('pod') || cat.includes('девайс');
+                }
+                if (selectedCategory === 'accessory') {
+                    return cat.includes('аксес') || cat.includes('acc');
+                }
+                return true;
+            });
 
             if (filtered.length === 0) {
-                container.innerHTML = `<p class="col-span-2 text-center text-gray-400 text-sm py-8 bg-[#121a29] rounded-2xl border border-gray-800">Товарів не знайдено</p>`;
+                container.innerHTML = `<p class="col-span-2 text-center text-gray-400 text-sm py-8 bg-[#121a29] rounded-2xl border border-gray-800">Товарів у цій категорії поки немає</p>`;
                 return;
             }
 
@@ -351,7 +371,7 @@
             const title = product.title || product.name || 'Товар';
             const price = product.price || 0;
             const oldPrice = product.old_price ? `<span class="line-through text-gray-500 text-xs mr-1">${product.old_price} грн</span>` : '';
-            const image = product.image ? `<img src="${product.image}" class="w-full h-64 object-cover rounded-3xl shadow-xl border border-gray-800" alt="${title}">` : '';
+            const image = product.image ? `<img src="${product.image}" class="w-full h-64 object-cover rounded-3xl shadow-xl border border-gray-800" alt="${title}">` : `<div class="w-full h-48 bg-gray-800/50 rounded-3xl flex items-center justify-center text-4xl mb-2">📦</div>`;
 
             let flavorsHtml = '';
             if (flavors.length > 0) {
@@ -441,8 +461,19 @@
 
         function showToast(title, flavor, img) {
             const toast = document.getElementById('toast-notification');
+            const imgEl = document.getElementById('toast-img');
+            const iconEl = document.getElementById('toast-icon');
+
             document.getElementById('toast-title').innerText = `${title} ${flavor ? `— ${flavor}` : ''}`;
-            document.getElementById('toast-img').src = img || 'https://via.placeholder.com/40';
+            
+            if (img) {
+                imgEl.src = img;
+                imgEl.classList.remove('hidden');
+                iconEl.classList.add('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                iconEl.classList.remove('hidden');
+            }
             
             toast.classList.remove('-translate-y-24');
             setTimeout(() => {
@@ -457,7 +488,7 @@
             });
             event.target.className = "cat-btn active bg-[#b8ff00] text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-md shadow-[#b8ff00]/10";
             
-            const titles = { 'all': 'Всі товари', 'Жидкости': 'Рідини', 'Картриджи': 'Картриджі', 'Устройства': 'Пристрої', 'Аксессуары': 'Аксесуари' };
+            const titles = { 'all': 'Всі товари', 'liquid': 'Рідини', 'cartridge': 'Картриджі', 'device': 'Пристрої', 'accessory': 'Аксесуари' };
             document.getElementById('category-title').innerText = titles[cat] || 'Товари';
             renderFilteredProducts();
         }
@@ -536,7 +567,7 @@
             }
         }
 
-        // ОТПРАВКА ДАННЫХ ЗАКАЗА ПРЯМО В БОТ ЧЕРЕЗ tg.sendData()
+        // НАДЕЖНАЯ ОТПРАВКА ЗАКАЗА И ОТКРЫТИЕ ДИАЛОГА
         function submitOrder() {
             const name = document.getElementById('order-name').value.trim();
             const phone = document.getElementById('order-phone').value.trim();
@@ -578,26 +609,25 @@
             text += `📞 Тел: ${phone}\n\n`;
             text += `👨‍💻 Менеджер: @Telleportt`;
 
-            // Передаем данные прямо в бот через встроенный метод Telegram WebApp
+            // 1. Пытаемся отправить данные боту
             if (tg && tg.sendData) {
-                try {
-                    tg.sendData(text);
-                    tg.close();
-                    return;
-                } catch(e) {
-                    console.error(e);
-                }
+                try { tg.sendData(text); } catch(e) {}
             }
 
-            // Если открыто в обычном браузере для проверки
-            alert("Замовлення сформовано! (Для відправки в бот відкрийте додаток у Telegram)");
+            // 2. Открываем прямой чат с менеджером @Telleportt с готовым сообщением
+            const managerUrl = `https://t.me/Telleportt?text=${encodeURIComponent(text)}`;
+            if (tg && tg.openTelegramLink) {
+                tg.openTelegramLink(managerUrl);
+            } else {
+                window.open(managerUrl, '_blank');
+            }
         }
 
         const infoTexts = {
             payment: "💳 Способи оплати:\n\n• Оплата банківською карткою (Visa / Mastercard)\n• Готівкою при отриманні у відділенні або кур'єру (Післяплата)",
             delivery: "📦 ДОСТАВКА\n\nОформлюючи замовлення, виберіть доставку у відділення НП або до дверей службою “Нова Пошта”. Також доступний самовивіз (вул. Остафія Дашкевича), час обговорюйте з менеджером @Telleportt.",
             offer: "📄 ПУБЛІЧНА ОФЕРТА\n\n1. Загальні положення\nЦя оферта є офіційною пропозицією магазину Kraken Lab щодо продажу товарів.",
-            privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\nМы поважаємо вашу приватність."
+            privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\nМи поважаємо вашу приватність."
         };
 
         function openInfoModal(type) {
