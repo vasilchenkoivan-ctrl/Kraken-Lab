@@ -9,7 +9,10 @@ const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Обробка команди /start з твоїм привітанням
+// Ссылка на твоё Mini App на Vercel
+const MINI_APP_URL = "https://krakenlab.vercel.app/";
+
+// Обработка команды /start
 bot.start((ctx) => {
     ctx.reply(
         "Вітаємо в 🐙KrakenLab🧪\n" +
@@ -20,25 +23,27 @@ bot.start((ctx) => {
         {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "🛍 Відкрити магазин", web_app: { url: "https://kraken-lab.onrender.com" } }]
+                    [{ text: "🛍 Відкрити магазин", web_app: { url: MINI_APP_URL } }]
                 ]
             }
         }
     );
 });
 
-// Обробка замовлення з Mini App
+// Обработка заказа из Mini App (когда нажимают "Оформить заказ")
 bot.on('web_app_data', async (ctx) => {
     try {
         const orderData = ctx.webAppData.data.text();
         const clientName = ctx.from.first_name || 'Клієнт';
 
+        // Ответ клиенту
         await ctx.reply(
             `✅ **Дякуємо, ${clientName}! Ваше замовлення успішно прийнято.**\n\n` +
             `Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом для підтвердження.`,
             { parse_mode: 'Markdown' }
         );
 
+        // Уведомление админу
         await bot.telegram.sendMessage(
             ADMIN_CHAT_ID,
             `📥 **НОВЕ ЗАМОВЛЕННЯ ІЗ САЙТУ!**\n\n` +
@@ -52,21 +57,21 @@ bot.on('web_app_data', async (ctx) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('Kraken Lab Bot is running via Webhook!');
+    res.send('Kraken Lab Bot is running!');
 });
 
 const PORT = process.env.PORT || 10000;
-const RENDER_EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL;
 
 app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
-    
-    if (RENDER_EXTERNAL_URL) {
-        await bot.telegram.setWebhook(`${RENDER_EXTERNAL_URL}/bot${BOT_TOKEN}`);
-        app.use(bot.webhookCallback(`/bot${BOT_TOKEN}`));
-        console.log(`Webhook set to ${RENDER_EXTERNAL_URL}`);
-    } else {
-        bot.launch();
-        console.log('Bot started via polling');
+    try {
+        await bot.telegram.deleteWebhook({ drop_pending_updates: true });
+        await bot.launch();
+        console.log('Bot successfully started!');
+    } catch (err) {
+        console.error('Помилка запуску бота:', err);
     }
 });
+
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
