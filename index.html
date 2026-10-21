@@ -483,17 +483,36 @@
     if (cart.length === 0) { alert("⚠️ Кошик порожній!"); return; }
 
     let total = 0;
-    cart.forEach(item => { total += item.price * item.count; });
+    let itemsList = '';
+    cart.forEach((item, idx) => {
+        itemsList += `${idx + 1}. ${item.title}${item.flavor ? ` (${item.flavor})` : ''} — ${item.count} шт. х ${item.price} ₴\n`;
+        total += item.price * item.count;
+    });
 
-    // Получаем ID пользователя из Telegram, чтобы бот мог написать ему в личку
-    const userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+    let text = `🛒 **НОВЕ ЗАМОВЛЕННЯ ІЗ САЙТУ**\n\n`;
+    text += `👤 **Клієнт:** ${name}\n`;
+    text += `📞 **Телефон:** ${phone}\n`;
+    text += `🚚 **Доставка:** ${deliveryType === 'Pickup' ? 'Самовивіз (Київ)' : 'Нова Пошта'}\n`;
+    if (deliveryType === 'NovaPoshta') {
+        text += `📍 **Місто:** ${city}\n`;
+        text += `📦 **Відділення:** ${department}\n`;
+    }
+    text += `\n📋 **Товари:**\n${itemsList}\n`;
+    text += `💰 **Загальна сума:** ${total} ₴`;
+
+    const BOT_TOKEN = '8523927755:AAFrRQKOkmipfgFs6lx6F7WHiNeZAyRd-T4';
+    const ADMIN_ID = '1005867951';
 
     try {
-        // Отправляем заказ на твой бэкенд на Render
-        const response = await fetch('https:// твой-бэкенд-на-render .onrender.com/api/order', {
+        // Прямая отправка администратору в Telegram
+        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, phone, deliveryType, city, department, cart, total, userId })
+            body: JSON.stringify({
+                chat_id: ADMIN_ID,
+                text: text,
+                parse_mode: 'Markdown'
+            })
         });
 
         if (response.ok) {
@@ -502,7 +521,7 @@
             updateCartUI();
             if (tg) tg.close();
         } else {
-            alert("Помилка відправки. Спробуйте ще раз.");
+            alert("Помилка відправки замовлення. Спробуйте ще раз.");
         }
     } catch (err) {
         alert("Помилка мережі: " + err.message);
