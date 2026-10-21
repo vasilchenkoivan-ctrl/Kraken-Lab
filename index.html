@@ -13,7 +13,7 @@
 </head>
 <body class="bg-[#090d16] text-white min-h-screen pb-28 font-sans select-none antialiased">
 
-    <!-- Уведомление "Товар добавлено в корзину" (как на скриншоте) -->
+    <!-- Уведомление "Товар добавлено в корзину" -->
     <div id="toast-notification" class="fixed top-3 left-4 right-4 z-50 bg-[#121a29]/95 border border-gray-700/80 rounded-2xl p-3 flex items-center justify-between shadow-2xl backdrop-blur-md transform -translate-y-24 transition-transform duration-300">
         <div class="flex items-center gap-3">
             <img id="toast-img" src="" class="w-10 h-10 object-cover rounded-xl border border-gray-700" alt="">
@@ -95,15 +95,13 @@
         </div>
     </main>
 
-    <!-- ВКЛАДКА: ДЕТАЛИ ТОВАРА И ВЫБОР ВКУСОВ (Точно как на скриншоте!) -->
+    <!-- ВКЛАДКА: ДЕТАЛИ ТОВАРА -->
     <main id="tab-product-detail" class="tab-content hidden pb-6">
         <button onclick="switchTab('catalog')" class="p-3 text-sm text-gray-400 flex items-center gap-1 hover:text-white">
             ← Назад до каталогу
         </button>
 
-        <div id="product-detail-container" class="px-4 space-y-5">
-            <!-- Сюда динамически загрузится картинка, название, вкус, переключатель и цена -->
-        </div>
+        <div id="product-detail-container" class="px-4 space-y-5"></div>
     </main>
 
     <!-- ВКЛАДКА: КОШИК -->
@@ -160,9 +158,11 @@
                 </div>
             </div>
 
-            <div id="pickup-fields" class="bg-[#121a29] border border-gray-800 p-3.5 rounded-xl hidden text-xs text-gray-300 space-y-1.5">
-                <p class="font-bold text-[#b8ff00] text-sm">📍 Адреса самовивозу:</p>
+            <!-- Блок самовывоза с нужным текстом про время и менеджера -->
+            <div id="pickup-fields" class="bg-[#121a29] border border-gray-800 p-3.5 rounded-xl hidden text-xs text-gray-300 space-y-1">
+                <p class="font-bold text-[#b8ff00] text-sm">📍 Самовивіз із магазину Kraken Lab</p>
                 <p class="text-white font-medium">м. Київ, вул. Остафія Дашкевича</p>
+                <p class="text-[11px] text-gray-400 pt-1">⏳ Час обговорюйте з менеджером <span class="text-blue-400 font-semibold">@Telleportt</span></p>
             </div>
 
             <div class="bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-2 shadow-xl">
@@ -339,7 +339,6 @@
             });
         }
 
-        // ОТКРЫТИЕ ПОЛНОЦЕННОЙ СТРАНИЦЫ ТОВАРА (КАК НА СКРИНШОТЕ)
         function openProductDetail(productId) {
             const product = allProducts.find(p => p.id == productId);
             if (!product) return;
@@ -386,7 +385,6 @@
                         <p class="text-[10px] text-gray-500">ціна за шт.</p>
                     </div>
 
-                    <!-- Переключатель количества < 1 > -->
                     <div class="flex items-center bg-[#121a29] border border-gray-800 rounded-2xl overflow-hidden p-1 shadow-inner">
                         <button onclick="updateDetailQty(-1)" class="w-10 h-10 flex items-center justify-center text-gray-300 font-bold hover:bg-gray-800 rounded-xl transition-all">&lt;</button>
                         <span id="detail-qty" class="w-10 text-center font-bold text-sm text-white">1</span>
@@ -538,7 +536,7 @@
             }
         }
 
-        // ОТПРАВКА ЗАКАЗА — НАПРЯМУЮ МЕНЕДЖЕРУ
+        // ОТПРАВКА ДАННЫХ ЗАКАЗА ПРЯМО В БОТ ЧЕРЕЗ tg.sendData()
         function submitOrder() {
             const name = document.getElementById('order-name').value.trim();
             const phone = document.getElementById('order-phone').value.trim();
@@ -556,38 +554,50 @@
                 return;
             }
 
-            let text = `🛒 НОВЕ ЗАМОВЛЕННЯ — Kraken Lab\n\n`;
-            text += `👤 ПІБ: ${name}\n`;
-            text += `📞 Телефон: ${phone}\n`;
-            text += `🚚 Спосіб доставки: ${deliveryType === 'NovaPoshta' ? 'Нова Пошта' : 'Самовивіз (вул. Остафія Дашкевича)'}\n`;
-            if (deliveryType === 'NovaPoshta') {
-                text += `🏙 Місто: ${city}\n`;
-                text += `📦 Відділення: ${department}\n`;
-            }
-            text += `\n--- Склад замовлення ---\n`;
-
+            const orderNum = Math.floor(100000 + Math.random() * 900000);
             let total = 0;
+            let itemsList = '';
             cart.forEach(item => {
-                text += `• ${item.title} ${item.flavor ? `[Смак: ${item.flavor}]` : ''} x${item.count} = ${item.price * item.count} ₴\n`;
+                itemsList += `• ${item.title} ${item.flavor ? `[${item.flavor}]` : ''} x${item.count} = ${item.price * item.count} ₴\n`;
                 total += item.price * item.count;
             });
-            text += `\nРазом до сплати: ${total} ₴`;
 
-            // Переход на менеджера
-            const managerUrl = `https://t.me/KrakenLabliquid?text=${encodeURIComponent(text)}`;
-            
-            if (tg && tg.openTelegramLink) {
-                tg.openTelegramLink(managerUrl);
+            let text = `🛒 НОВЕ ЗАМОВЛЕННЯ #${orderNum}\n\n`;
+            if (deliveryType === 'Pickup') {
+                text += `🛍 Самовивіз із магазину Kraken Lab\n(м. Київ, вул. Остафія Дашкевича)\n`;
+                text += `⏳ Час обговорюйте з менеджером @Telleportt\n\n`;
             } else {
-                window.open(managerUrl, '_blank');
+                text += `🚚 Доставка Новою Поштою\n`;
+                text += `🏙 Місто: ${city}\n`;
+                text += `📦 Відділення: ${department}\n\n`;
             }
+
+            text += `--- Склад замовлення ---\n${itemsList}\n`;
+            text += `💰 Разом до сплати: ${total}.00 ₴\n\n`;
+            text += `👤 Отримувач: ${name}\n`;
+            text += `📞 Тел: ${phone}\n\n`;
+            text += `👨‍💻 Менеджер: @Telleportt`;
+
+            // Передаем данные прямо в бот через встроенный метод Telegram WebApp
+            if (tg && tg.sendData) {
+                try {
+                    tg.sendData(text);
+                    tg.close();
+                    return;
+                } catch(e) {
+                    console.error(e);
+                }
+            }
+
+            // Если открыто в обычном браузере для проверки
+            alert("Замовлення сформовано! (Для відправки в бот відкрийте додаток у Telegram)");
         }
 
         const infoTexts = {
             payment: "💳 Способи оплати:\n\n• Оплата банківською карткою (Visa / Mastercard)\n• Готівкою при отриманні у відділенні або кур'єру (Післяплата)",
-            delivery: "📦 ДОСТАВКА\n\nОформлюючи замовлення, виберіть доставку у відділення НП або до дверей службою “Нова Пошта”. Також доступний самовивіз (вул. Остафія Дашкевича).",
+            delivery: "📦 ДОСТАВКА\n\nОформлюючи замовлення, виберіть доставку у відділення НП або до дверей службою “Нова Пошта”. Також доступний самовивіз (вул. Остафія Дашкевича), час обговорюйте з менеджером @Telleportt.",
             offer: "📄 ПУБЛІЧНА ОФЕРТА\n\n1. Загальні положення\nЦя оферта є офіційною пропозицією магазину Kraken Lab щодо продажу товарів.",
-            privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\nМи поважаємо вашу приватність."
+            privacy: "🔒 ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ\n\nМы поважаємо вашу приватність."
         };
 
         function openInfoModal(type) {
