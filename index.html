@@ -175,9 +175,7 @@
 <!-- ВКЛАДКА: ІСТОРІЯ -->
 <main id="tab-history" class="tab-content p-4 space-y-4 hidden">
     <h2 class="text-xl font-bold">Історія замовлень</h2>
-    <div id="history-container" class="space-y-3">
-        <!-- Сюда динамически подгружается история -->
-    </div>
+    <div id="history-container" class="space-y-3"></div>
 </main>
 
 <!-- НАВИГАЦИЯ -->
@@ -222,7 +220,7 @@
     let currentDetailProduct = null;
     let selectedFlavor = '';
     let detailQuantity = 1;
-    let discountPercent = 0; // Скидка по промокоду
+    let discountPercent = 0;
 
     const ukrainianCities = [
         "Київ", "Софіївська Борщагівка", "Харків", "Одеса", "Дніпро", "Запоріжжя", "Львів", 
@@ -266,7 +264,6 @@
         }
     }
 
-    // Применение промокода
     function applyPromo() {
         const code = document.getElementById('promo-input').value.trim().toUpperCase();
         const msg = document.getElementById('promo-msg');
@@ -489,7 +486,6 @@
         }
     }
 
-    // Отрисовка истории заказов из localStorage
     function renderHistoryUI() {
         const container = document.getElementById('history-container');
         const orders = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
@@ -506,7 +502,7 @@
         }
 
         container.innerHTML = '';
-        orders.reverse().forEach((order, idx) => {
+        orders.slice().reverse().forEach((order) => {
             let itemsStr = order.items.map(i => `${i.title} (${i.flavor || 'без смаку'}) x ${i.count}`).join(', ');
             const div = document.createElement('div');
             div.className = "bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-2 shadow-xl";
@@ -526,7 +522,6 @@
         });
     }
 
-    // Оформление заказа и отправка админу + клиенту
     async function submitOrder() {
         const name = document.getElementById('order-name').value.trim();
         const phone = document.getElementById('order-phone').value.trim();
@@ -556,12 +551,16 @@
             total = Math.round(subtotal * (1 - discountPercent / 100));
         }
 
-        const deliveryDesc = deliveryType === 'Pickup' ? 'Самовивіз (Київ)' : `Нова Пошта (${city}, відд. ${department})`;
+        const isPickup = deliveryType === 'Pickup';
+        const deliveryDesc = isPickup ? 'Самовивіз (Київ, вул. Остафія Дашкевича)' : `Нова Пошта (${city}, відд. ${department})`;
 
         let text = `🛒 **НОВЕ ЗАМОВЛЕННЯ ІЗ САЙТУ**\n\n`;
         text += `👤 **Клієнт:** ${name}\n`;
         text += `📞 **Телефон:** ${phone}\n`;
         text += `🚚 **Доставка:** ${deliveryDesc}\n`;
+        if (isPickup) {
+            text += `⏱️ **Статус:** Потрібно узгодити час самовивозу!\n`;
+        }
         if (discountPercent > 0) {
             text += `🏷️ **Промокод:** KRAKEN (-${discountPercent}%)\n`;
         }
@@ -573,19 +572,24 @@
         const clientId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
 
         try {
-            // 1. Отправляем заказ тебе (админу)
+            // 1. Отправляем админу
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'Markdown' })
             });
 
-            // 2. Если у нас есть Telegram ID клиента, отправляем подтверждение ему в личку
+            // 2. Отправляем клиенту
             if (clientId) {
-                const clientMsg = `✅ **Дякуємо, ${name}! Ваше замовлення успішно прийнято.**\n\n` +
-                    `📦 Статус: **Прийнято в обробку**\n` +
-                    `Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом для підтвердження.`;
+                let clientMsg = `✅ **Дякуємо, ${name}! Ваше замовлення успішно прийнято.**\n\n` +
+                    `📦 Спосіб: **${deliveryDesc}**\n`;
                 
+                if (isPickup) {
+                    clientMsg += `\n⏱️ Оскільки це **самовивіз**, будь ласка, напишіть менеджеру @telleportt, щоб узгодити зручний час!`;
+                } else {
+                    clientMsg += `Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом.`;
+                }
+
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -593,7 +597,7 @@
                 }).catch(() => {});
             }
 
-            // 3. Сохраняем в историю на телефоне (localStorage)
+            // 3. Сохраняем в историю
             const newOrder = {
                 date: new Date().toLocaleDateString('uk-UA') + ' ' + new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'}),
                 items: [...cart],
@@ -604,7 +608,7 @@
             existingOrders.push(newOrder);
             localStorage.setItem('kraken_orders', JSON.stringify(existingOrders));
 
-            alert("✅ Дякуємо! Замовлення успішно оформлено. Деталі надіслано в бот.");
+            alert("✅ Дякуємо! Замовлення успішно оформлено.");
             cart = [];
             discountPercent = 0;
             updateCartUI();
