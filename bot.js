@@ -36,14 +36,14 @@ bot.on('web_app_data', async (ctx) => {
         const orderData = ctx.webAppData.data.text();
         const clientName = ctx.from.first_name || 'Клієнт';
 
-        // Ответ клиенту
+        // Ответ клиенту в чат
         await ctx.reply(
             `✅ **Дякуємо, ${clientName}! Ваше замовлення успішно прийнято.**\n\n` +
             `Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом для підтвердження.`,
             { parse_mode: 'Markdown' }
         );
 
-        // Уведомление админу
+        // Уведомление тебе (админу)
         await bot.telegram.sendMessage(
             ADMIN_CHAT_ID,
             `📥 **НОВЕ ЗАМОВЛЕННЯ ІЗ САЙТУ!**\n\n` +
