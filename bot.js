@@ -9,11 +9,14 @@ const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Обработка команды /start
+// Обробка команди /start з твоїм привітанням
 bot.start((ctx) => {
     ctx.reply(
-        "👋 Вітаємо в Kraken Lab 🐙!\n\n" +
-        "Натисніть кнопку нижче, щоб відкрити магазин та обрати товари:",
+        "Вітаємо в 🐙KrakenLab🧪\n" +
+        "🛍️ Відгуки клієнтів: @KRAKENOTZYVY\n" +
+        "👨‍💻 Зв’язок з менеджером: @telleportt\n\n" +
+        "👇🏻 Натискайте на кнопку нижче — це наш офіційний магазин у Telegram.\n" +
+        "Тут ви можете швидко та зручно оформити замовлення та обрати улюблені смаки",
         {
             reply_markup: {
                 inline_keyboard: [
@@ -24,7 +27,7 @@ bot.start((ctx) => {
     );
 });
 
-// Обработка заказа из Mini App
+// Обробка замовлення з Mini App
 bot.on('web_app_data', async (ctx) => {
     try {
         const orderData = ctx.webAppData.data.text();
