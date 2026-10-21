@@ -9,9 +9,8 @@ const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Ссылка на твоё Mini App на Vercel
-const MINI_APP_URL = const MINI_APP_URL = "https://krakenlab-git-main-kraken-lab3.vercel.app/";
-
+// Ссылка на твоё Mini App на Vercel (исправлено)
+const MINI_APP_URL = "https://krakenlab-git-main-kraken-lab3.vercel.app/";
 
 // Обработка команды /start
 bot.start((ctx) => {
