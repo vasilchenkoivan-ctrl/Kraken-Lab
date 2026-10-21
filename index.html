@@ -465,48 +465,50 @@
         }
     }
 
-    function submitOrder() {
-        const name = document.getElementById('order-name').value.trim();
-        const phone = document.getElementById('order-phone').value.trim();
-        const deliveryType = document.getElementById('delivery-type').value;
-        const city = document.getElementById('city-input').value.trim();
-        const department = document.getElementById('department-input').value.trim();
+    async function submitOrder() {
+    const name = document.getElementById('order-name').value.trim();
+    const phone = document.getElementById('order-phone').value.trim();
+    const deliveryType = document.getElementById('delivery-type').value;
+    const city = document.getElementById('city-input').value.trim();
+    const department = document.getElementById('department-input').value.trim();
 
-        if (!name) { alert("⚠️ Введіть ваше ім'я!"); return; }
-        if (!phone || phone === '+380') { alert("⚠️ Введіть номер телефону!"); return; }
+    if (!name) { alert("⚠️ Введіть ваше ім'я!"); return; }
+    if (!phone || phone === '+380') { alert("⚠️ Введіть номер телефону!"); return; }
 
-        if (deliveryType === 'NovaPoshta') {
-            if (!city) { alert("⚠️ Вкажіть місто доставки!"); return; }
-            if (!department) { alert("⚠️ Вкажіть номер відділення Нової Пошти!"); return; }
-        }
+    if (deliveryType === 'NovaPoshta') {
+        if (!city) { alert("⚠️ Вкажіть місто доставки!"); return; }
+        if (!department) { alert("⚠️ Вкажіть номер відділення Нової Пошти!"); return; }
+    }
 
-        if (cart.length === 0) { alert("⚠️ Кошик порожній!"); return; }
+    if (cart.length === 0) { alert("⚠️ Кошик порожній!"); return; }
 
-        let total = 0;
-        let itemsList = '';
-        cart.forEach((item, idx) => {
-            itemsList += `${idx + 1}. ${item.title}${item.flavor ? ` (${item.flavor})` : ''} — ${item.count} шт. х ${item.price} ₴\n`;
-            total += item.price * item.count;
+    let total = 0;
+    cart.forEach(item => { total += item.price * item.count; });
+
+    // Получаем ID пользователя из Telegram, чтобы бот мог написать ему в личку
+    const userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+
+    try {
+        // Отправляем заказ на твой бэкенд на Render
+        const response = await fetch('https:// твой-бэкенд-на-render .onrender.com/api/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, deliveryType, city, department, cart, total, userId })
         });
 
-        let text = `🛒 **НОВЕ ЗАМОВЛЕННЯ**\n\n`;
-        text += `👤 **Клієнт:** ${name}\n`;
-        text += `📞 **Телефон:** ${phone}\n`;
-        text += `🚚 **Доставка:** ${deliveryType === 'Pickup' ? 'Самовивіз (Київ)' : 'Нова Пошта'}\n`;
-        if (deliveryType === 'NovaPoshta') {
-            text += `📍 **Місто:** ${city}\n`;
-            text += `📦 **Відділення:** ${department}\n`;
-        }
-        text += `\n📋 **Товари:**\n${itemsList}\n`;
-        text += `💰 **Загальна сума:** ${total} ₴`;
-
-        if (tg && typeof tg.sendData === 'function') {
-            tg.sendData(text);
-            tg.close();
+        if (response.ok) {
+            alert("✅ Дякуємо! Ваше замовлення успішно оформлено.");
+            cart = [];
+            updateCartUI();
+            if (tg) tg.close();
         } else {
-            alert("Замовлення відправлено!\n\n" + text);
+            alert("Помилка відправки. Спробуйте ще раз.");
         }
+    } catch (err) {
+        alert("Помилка мережі: " + err.message);
     }
+}
+
 
     const infoTexts = {
         payment: "💳 Способи оплати:\n\n• Оплата банківською карткою (Visa / Mastercard)\n• Готівкою при отриманні у відділенні або кур'єру (Післяплата)",
