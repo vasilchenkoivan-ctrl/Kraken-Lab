@@ -1,8 +1,10 @@
+const express = require('express');
 const { Telegraf } = require('telegraf');
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '8523927755:AAFrRQKOkmipfgFs6lx6F7WHiNeZAyRd-T4';
-const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
+const app = express();
+app.use(express.json());
 
+const BOT_TOKEN = process.env.BOT_TOKEN || '8523927755:AAFrRQKOkmipfgFs6lx6F7WHiNeZAyRd-T4';
 const bot = new Telegraf(BOT_TOKEN);
 
 // Обработка команды /start
@@ -23,11 +25,21 @@ bot.start((ctx) => {
     );
 });
 
-// Запуск бота через long polling (самый надежный способ для Render без вебхуков)
-bot.launch().then(() => {
-    console.log('Bot successfully started!');
-}).catch((err) => {
-    console.error('Помилка запуску бота:', err);
+// Простой веб-сервер для Render, чтобы он видел открытый порт
+app.get('/', (req, res) => {
+    res.send('Kraken Lab Bot is running!');
+});
+
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, async () => {
+    console.log(`Server is running on port ${PORT}`);
+    try {
+        await bot.launch();
+        console.log('Bot successfully started!');
+    } catch (err) {
+        console.error('Помилка запуску бота:', err);
+    }
 });
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
