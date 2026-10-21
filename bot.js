@@ -7,6 +7,16 @@ app.use(express.json());
 const BOT_TOKEN = process.env.BOT_TOKEN || '8523927755:AAFrRQKOkmipfgFs6lx6F7WHiNeZAyRd-T4';
 const bot = new Telegraf(BOT_TOKEN);
 
+// Простой веб-сервер, который мгновенно открывает порт для Render
+const PORT = process.env.PORT || 10000;
+app.get('/', (req, res) => {
+    res.send('Kraken Lab Bot is running!');
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
 // Обработка команды /start
 bot.start((ctx) => {
     ctx.reply(
@@ -25,21 +35,11 @@ bot.start((ctx) => {
     );
 });
 
-// Простой веб-сервер для Render, чтобы он видел открытый порт
-app.get('/', (req, res) => {
-    res.send('Kraken Lab Bot is running!');
-});
-
-const PORT = process.env.PORT || 10000;
-
-app.listen(PORT, async () => {
-    console.log(`Server is running on port ${PORT}`);
-    try {
-        await bot.launch();
-        console.log('Bot successfully started!');
-    } catch (err) {
-        console.error('Помилка запуску бота:', err);
-    }
+// Запуск бота
+bot.launch().then(() => {
+    console.log('Bot successfully started!');
+}).catch((err) => {
+    console.error('Помилка запуску бота:', err);
 });
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
