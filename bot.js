@@ -9,8 +9,10 @@ const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-const MINI_APP_URL = "https://krakenlab-git-main-kraken-lab3.vercel.app/";
+// Твоя рабочая публичная ссылка на Vercel
+const MINI_APP_URL = "https://krakenlab.vercel.app/";
 
+// Обработка команды /start
 bot.start((ctx) => {
     ctx.reply(
         "Вітаємо в 🐙KrakenLab🧪\n" +
@@ -28,18 +30,20 @@ bot.start((ctx) => {
     );
 });
 
-// Исправлено: ctx.webAppData.data уже строка, без .text()
+// Обработка заказа из Mini App (без ошибки .text())
 bot.on('web_app_data', async (ctx) => {
     try {
         const orderData = ctx.webAppData.data;
         const clientName = ctx.from.first_name || 'Клієнт';
 
+        // Ответ клиенту в чат
         await ctx.reply(
             `✅ **Дякуємо, ${clientName}! Ваше замовлення успішно прийнято.**\n\n` +
             `Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом для підтвердження.`,
             { parse_mode: 'Markdown' }
         );
 
+        // Уведомление тебе (админу)
         await bot.telegram.sendMessage(
             ADMIN_CHAT_ID,
             `📥 **НОВЕ ЗАМОВЛЕННЯ ІЗ САЙТУ!**\n\n` +
