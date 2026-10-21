@@ -538,19 +538,41 @@
     }
 
     function submitOrder() {
-        const name = document.getElementById('order-name').value.trim();
-        const phone = document.getElementById('order-phone').value.trim();
-        const deliveryType = document.getElementById('delivery-type').value;
-        const city = document.getElementById('city-input').value.trim();
-        const department = document.getElementById('department-input').value.trim();
+        const nameEl = document.getElementById('order-name');
+        const phoneEl = document.getElementById('order-phone');
+        const deliveryTypeEl = document.getElementById('delivery-type');
+        const cityEl = document.getElementById('city-input');
+        const deptEl = document.getElementById('department-input');
 
-        if (!name || !phone) {
-            alert("Будь ласка, введіть ім'я та номер телефону!");
+        const name = nameEl ? nameEl.value.trim() : '';
+        const phone = phoneEl ? phoneEl.value.trim() : '';
+        const deliveryType = deliveryTypeEl ? deliveryTypeEl.value : 'NovaPoshta';
+        const city = cityEl ? cityEl.value.trim() : '';
+        const department = deptEl ? deptEl.value.trim() : '';
+
+        if (!name) {
+            alert("Введіть ваше ім'я!");
             return;
         }
 
-        if (deliveryType === 'NovaPoshta' && (!city || !department)) {
-            alert("Будь ласка, вкажіть місто та відділення Нової Пошти!");
+        if (!phone || phone === '+380') {
+            alert("Введіть ваш номер телефону!");
+            return;
+        }
+
+        if (deliveryType === 'NovaPoshta') {
+            if (!city) {
+                alert("Вкажіть місто доставки!");
+                return;
+            }
+            if (!department) {
+                alert("Вкажіть номер відділення Нової Пошти!");
+                return;
+            }
+        }
+
+        if (cart.length === 0) {
+            alert("Кошик порожній!");
             return;
         }
 
@@ -572,9 +594,13 @@
         text += `\n📋 **Товари:**\n${itemsList}\n`;
         text += `💰 **Загальна сума:** ${total} ₴`;
 
-        if (tg && tg.sendData) {
-            tg.sendData(text);
-            tg.close();
+        if (tg && typeof tg.sendData === 'function') {
+            try {
+                tg.sendData(text);
+                tg.close();
+            } catch (err) {
+                alert("Помилка відправки через Telegram SDK: " + err.message);
+            }
         } else {
             alert("Замовлення сформовано!\n\n" + text);
         }
