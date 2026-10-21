@@ -9,7 +9,22 @@ const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Обробка замовлень з Mini App
+// Обработка команды /start
+bot.start((ctx) => {
+    ctx.reply(
+        "👋 Вітаємо в Kraken Lab 🐙!\n\n" +
+        "Натисніть кнопку нижче, щоб відкрити магазин та обрати товари:",
+        {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "🛍 Відкрити магазин", web_app: { url: "https://kraken-lab.onrender.com" } }]
+                ]
+            }
+        }
+    );
+});
+
+// Обработка заказа из Mini App
 bot.on('web_app_data', async (ctx) => {
     try {
         const orderData = ctx.webAppData.data.text();
@@ -34,21 +49,21 @@ bot.on('web_app_data', async (ctx) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('Kraken Lab Bot is running!');
+    res.send('Kraken Lab Bot is running via Webhook!');
 });
 
 const PORT = process.env.PORT || 10000;
+const RENDER_EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL;
+
 app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
-    try {
-        // Скидаємо старі вебхуки/з'єднання, щоб не було конфлікту 409
-        await bot.telegram.deleteWebhook({ drop_pending_updates: true });
+    
+    if (RENDER_EXTERNAL_URL) {
+        await bot.telegram.setWebhook(`${RENDER_EXTERNAL_URL}/bot${BOT_TOKEN}`);
+        app.use(bot.webhookCallback(`/bot${BOT_TOKEN}`));
+        console.log(`Webhook set to ${RENDER_EXTERNAL_URL}`);
+    } else {
         bot.launch();
-        console.log('Bot successfully started without conflicts!');
-    } catch (err) {
-        console.error('Помилка запуску бота:', err);
+        console.log('Bot started via polling');
     }
 });
-
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
