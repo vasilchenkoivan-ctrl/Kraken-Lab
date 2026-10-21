@@ -4,10 +4,10 @@ const { Telegraf } = require('telegraf');
 const app = express();
 app.use(express.json());
 
-// 1. Встав сюди токен свого бота з @BotFather
+// 1. Токен твого бота
 const BOT_TOKEN = process.env.BOT_TOKEN || '8523927755:AAFrRQKOkmipfgFs6lx6F7WHiNeZAyRd-T4';
 
-// 2. Встав сюди свій особистий Telegram ID (або ID групи)
+// 2. ID куди слати замовлення (якщо це група, має бути з мінусом, наприклад '-100xxxxxx')
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
