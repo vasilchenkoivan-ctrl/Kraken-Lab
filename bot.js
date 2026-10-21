@@ -238,18 +238,14 @@ app.get('/', (req, res) => {
     res.send('Kraken Lab Bot is running!');
 });
 const PORT = process.env.PORT || 10000;
-async function startServer() {
-    try {
-        await bot.telegram.deleteWebhook({
-            drop_pending_updates: false
-        });
-        await bot.launch();
-        app.listen(PORT, '0.0.0.0', () => {
-            console.log(`Server running on port ${PORT}`);
-        });
-    } catch (error) {
-        console.error('Ошибка запуска бота:', error);
-        process.exit(1);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
+bot.launch()
+  .then(() => console.log('Telegram bot started'))
+  .catch((error) => console.error('Bot launch error:', error));
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
     }
 }
 startServer();
