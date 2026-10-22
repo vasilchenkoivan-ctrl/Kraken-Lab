@@ -3,81 +3,75 @@ const { Telegraf } = require('telegraf');
 
 const app = express();
 app.use(express.json());
-// Разрешаем запросы из твоего мини-приложения (CORS)
+
+// Разрешаем запросы из твоего мини-приложения
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
 });
 
+// Новый рабочий токен и твой ID админа
 const BOT_TOKEN = "8523927755:AAHCJKto1g_xWFUCAwqJSMKOH5nu5Fkg7j4";
-const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951'; // Твой ID админа
-
+const ADMIN_CHAT_ID = '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
 // Команда /start
 bot.start((ctx) => {
     ctx.reply(
-        "Вітаємо в 🐙KrakenLab🧪\n" +
-        "🛍️ Відгуки клієнтів: @KRAKENOTZYVY\n" +
-        "👨‍💻 Зв’язок з менеджером: @telleportt\n\n" +
-        "👇🏻 Натискайте на кнопку нижче — це наш офіційний магазин у Telegram.",
+        "Вітаємо в 🐙 Kraken Lab!\n\n" +
+        "🛍 Відгуки клієнтів: @KRAKENOTZYVVL\n" +
+        "👩‍💻 Зв'язок з менеджером: @telleportt\n\n" +
+        "👇 Натискайте на кнопку нижче — це наш магазин:",
         {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "🛍 Відкрити магазин", web_app: { url: "https://krakenlab.vercel.app/" } }]
+                    [{ text: "🛍 Відкрити магазин", web_app: { url: "ССЫЛКА_НА_ТВОЙ_GITHUB_PAGES" } }]
                 ]
             }
         }
     );
 });
 
-// API-эндпоинт, куда сайт отправляет заказ
-app.post('/api/order', async (req, res) => {
+// Обработка заказа из Mini App (когда клиент жмет "оформити замовлення")
+bot.on('web_app_data', async (ctx) => {
+    const orderData = ctx.web_app_data.data;
+    const user = ctx.from;
+
+    // 1. Отправляем клиенту подтверждение с инфой по самовывозу
     try {
-        const { name, phone, deliveryType, city, department, cart, total, userId } = req.body;
-
-        let itemsList = '';
-        cart.forEach((item, idx) => {
-            itemsList += `${idx + 1}. ${item.title}${item.flavor ? ` (${item.flavor})` : ''} — ${item.count} шт. х ${item.price} ₴\n`;
-        });
-
-        // Текст для тебя (админа)
-        let adminText = `🛒 **НОВЕ ЗАМОВЛЕННЯ ІЗ САЙТУ**\n\n` +
-            `👤 **Клієнт:** ${name}\n` +
-            `📞 **Телефон:** ${phone}\n` +
-            `🚚 **Доставка:** ${deliveryType === 'Pickup' ? 'Самовивіз (Київ)' : 'Нова Пошта'}\n`;
-        
-        if (deliveryType === 'NovaPoshta') {
-            adminText += `📍 **Місто:** ${city}\n` + `📦 **Відділення:** ${department}\n`;
-        }
-        adminText += `\n📋 **Товари:**\n${itemsList}\n` + `💰 **Загальна сума:** ${total} ₴`;
-
-        // Отправляем тебе
-        await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminText, { parse_mode: 'Markdown' });
-
-        // Если у нас есть ID клиента, отправляем подтверждение ему в личку боту
-        if (userId) {
-            const clientText = `✅ **Дякуємо, ${name}! Ваше замовлення успішно прийнято.**\n\n` +
-                `Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом для підтвердження.`;
-            await bot.telegram.sendMessage(userId, clientText, { parse_mode: 'Markdown' }).catch(() => {});
-        }
-
-        res.status(200).json({ success: true });
+        await ctx.reply(
+            "✅ **Дякуємо за замовлення!**\n\n" +
+            "Менеджер вже обробляє ваші дані.\n" +
+            "📍 **Якщо ви обрали Самовивіз:** обов'язково напишіть менеджеру @telleportt для узгодження часу!",
+            { parse_mode: 'Markdown' }
+        );
     } catch (e) {
-        console.error('Помилка сервера при заказе:', e);
-        res.status(500).json({ success: false, error: e.message });
+        console.error("Ошибка отправки клиенту:", e);
+    }
+
+    // 2. Отправляем детальный заказ тебе (админу)
+    const adminText = 
+        `🛍 **НОВЕ ЗАМОВЛЕННЯ Kraken Lab!**\n\n` +
+        `👤 **Покупець:** ${user.first_name} (@${user.username || 'немає'})\n` +
+        `🆔 **ID:** \`${user.id}\`\n\n` +
+        `📦 **Деталі замовлення:**\n${orderData}`;
+
+    try {
+        await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminText, { parse_mode: 'Markdown' });
+    } catch (e) {
+        console.error("Не удалось отправить заказ админу:", e);
     }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, async () => {
+// Запуск бота
+bot.launch().then(() => {
+    console.log("🐙 Kraken Lab Bot запущено на Node.js!");
+});
+
+// Простой express сервер (чтобы хостинг не ругался)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-    try {
-        await bot.launch();
-        console.log('Bot successfully started!');
-    } catch (err) {
-        console.error('Помилка запуску бота:', err);
-    }
 });
