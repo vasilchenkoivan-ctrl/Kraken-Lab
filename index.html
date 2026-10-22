@@ -557,66 +557,52 @@
         const isPickup = deliveryType === 'Pickup';
         const deliveryDesc = isPickup ? 'Самовивіз (Київ, вул. Остафія Дашкевича)' : `Нова Пошта (${city}, відд. ${department})`;
 
-        let text = `🛒 **НОВЕ ЗАМОВЛЕННЯ ІЗ САЙТУ**\n\n`;
-        text += `👤 **Клієнт:** ${name}\n`;
-        text += `📞 **Телефон:** ${phone}\n`;
-        text += `🚚 **Доставка:** ${deliveryDesc}\n`;
-        if (isPickup) {
-            text += `⏱️ **Статус:** Потрібно узгодити час самовивозу!\n`;
-        }
-        if (discountPercent > 0) {
-            text += `🏷️ **Промокод:** KRAKEN (-${discountPercent}%)\n`;
-        }
-        text += `\n📋 **Товари:**\n${itemsList}\n`;
-        text += `💰 **Загальна сума:** ${total} ₴`;
+        const telegramUser = tg?.initDataUnsafe?.user;
 
-        const BOT_TOKEN = '8523927755:AAFrRQKOkmipfgFs6lx6F7WHiNeZAyRd-T4';
-        const ADMIN_ID = '1005867951';
-        const clientId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+        const orderData = {
+            user: telegramUser || { id: 1005867951, first_name: name },
+            items: itemsList,
+            totalPrice: total,
+            deliveryType: isPickup ? 'Самовивіз' : 'Нова Пошта',
+            address: deliveryDesc,
+            phone: phone
+        };
 
         try {
-            // 1. Отправляем админу
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            const response = await fetch('https://kraken-lab.onrender.com/api/order', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'Markdown' })
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
             });
 
-            // 2. Отправляем клиенту
-            if (clientId) {
-                let clientMsg = `✅ **Дякуємо, ${name}! Ваше замовлення успішно прийнято.**\n\n` +
-                    `📦 Спосіб: **${deliveryDesc}**\n`;
-                
-                if (isPickup) {
-                    clientMsg += `\n⏱️ Оскільки це **самовивіз**, будь ласка, напишіть менеджеру @telleportt, щоб узгодити зручний час!`;
+            if (response.ok) {
+                // Сохраняем в локальную историю устройства
+                const newOrder = {
+                    date: new Date().toLocaleDateString('uk-UA') + ' ' + new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'}),
+                    items: [...cart],
+                    delivery: deliveryDesc,
+                    total: total
+                };
+                const existingOrders = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
+                existingOrders.push(newOrder);
+                localStorage.setItem('kraken_orders', JSON.stringify(existingOrders));
+
+                cart = [];
+                discountPercent = 0;
+                updateCartUI();
+
+                if (tg) {
+                    tg.close();
                 } else {
-                    clientMsg += `Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом.`;
+                    alert("✅ Дякуємо! Замовлення успішно оформлено.");
                 }
-
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: clientId, text: clientMsg, parse_mode: 'Markdown' })
-                }).catch(() => {});
+            } else {
+                alert("Помилка при оформленні замовлення. Спробуйте ще раз.");
             }
-
-            // 3. Сохраняем в историю
-            const newOrder = {
-                date: new Date().toLocaleDateString('uk-UA') + ' ' + new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'}),
-                items: [...cart],
-                delivery: deliveryDesc,
-                total: total
-            };
-            const existingOrders = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
-            existingOrders.push(newOrder);
-            localStorage.setItem('kraken_orders', JSON.stringify(existingOrders));
-
-            alert("✅ Дякуємо! Замовлення успішно оформлено.");
-            cart = [];
-            discountPercent = 0;
-            updateCartUI();
-            if (tg) tg.close();
         } catch (err) {
+            console.error("Помилка:", err);
             alert("Помилка мережі: " + err.message);
         }
     }
