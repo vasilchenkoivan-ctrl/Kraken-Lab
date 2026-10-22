@@ -176,15 +176,15 @@
     <div class="bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-3 shadow-xl">
         <h3 class="text-sm font-bold text-[#b8ff00] flex items-center gap-2">🎁 Запрошуй друзів — отримуй жижу безкоштовно!</h3>
         <p class="text-xs text-gray-300 leading-relaxed">
-            За кожного друга, який зробить замовлення за твоим посиланням, ти отримуєш **+10% знижки**!
-            <br>• 100% знижки = **1 баночка безкоштовно** 🔥
-            <br>• Максимум можна накопичити **200% (2 банки)**.
+            За кожного друга, який зробить замовлення за твоїм посиланням, ти отримуєш <span class="text-[#b8ff00] font-bold">+10% знижки</span>!
+            <br>• 100% знижки = <span class="text-white font-bold">1 баночка безкоштовно</span> 🔥
+            <br>• Максимум можна накопичити <span class="text-white font-bold">200% (2 банки)</span>.
         </p>
         <div class="bg-gray-900/80 p-2.5 rounded-xl flex items-center justify-between border border-gray-800">
             <span id="ref-link-text" class="text-[10px] text-gray-400 truncate max-w-[200px]">Генеруємо посилання...</span>
             <button onclick="copyRefLink()" class="px-3 py-1.5 bg-[#b8ff00] text-black rounded-lg text-xs font-bold active:scale-95 transition-all">Скопіювати</button>
         </div>
-        <p class="text-[11px] text-gray-400">Твоя накопичена знижка: <strong id="user-ref-discount" class="text-white">0%</strong></p>
+        <p class="text-[11px] text-gray-400">Твоя накопичена знижка: <strong id="user-ref-discount" class="text-[#b8ff00]">0%</strong></p>
     </div>
 
     <h2 class="text-xl font-bold">Історія замовлень</h2>
@@ -253,7 +253,8 @@
 
     function initRefLink() {
         const userId = tg?.initDataUnsafe?.user?.id || '1005867951';
-        const refLink = `https://t.me/KrakenLabBot?start=ref_${userId}`;
+        // Указываем твой реальный юзернейм бота (без приставки LabBot, если у него другое имя)
+        const refLink = `https://t.me/KrakenLabbot?start=ref_${userId}`;
         document.getElementById('ref-link-text').innerText = refLink;
     }
 
