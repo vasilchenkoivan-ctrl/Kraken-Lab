@@ -11,214 +11,235 @@
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Неоновые свечения в стиле логотипа Kraken Lab */
+        .neon-border {
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.15);
+        }
+        .neon-border-active {
+            border: 1px solid #39ff14;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+        }
+        .neon-glow-btn {
+            background: linear-[#39ff14];
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.5);
+        }
+        .neon-text-glow {
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.6);
+        }
+        .glass-card {
+            background: rgba(12, 19, 29, 0.85);
+            backdrop-filter: blur(12px);
+        }
     </style>
 </head>
-<body class="bg-[#090d16] text-white min-h-screen font-sans antialiased pb-20 select-none">
+<body class="bg-[#05080c] text-white min-h-screen font-sans antialiased pb-20 select-none">
 
 <!-- Шапка -->
-<header class="sticky top-0 z-40 bg-[#090d16]/90 backdrop-blur-md border-b border-gray-800/80 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-        <span class="text-2xl">🐙</span>
+<header class="sticky top-0 z-40 bg-[#05080c]/90 backdrop-blur-md border-b border-[#39ff14]/20 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+        <span class="text-2xl filter drop-shadow-[0_0_8px_rgba(57,255,20,0.8)]">🐙</span>
         <div>
-            <h1 class="text-base font-bold leading-none tracking-wide text-white">Kraken Lab</h1>
-            <p class="text-[10px] text-gray-400 font-medium">Premium Vape Shop</p>
+            <h1 class="text-base font-black tracking-wider text-white uppercase italic">Kraken <span class="text-[#39ff14] neon-text-glow">Lab</span></h1>
+            <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Premium Vape Shop</p>
         </div>
     </div>
-    <div class="bg-gray-800/60 border border-gray-700/50 px-2.5 py-1 rounded-full flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-[#b8ff00] animate-pulse"></span>
-        <span class="text-[11px] font-semibold text-gray-300">Онлайн</span>
+    <div class="bg-[#0c131d] border border-[#39ff14]/30 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_10px_rgba(57,255,20,0.2)]">
+        <span class="w-2 h-2 rounded-full bg-[#39ff14] animate-ping"></span>
+        <span class="text-[10px] font-extrabold text-[#39ff14] tracking-wide">ONLINE</span>
     </div>
 </header>
 
 <!-- ВКЛАДКА: КАТАЛОГ -->
 <main id="tab-catalog" class="tab-content p-4 space-y-4">
     <div>
-        <h2 class="text-sm font-bold text-gray-400 mb-2">Категорії</h2>
+        <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Категорії</h2>
         <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
-            <button onclick="setCategory('all')" class="cat-btn active bg-[#b8ff00] text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-md shadow-[#b8ff00]/10">Всі товари</button>
-            <button onclick="setCategory('liquid')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Рідини</button>
-            <button onclick="setCategory('cartridge')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Картриджі</button>
-            <button onclick="setCategory('device')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Пристрої</button>
-            <button onclick="setCategory('accessory')" class="cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">Аксесуари</button>
+            <button onclick="setCategory('all')" class="cat-btn active bg-[#39ff14] text-black px-4 py-2 rounded-xl text-xs font-black uppercase whitespace-nowrap transition-all shadow-[0_0_15px_rgba(57,255,20,0.4)]">Всі товари</button>
+            <button onclick="setCategory('liquid')" class="cat-btn bg-[#0c131d] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all hover:border-[#39ff14]/50">Рідини</button>
+            <button onclick="setCategory('cartridge')" class="cat-btn bg-[#0c131d] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all hover:border-[#39ff14]/50">Картриджі</button>
+            <button onclick="setCategory('device')" class="cat-btn bg-[#0c131d] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all hover:border-[#39ff14]/50">Пристрої</button>
+            <button onclick="setCategory('accessory')" class="cat-btn bg-[#0c131d] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all hover:border-[#39ff14]/50">Аксесуари</button>
         </div>
     </div>
 
-    <h2 id="category-title" class="text-lg font-bold">Всі товари</h2>
+    <h2 id="category-title" class="text-base font-black uppercase tracking-wide text-white border-l-4 border-[#39ff14] pl-2">Всі товари</h2>
 
     <div id="products-container" class="grid grid-cols-2 gap-3">
         <div class="col-span-2 p-8 text-center text-gray-400">
-            <div class="inline-block animate-spin mb-2 text-xl">⏳</div>
-            <p class="text-xs">Завантаження каталогу...</p>
+            <div class="inline-block animate-spin mb-2 text-2xl text-[#39ff14]">⏳</div>
+            <p class="text-xs font-bold">Завантаження каталогу...</p>
         </div>
     </div>
 
     <!-- Соцсети и инфо -->
-    <div class="p-4 bg-[#121a29] rounded-2xl space-y-4 border border-gray-800/80 mt-6 shadow-xl">
+    <div class="p-4 glass-card rounded-2xl space-y-4 border border-[#39ff14]/20 mt-6 shadow-[0_0_20px_rgba(0,0,0,0.8)]">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-xs text-gray-400 font-medium">Соціальні мережі:</p>
-                <a href="https://t.me/KrakenLabliquid" target="_blank" class="w-8 h-8 rounded-full bg-[#24A1DE] flex items-center justify-center text-white text-sm hover:opacity-90 transition-all shadow-md active:scale-95 mt-1.5">
+                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Соціальні мережі:</p>
+                <a href="https://t.me/KrakenLabliquid" target="_blank" class="w-9 h-9 rounded-xl bg-[#24A1DE] flex items-center justify-center text-white text-sm hover:opacity-90 transition-all shadow-[0_0_12px_rgba(36,161,222,0.5)] active:scale-95 mt-1.5">
                     <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.68-.55.84-1.12.52l-3.01-2.22-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.04 5.54-5.01c.24-.21-.05-.33-.37-.12l-6.85 4.31-2.95-.92c-.64-.2-.65-.64.13-.95l11.52-4.44c.53-.19 1 .13.82.89z"/></svg>
                 </a>
             </div>
             <div>
-                <p class="text-xs text-gray-400 mb-1 font-medium text-right">Оплата:</p>
+                <p class="text-xs text-gray-400 mb-1 font-bold text-right uppercase tracking-wider">Оплата:</p>
                 <div class="flex gap-1">
-                    <span class="px-1.5 py-0.5 bg-white text-black rounded text-[9px] font-bold">VISA</span>
-                    <span class="px-1.5 py-0.5 bg-white text-black rounded text-[9px] font-bold">Mastercard</span>
-                    <span class="px-1.5 py-0.5 bg-gray-700 text-white rounded text-[9px] font-bold border border-gray-600">Готівка</span>
+                    <span class="px-2 py-0.5 bg-white text-black rounded text-[9px] font-black">VISA</span>
+                    <span class="px-2 py-0.5 bg-white text-black rounded text-[9px] font-black">Mastercard</span>
+                    <span class="px-2 py-0.5 bg-gray-800 text-[#39ff14] rounded text-[9px] font-black border border-[#39ff14]/30">Готівка</span>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-1.5 pt-1 border-t border-gray-800/60">
-            <button onclick="openInfoModal('payment')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Оплата</button>
-            <button onclick="openInfoModal('delivery')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Доставка</button>
-            <button onclick="openInfoModal('offer')" class="py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Оферта</button>
+        <div class="grid grid-cols-3 gap-1.5 pt-2 border-t border-gray-800/80">
+            <button onclick="openInfoModal('payment')" class="py-2.5 bg-gray-900/80 hover:border-[#39ff14]/50 border border-gray-800 rounded-xl text-[10px] text-gray-300 font-bold uppercase transition-all">Оплата</button>
+            <button onclick="openInfoModal('delivery')" class="py-2.5 bg-gray-900/80 hover:border-[#39ff14]/50 border border-gray-800 rounded-xl text-[10px] text-gray-300 font-bold uppercase transition-all">Доставка</button>
+            <button onclick="openInfoModal('offer')" class="py-2.5 bg-gray-900/80 hover:border-[#39ff14]/50 border border-gray-800 rounded-xl text-[10px] text-gray-300 font-bold uppercase transition-all">Оферта</button>
         </div>
-        <button onclick="openInfoModal('privacy')" class="w-full py-2 bg-gray-800/80 hover:bg-gray-700 rounded-xl text-[11px] text-gray-300 font-medium transition-all">Політика конфіденційності</button>
+        <button onclick="openInfoModal('privacy')" class="w-full py-2.5 bg-gray-900/80 hover:border-[#39ff14]/50 border border-gray-800 rounded-xl text-[10px] text-gray-300 font-bold uppercase transition-all">Політика конфіденційності</button>
     </div>
 </main>
 
 <!-- ВКЛАДКА: ДЕТАЛИ -->
 <main id="tab-product-detail" class="tab-content hidden pb-6">
-    <button onclick="switchTab('catalog')" class="p-3 text-sm text-gray-400 flex items-center gap-1 hover:text-white">← Назад до каталогу</button>
+    <button onclick="switchTab('catalog')" class="p-3 text-xs text-gray-400 uppercase font-bold flex items-center gap-1 hover:text-[#39ff14]">← Назад до каталогу</button>
     <div id="product-detail-container" class="px-4 space-y-5"></div>
 </main>
 
 <!-- ВКЛАДКА: КОШИК -->
 <main id="tab-cart" class="tab-content p-4 space-y-4 hidden">
-    <h2 class="text-xl font-bold">Кошик</h2>
+    <h2 class="text-xl font-black uppercase text-white tracking-wide border-l-4 border-[#39ff14] pl-2">Кошик</h2>
     <div id="cart-items" class="space-y-3"></div>
 
     <div id="checkout-form-container" class="space-y-4 hidden">
         <div class="space-y-1.5">
-            <label class="text-xs text-gray-400 font-medium">Прізвище та ім'я *</label>
-            <div class="bg-[#121a29] border border-gray-800 rounded-xl px-3 py-2.5 flex items-center gap-3">
+            <label class="text-xs text-gray-400 font-bold uppercase">Прізвище та ім'я *</label>
+            <div class="bg-[#0c131d] border border-gray-800 focus-within:border-[#39ff14] rounded-xl px-3 py-2.5 flex items-center gap-3 transition-all">
                 <span class="text-gray-400">👤</span>
                 <input type="text" id="order-name" placeholder="Іванов Іван" class="w-full bg-transparent text-sm text-white focus:outline-none placeholder:text-gray-600">
             </div>
         </div>
 
         <div class="space-y-1.5">
-            <label class="text-xs text-gray-400 font-medium">Номер телефону *</label>
-            <div class="bg-[#121a29] border border-gray-800 rounded-xl px-3 py-2.5 flex items-center gap-3">
+            <label class="text-xs text-gray-400 font-bold uppercase">Номер телефону *</label>
+            <div class="bg-[#0c131d] border border-gray-800 focus-within:border-[#39ff14] rounded-xl px-3 py-2.5 flex items-center gap-3 transition-all">
                 <span class="text-gray-400">📞</span>
                 <input type="tel" id="order-phone" value="+380" class="w-full bg-transparent text-sm text-white focus:outline-none">
             </div>
         </div>
 
         <div class="space-y-1.5">
-            <label class="text-xs text-gray-400 font-medium">Спосіб доставки</label>
+            <label class="text-xs text-gray-400 font-bold uppercase">Спосіб доставки</label>
             <div class="relative">
-                <select id="delivery-type" onchange="changeDeliveryType()" class="w-full bg-[#121a29] border border-gray-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer">
+                <select id="delivery-type" onchange="changeDeliveryType()" class="w-full bg-[#0c131d] border border-gray-800 focus:border-[#39ff14] rounded-xl px-3 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer">
                     <option value="NovaPoshta">Нова Пошта</option>
                     <option value="Pickup">Самовивіз</option>
                 </select>
-                <span class="absolute right-3.5 top-3.5 text-gray-400 pointer-events-none">▼</span>
+                <span class="absolute right-3.5 top-3.5 text-[#39ff14] pointer-events-none">▼</span>
             </div>
         </div>
 
         <div id="np-fields" class="space-y-3">
             <div class="space-y-1.5 relative">
-                <label class="text-xs text-gray-400 font-medium">Місто *</label>
-                <div class="bg-[#121a29] border border-gray-800 rounded-xl px-3 py-2.5 flex items-center gap-3">
+                <label class="text-xs text-gray-400 font-bold uppercase">Місто *</label>
+                <div class="bg-[#0c131d] border border-gray-800 focus-within:border-[#39ff14] rounded-xl px-3 py-2.5 flex items-center gap-3 transition-all">
                     <span class="text-gray-400">📍</span>
                     <input type="text" id="city-input" oninput="onCityInput()" placeholder="Введіть місто..." class="w-full bg-transparent text-sm text-white focus:outline-none placeholder:text-gray-600" autocomplete="off">
                 </div>
-                <div id="city-dropdown" class="absolute left-0 right-0 top-16 bg-[#121a29] border border-gray-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto hidden z-50"></div>
+                <div id="city-dropdown" class="absolute left-0 right-0 top-16 bg-[#0c131d] border border-[#39ff14]/30 rounded-xl shadow-2xl max-h-48 overflow-y-auto hidden z-50"></div>
             </div>
 
             <div class="space-y-1.5">
-                <label class="text-xs text-gray-400 font-medium">Відділення *</label>
-                <div class="bg-[#121a29] border border-gray-800 rounded-xl px-3 py-2.5 flex items-center gap-3">
+                <label class="text-xs text-gray-400 font-bold uppercase">Відділення *</label>
+                <div class="bg-[#0c131d] border border-gray-800 focus-within:border-[#39ff14] rounded-xl px-3 py-2.5 flex items-center gap-3 transition-all">
                     <span class="text-gray-400">📦</span>
                     <input type="text" id="department-input" placeholder="Номер відділення або поштомат" class="w-full bg-transparent text-sm text-white focus:outline-none placeholder:text-gray-600">
                 </div>
             </div>
         </div>
 
-        <div id="pickup-fields" class="bg-[#121a29] border border-gray-800 p-3.5 rounded-xl hidden text-xs text-gray-300 space-y-1">
-            <p class="font-bold text-[#b8ff00] text-sm">📍 Самовивіз із магазину Kraken Lab</p>
+        <div id="pickup-fields" class="bg-[#0c131d] border border-[#39ff14]/40 p-4 rounded-xl hidden text-xs text-gray-300 space-y-1 shadow-[0_0_15px_rgba(57,255,20,0.1)]">
+            <p class="font-black text-[#39ff14] text-sm uppercase tracking-wide">📍 Самовивіз із магазину Kraken Lab</p>
             <p class="text-white font-medium">м. Київ, вул. Остафія Дашкевича</p>
         </div>
 
         <div class="space-y-1.5">
-            <label class="text-xs text-gray-400 font-medium">Промокод</label>
+            <label class="text-xs text-gray-400 font-bold uppercase">Промокод</label>
             <div class="flex gap-2">
-                <div class="bg-[#121a29] border border-gray-800 rounded-xl px-3 py-2.5 flex items-center gap-3 flex-1">
+                <div class="bg-[#0c131d] border border-gray-800 focus-within:border-[#39ff14] rounded-xl px-3 py-2.5 flex items-center gap-3 flex-1">
                     <span class="text-gray-400">🏷️</span>
-                    <input type="text" id="promo-input" placeholder="Введіть промокод (напр. KRAKEN)" class="w-full bg-transparent text-sm text-white focus:outline-none placeholder:text-gray-600 uppercase">
+                    <input type="text" id="promo-input" placeholder="Введіть промокод" class="w-full bg-transparent text-sm text-white focus:outline-none placeholder:text-gray-600 uppercase">
                 </div>
-                <button onclick="applyPromo()" class="px-4 bg-gray-800 hover:bg-gray-700 rounded-xl text-xs font-bold text-white transition-all">Застосувати</button>
+                <button onclick="applyPromo()" class="px-4 bg-gray-800 hover:bg-[#39ff14] hover:text-black rounded-xl text-xs font-black uppercase text-white transition-all">Застосувати</button>
             </div>
             <p id="promo-msg" class="text-[11px] text-gray-400"></p>
         </div>
 
-        <div class="bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-2 shadow-xl">
-            <div class="flex justify-between items-center text-sm font-bold">
+        <div class="glass-card border border-[#39ff14]/30 p-4 rounded-2xl space-y-2 shadow-xl">
+            <div class="flex justify-between items-center text-sm font-black uppercase">
                 <span class="text-white">До сплати</span>
-                <span id="cart-total-price" class="text-[#b8ff00] text-base">0 грн</span>
+                <span id="cart-total-price" class="text-[#39ff14] text-lg neon-text-glow">0 грн</span>
             </div>
         </div>
 
-        <p class="text-[11px] text-gray-400 text-center leading-relaxed">
-            Натискаючи кнопку «Оформити замовлення», ви погоджуєтеся з <span onclick="openInfoModal('offer')" class="text-[#b8ff00] underline cursor-pointer">публічною офертою</span> та <span onclick="openInfoModal('privacy')" class="text-[#b8ff00] underline cursor-pointer">політикою конфіденційності</span>.
+        <p class="text-[10px] text-gray-400 text-center leading-relaxed">
+            Натискаючи кнопку «Оформити замовлення», ви погоджуєтеся з <span onclick="openInfoModal('offer')" class="text-[#39ff14] underline cursor-pointer font-bold">публічною офертою</span> та <span onclick="openInfoModal('privacy')" class="text-[#39ff14] underline cursor-pointer font-bold">політикою конфіденційності</span>.
         </p>
 
-        <button onclick="submitOrder()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-extrabold text-white shadow-lg shadow-blue-600/30 active:scale-98 transition-all">Оформити замовлення</button>
+        <button onclick="submitOrder()" class="w-full py-4 bg-[#39ff14] hover:bg-[#22c55e] rounded-2xl text-sm font-black uppercase text-black shadow-[0_0_20px_rgba(57,255,20,0.4)] active:scale-98 transition-all">Оформити замовлення</button>
     </div>
 </main>
 
 <!-- ВКЛАДКА: ІСТОРІЯ + РЕФЕРАЛКА -->
 <main id="tab-history" class="tab-content p-4 space-y-4 hidden">
-    <div class="bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-3 shadow-xl">
-        <h3 class="text-sm font-bold text-[#b8ff00] flex items-center gap-2">🎁 Запрошуй друзів — отримуй жижу безкоштовно!</h3>
+    <div class="glass-card border border-[#39ff14]/30 p-4 rounded-2xl space-y-3 shadow-[0_0_20px_rgba(57,255,20,0.15)]">
+        <h3 class="text-sm font-black text-[#39ff14] uppercase tracking-wide flex items-center gap-2">🎁 Запрошуй друзів — отримуй жижу безкоштовно!</h3>
         <p class="text-xs text-gray-300 leading-relaxed">
-            За кожного друга, який зробить замовлення за твоїм посиланням, ти отримуєш <span class="text-[#b8ff00] font-bold">+10% знижки</span>!
+            За кожного друга, який зробить замовлення за твоїм посиланням, ти отримуєш <span class="text-[#39ff14] font-bold">+10% знижки</span>!
             <br>• 100% знижки = <span class="text-white font-bold">1 баночка безкоштовно</span> 🔥
             <br>• Максимум можна накопичити <span class="text-white font-bold">200% (2 банки)</span>.
         </p>
-        <div class="bg-gray-900/80 p-2.5 rounded-xl flex items-center justify-between border border-gray-800">
-            <span id="ref-link-text" class="text-[10px] text-gray-400 truncate max-w-[200px]">Генеруємо посилання...</span>
-            <button onclick="copyRefLink()" class="px-3 py-1.5 bg-[#b8ff00] text-black rounded-lg text-xs font-bold active:scale-95 transition-all">Скопіювати</button>
+        <div class="bg-[#05080c] p-3 rounded-xl flex items-center justify-between border border-gray-800">
+            <span id="ref-link-text" class="text-[10px] text-gray-400 truncate max-w-[190px]">Генеруємо посилання...</span>
+            <button onclick="copyRefLink()" class="px-3.5 py-1.5 bg-[#39ff14] text-black rounded-lg text-xs font-black uppercase active:scale-95 transition-all shadow-[0_0_10px_rgba(57,255,20,0.3)]">Скопіювати</button>
         </div>
-        <p class="text-[11px] text-gray-400">Твоя накопичена знижка: <strong id="user-ref-discount" class="text-[#b8ff00]">0%</strong></p>
+        <p class="text-[11px] text-gray-400">Твоя накопичена знижка: <strong id="user-ref-discount" class="text-[#39ff14] font-black">0%</strong></p>
     </div>
 
-    <h2 class="text-xl font-bold">Історія замовлень</h2>
+    <h2 class="text-xl font-black uppercase text-white tracking-wide border-l-4 border-[#39ff14] pl-2">Історія замовлень</h2>
     <div id="history-container" class="space-y-3"></div>
 </main>
 
 <!-- НАВИГАЦИЯ -->
-<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#090d16]/95 backdrop-blur-lg border-t border-gray-800/80 px-2 py-1.5">
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#05080c]/95 backdrop-blur-lg border-t border-[#39ff14]/20 px-2 py-2">
     <div class="max-w-md mx-auto grid grid-cols-4 gap-1 text-center">
-        <button onclick="switchTab('home')" id="nav-home" class="nav-btn active flex flex-col items-center justify-center py-1 rounded-xl text-[#b8ff00] transition-all">
-            <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            <span class="text-[10px] font-medium">Головна</span>
+        <button onclick="switchTab('home')" id="nav-home" class="nav-btn active flex flex-col items-center justify-center py-1 rounded-xl text-[#39ff14] transition-all">
+            <svg class="w-5 h-5 mb-0.5 fill-current filter drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span class="text-[9px] font-black uppercase tracking-wider">Головна</span>
         </button>
-        <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
+        <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-500 transition-all">
             <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4v4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
-            <span class="text-[10px] font-medium">Каталог</span>
+            <span class="text-[9px] font-black uppercase tracking-wider">Каталог</span>
         </button>
-        <button onclick="switchTab('cart')" id="nav-cart" class="nav-btn relative flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
-            <span id="cart-badge" class="absolute top-0.5 right-4 bg-[#b8ff00] text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center hidden shadow-sm">0</span>
+        <button onclick="switchTab('cart')" id="nav-cart" class="nav-btn relative flex flex-col items-center justify-center py-1 rounded-xl text-gray-500 transition-all">
+            <span id="cart-badge" class="absolute top-0.5 right-3 bg-[#39ff14] text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center hidden shadow-[0_0_8px_rgba(57,255,20,0.8)]">0</span>
             <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            <span class="text-[10px] font-medium">Кошик</span>
+            <span class="text-[9px] font-black uppercase tracking-wider">Кошик</span>
         </button>
-        <button onclick="switchTab('history')" id="nav-history" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-400 transition-all">
+        <button onclick="switchTab('history')" id="nav-history" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-500 transition-all">
             <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-            <span class="text-[10px] font-medium">Історія</span>
+            <span class="text-[9px] font-black uppercase tracking-wider">Історія</span>
         </button>
     </div>
 </nav>
 
 <!-- МОДАЛЬНОЕ ОКНО -->
-<div id="infoModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-    <div class="bg-[#121a29] border border-gray-800 w-full max-w-sm rounded-2xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-2xl">
-        <h3 id="infoModalTitle" class="text-lg font-bold border-b border-gray-800 pb-2">Інформація</h3>
-        <div id="infoModalText" class="text-sm text-gray-300 overflow-y-auto space-y-2 pr-1 whitespace-pre-line leading-relaxed"></div>
-        <button onclick="closeInfoModal()" class="w-full py-2.5 bg-[#b8ff00] hover:opacity-90 rounded-xl text-xs font-bold text-black mt-auto active:scale-98 transition-all">Закрити</button>
+<div id="infoModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center p-4 z-50 backdrop-blur-md">
+    <div class="bg-[#0c131d] border border-[#39ff14]/30 w-full max-w-sm rounded-2xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-[0_0_30px_rgba(57,255,20,0.2)]">
+        <h3 id="infoModalTitle" class="text-base font-black uppercase tracking-wide border-b border-gray-800 pb-2 text-[#39ff14]">Інформація</h3>
+        <div id="infoModalText" class="text-xs text-gray-300 overflow-y-auto space-y-2 pr-1 whitespace-pre-line leading-relaxed"></div>
+        <button onclick="closeInfoModal()" class="w-full py-3 bg-[#39ff14] hover:bg-[#22c55e] rounded-xl text-xs font-black uppercase text-black mt-auto active:scale-98 transition-all">Закрити</button>
     </div>
 </div>
 
@@ -279,7 +300,7 @@
         if (!val) { dropdown.classList.add('hidden'); return; }
         const filtered = ukrainianCities.filter(c => c.toLowerCase().includes(val));
         if (filtered.length === 0) { dropdown.classList.add('hidden'); return; }
-        dropdown.innerHTML = filtered.map(c => `<div onclick="selectCity('${c}')" class="px-3 py-2.5 hover:bg-gray-800 cursor-pointer text-xs text-white border-b border-gray-800/50">${c}</div>`).join('');
+        dropdown.innerHTML = filtered.map(c => `<div onclick="selectCity('${c}')" class="px-3 py-2.5 hover:bg-[#39ff14]/10 hover:text-[#39ff14] cursor-pointer text-xs font-bold text-white border-b border-gray-800/50">${c}</div>`).join('');
         dropdown.classList.remove('hidden');
     }
 
@@ -304,7 +325,7 @@
         const msg = document.getElementById('promo-msg');
         if (code === 'KRAKEN') {
             discountPercent = 10;
-            msg.className = 'text-[11px] text-[#b8ff00] font-bold';
+            msg.className = 'text-[11px] text-[#39ff14] font-bold';
             msg.innerText = '✅ Промокод активовано! Знижка 10%';
         } else {
             msg.className = 'text-[11px] text-red-400 font-bold';
@@ -336,7 +357,7 @@
 
             renderFilteredProducts();
         } catch (error) {
-            container.innerHTML = `<div class="col-span-2 p-8 text-center text-red-400 text-xs">Помилка завантаження даних</div>`;
+            container.innerHTML = `<div class="col-span-2 p-8 text-center text-red-400 text-xs font-bold">Помилка завантаження даних</div>`;
         }
     }
 
@@ -348,23 +369,23 @@
         });
 
         if (filtered.length === 0) {
-            container.innerHTML = `<div class="col-span-2 p-8 text-center text-gray-400 text-xs">Немає товарів у цій категорії</div>`;
+            container.innerHTML = `<div class="col-span-2 p-8 text-center text-gray-400 text-xs font-bold">Немає товарів у цій категорії</div>`;
             return;
         }
 
         container.innerHTML = '';
         filtered.forEach(product => {
             const card = document.createElement('div');
-            card.className = "bg-[#121a29] p-3 rounded-2xl border border-gray-800/80 flex flex-col justify-between cursor-pointer";
+            card.className = "glass-card p-3 rounded-2xl border border-gray-800 hover:border-[#39ff14]/50 flex flex-col justify-between cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(57,255,20,0.15)]";
             card.onclick = () => openProductDetail(product.id);
 
-            const img = product.image ? `<img src="${product.image}" class="w-full h-28 object-cover rounded-xl mb-2">` : '<div class="w-full h-28 bg-gray-800 rounded-xl mb-2 flex items-center justify-center text-2xl">📦</div>';
+            const img = product.image ? `<img src="${product.image}" class="w-full h-28 object-cover rounded-xl mb-2">` : '<div class="w-full h-28 bg-gray-900 rounded-xl mb-2 flex items-center justify-center text-2xl">📦</div>';
 
             card.innerHTML = `
                 <div>${img}<h3 class="text-xs font-bold line-clamp-1 text-white">${product.title}</h3></div>
-                <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-800/50">
-                    <span class="text-sm font-extrabold text-white">${product.price} ₴</span>
-                    <button class="w-8 h-8 rounded-full bg-[#b8ff00] text-black font-extrabold flex items-center justify-center text-base">+</button>
+                <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-800/60">
+                    <span class="text-sm font-black text-white">${product.price} ₴</span>
+                    <button class="w-8 h-8 rounded-full bg-[#39ff14] text-black font-black flex items-center justify-center text-base shadow-[0_0_10px_rgba(57,255,20,0.4)]">+</button>
                 </div>
             `;
             container.appendChild(card);
@@ -380,14 +401,14 @@
         let rawFlavors = product.flavors ? product.flavors.split(/[,;\n]/).map(s => s.trim()).filter(Boolean) : [];
         selectedFlavor = rawFlavors.length > 0 ? rawFlavors[0] : '';
 
-        const img = product.image ? `<img src="${product.image}" class="w-full h-48 object-cover rounded-2xl mb-3">` : '<div class="w-full h-48 bg-gray-800 rounded-2xl mb-3 flex items-center justify-center text-4xl">📦</div>';
+        const img = product.image ? `<img src="${product.image}" class="w-full h-48 object-cover rounded-2xl mb-3 border border-[#39ff14]/30">` : '<div class="w-full h-48 bg-gray-900 rounded-2xl mb-3 flex items-center justify-center text-4xl">📦</div>';
 
         let flavorsHtml = rawFlavors.length > 0 ? `
             <div class="space-y-2">
-                <h4 class="text-sm font-bold text-gray-200">Смаки</h4>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-300">Смаки</h4>
                 <div class="flex flex-wrap gap-2">
                     ${rawFlavors.map(f => `
-                        <button onclick="selectDetailFlavor('${f}')" class="flavor-btn px-4 py-2 rounded-xl text-xs font-semibold ${f === selectedFlavor ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'}">${f}</button>
+                        <button onclick="selectDetailFlavor('${f}')" class="flavor-btn px-4 py-2 rounded-xl text-xs font-bold transition-all ${f === selectedFlavor ? 'bg-[#39ff14] text-black shadow-[0_0_12px_rgba(57,255,20,0.4)]' : 'bg-gray-900 text-gray-400 border border-gray-800'}">${f}</button>
                     `).join('')}
                 </div>
             </div>
@@ -395,17 +416,17 @@
 
         document.getElementById('product-detail-container').innerHTML = `
             ${img}
-            <h2 class="text-2xl font-extrabold text-white">${product.title}</h2>
+            <h2 class="text-2xl font-black text-white uppercase">${product.title}</h2>
             ${flavorsHtml}
             <div class="flex items-center justify-between pt-4 border-t border-gray-800 mt-6">
-                <p class="text-2xl font-extrabold text-[#b8ff00]"><span id="detail-total-price">${product.price}</span> грн</p>
-                <div class="flex items-center bg-[#121a29] border border-gray-800 rounded-2xl p-1">
-                    <button onclick="updateDetailQty(-1)" class="w-10 h-10 flex items-center justify-center text-gray-300 font-bold">-</button>
-                    <span id="detail-qty" class="w-10 text-center font-bold text-sm text-white">1</span>
-                    <button onclick="updateDetailQty(1)" class="w-10 h-10 flex items-center justify-center text-gray-300 font-bold">+</button>
+                <p class="text-2xl font-black text-[#39ff14] neon-text-glow"><span id="detail-total-price">${product.price}</span> грн</p>
+                <div class="flex items-center bg-[#05080c] border border-gray-800 rounded-2xl p-1">
+                    <button onclick="updateDetailQty(-1)" class="w-10 h-10 flex items-center justify-center text-gray-300 font-bold text-lg">-</button>
+                    <span id="detail-qty" class="w-10 text-center font-black text-sm text-white">1</span>
+                    <button onclick="updateDetailQty(1)" class="w-10 h-10 flex items-center justify-center text-[#39ff14] font-bold text-lg">+</button>
                 </div>
             </div>
-            <button onclick="addCurrentDetailToCart()" class="w-full py-4 bg-blue-600 rounded-2xl text-sm font-extrabold text-white mt-4">Додати до кошика</button>
+            <button onclick="addCurrentDetailToCart()" class="w-full py-4 bg-[#39ff14] hover:bg-[#22c55e] rounded-2xl text-sm font-black uppercase text-black shadow-[0_0_20px_rgba(57,255,20,0.4)] mt-4">Додати до кошика</button>
         `;
         switchTab('detail');
     }
@@ -413,8 +434,8 @@
     function selectDetailFlavor(f) {
         selectedFlavor = f;
         document.querySelectorAll('.flavor-btn').forEach(b => {
-            if(b.innerText === f) { b.className = 'flavor-btn px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white'; }
-            else { b.className = 'flavor-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800 text-gray-400'; }
+            if(b.innerText === f) { b.className = 'flavor-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#39ff14] text-black shadow-[0_0_12px_rgba(57,255,20,0.4)]'; }
+            else { b.className = 'flavor-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-gray-900 text-gray-400 border border-gray-800'; }
         });
     }
 
@@ -436,10 +457,10 @@
     function setCategory(cat) {
         selectedCategory = cat;
         document.querySelectorAll('.cat-btn').forEach(btn => {
-            btn.className = "cat-btn bg-[#121a29] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all";
+            btn.className = "cat-btn bg-[#0c131d] text-gray-400 border border-gray-800 px-4 py-2 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all hover:border-[#39ff14]/50";
         });
         if (event && event.target) {
-            event.target.className = "cat-btn active bg-[#b8ff00] text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-md shadow-[#b8ff00]/10";
+            event.target.className = "cat-btn active bg-[#39ff14] text-black px-4 py-2 rounded-xl text-xs font-black uppercase whitespace-nowrap transition-all shadow-[0_0_15px_rgba(57,255,20,0.4)]";
         }
         const titles = { 'all': 'Всі товари', 'liquid': 'Рідини', 'cartridge': 'Картриджі', 'device': 'Пристрої', 'accessory': 'Аксесуари' };
         document.getElementById('category-title').innerText = titles[cat] || 'Товари';
@@ -456,7 +477,7 @@
         const checkoutForm = document.getElementById('checkout-form-container');
 
         if (cart.length === 0) {
-            cartContainer.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">Ваш кошик порожній</p>`;
+            cartContainer.innerHTML = `<p class="text-xs text-gray-400 text-center font-bold py-6">Ваш кошик порожній</p>`;
             checkoutForm.classList.add('hidden');
             return;
         }
@@ -468,17 +489,17 @@
         cart.forEach((item, index) => {
             subtotal += item.price * item.count;
             const div = document.createElement('div');
-            div.className = "bg-[#121a29] p-3 rounded-2xl border border-gray-800 flex justify-between items-center";
+            div.className = "glass-card p-3.5 rounded-2xl border border-gray-800 flex justify-between items-center";
             div.innerHTML = `
                 <div>
-                    <h4 class="font-bold text-sm">${item.title}</h4>
+                    <h4 class="font-bold text-sm text-white">${item.title}</h4>
                     ${item.flavor ? `<p class="text-xs text-gray-400">Смак: ${item.flavor}</p>` : ''}
-                    <p class="text-xs font-bold text-white mt-1">${item.price * item.count} ₴</p>
+                    <p class="text-xs font-black text-[#39ff14] mt-1">${item.price * item.count} ₴</p>
                 </div>
-                <div class="flex items-center gap-2 bg-gray-800 p-1 rounded-xl">
-                    <button onclick="changeCount(${index}, -1)" class="w-6 h-6 bg-gray-700 rounded text-xs font-bold">-</button>
-                    <span class="text-xs font-bold w-4 text-center">${item.count}</span>
-                    <button onclick="changeCount(${index}, 1)" class="w-6 h-6 bg-[#b8ff00] text-black rounded text-xs font-bold">+</button>
+                <div class="flex items-center gap-2 bg-[#05080c] border border-gray-800 p-1 rounded-xl">
+                    <button onclick="changeCount(${index}, -1)" class="w-6 h-6 bg-gray-800 rounded text-xs font-bold text-white">-</button>
+                    <span class="text-xs font-black w-4 text-center text-white">${item.count}</span>
+                    <button onclick="changeCount(${index}, 1)" class="w-6 h-6 bg-[#39ff14] text-black rounded text-xs font-bold">+</button>
                 </div>
             `;
             cartContainer.appendChild(div);
@@ -501,21 +522,29 @@
     function switchTab(tab) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.querySelectorAll('.nav-btn').forEach(b => {
-            b.classList.remove('text-[#b8ff00]', 'active');
-            b.classList.add('text-gray-400');
+            b.classList.remove('text-[#39ff14]', 'active');
+            b.classList.add('text-gray-500');
+            const svg = b.querySelector('svg');
+            if (svg) svg.classList.remove('drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]');
         });
 
         if (tab === 'home' || tab === 'catalog') {
             document.getElementById('tab-catalog').classList.remove('hidden');
-            document.getElementById(tab === 'home' ? 'nav-home' : 'nav-catalog').classList.add('text-[#b8ff00]', 'active');
+            const btn = document.getElementById(tab === 'home' ? 'nav-home' : 'nav-catalog');
+            btn.classList.add('text-[#39ff14]', 'active');
+            btn.querySelector('svg').classList.add('drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]');
         } else if (tab === 'detail') {
             document.getElementById('tab-product-detail').classList.remove('hidden');
         } else if (tab === 'cart') {
             document.getElementById('tab-cart').classList.remove('hidden');
-            document.getElementById('nav-cart').classList.add('text-[#b8ff00]', 'active');
+            const btn = document.getElementById('nav-cart');
+            btn.classList.add('text-[#39ff14]', 'active');
+            btn.querySelector('svg').classList.add('drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]');
         } else if (tab === 'history') {
             document.getElementById('tab-history').classList.remove('hidden');
-            document.getElementById('nav-history').classList.add('text-[#b8ff00]', 'active');
+            const btn = document.getElementById('nav-history');
+            btn.classList.add('text-[#39ff14]', 'active');
+            btn.querySelector('svg').classList.add('drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]');
             initRefLink();
             renderHistoryUI();
         }
@@ -527,9 +556,9 @@
 
         if (orders.length === 0) {
             container.innerHTML = `
-                <div class="bg-[#121a29] border border-gray-800 p-6 rounded-2xl text-center space-y-2">
+                <div class="glass-card border border-gray-800 p-6 rounded-2xl text-center space-y-2">
                     <p class="text-3xl">📦</p>
-                    <p class="text-sm font-bold">У вас поки немає замовлень</p>
+                    <p class="text-sm font-bold text-white">У вас поки немає замовлень</p>
                     <p class="text-xs text-gray-400">Оформіть перше замовлення в каталозі!</p>
                 </div>
             `;
@@ -553,19 +582,19 @@
             }
 
             const div = document.createElement('div');
-            div.className = "bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-2 shadow-xl";
+            div.className = "glass-card border border-gray-800 p-4 rounded-2xl space-y-2 shadow-xl";
             div.innerHTML = `
-                <div class="flex justify-between items-center text-xs text-gray-400 border-b border-gray-800 pb-2">
+                <div class="flex justify-between items-center text-xs text-gray-400 border-b border-gray-800/80 pb-2">
                     <span>📅 ${order.date}</span>
-                    <span class="text-[#b8ff00] font-bold">${currentStatus}</span>
+                    <span class="text-[#39ff14] font-black">${currentStatus}</span>
                 </div>
                 <p class="text-xs text-white"><strong class="text-gray-400">Товари:</strong> ${itemsStr}</p>
                 <p class="text-xs text-white"><strong class="text-gray-400">Доставка:</strong> ${order.delivery}</p>
-                <div class="flex justify-between items-center pt-2 border-t border-gray-800 text-sm font-extrabold">
+                <div class="flex justify-between items-center pt-2 border-t border-gray-800/80 text-sm font-black">
                     <span class="text-gray-300">Сума:</span>
-                    <span class="text-[#b8ff00]">${order.total} ₴</span>
+                    <span class="text-[#39ff14]">${order.total} ₴</span>
                 </div>
-                <a href="https://t.me/telleportt" target="_blank" class="block w-full py-2 bg-gray-800 hover:bg-gray-700 text-center rounded-xl text-xs font-bold text-gray-300 transition-all mt-2">
+                <a href="https://t.me/telleportt" target="_blank" class="block w-full py-2 bg-gray-900 hover:border-[#39ff14]/50 border border-gray-800 text-center rounded-xl text-xs font-bold text-gray-300 transition-all mt-2">
                     💬 Уточнити статус у менеджера
                 </a>
             `;
