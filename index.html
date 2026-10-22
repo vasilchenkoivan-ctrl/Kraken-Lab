@@ -143,7 +143,6 @@
             <p class="text-white font-medium">м. Київ, вул. Остафія Дашкевича</p>
         </div>
 
-        <!-- ПРОМОКОД -->
         <div class="space-y-1.5">
             <label class="text-xs text-gray-400 font-medium">Промокод</label>
             <div class="flex gap-2">
@@ -163,7 +162,6 @@
             </div>
         </div>
 
-        <!-- Текст согласия с офертой -->
         <p class="text-[11px] text-gray-400 text-center leading-relaxed">
             Натискаючи кнопку «Оформити замовлення», ви погоджуєтеся з <span onclick="openInfoModal('offer')" class="text-[#b8ff00] underline cursor-pointer">публічною офертою</span> та <span onclick="openInfoModal('privacy')" class="text-[#b8ff00] underline cursor-pointer">політикою конфіденційності</span>.
         </p>
@@ -172,8 +170,23 @@
     </div>
 </main>
 
-<!-- ВКЛАДКА: ІСТОРІЯ -->
+<!-- ВКЛАДКА: ІСТОРІЯ + РЕФЕРАЛКА -->
 <main id="tab-history" class="tab-content p-4 space-y-4 hidden">
+    <!-- Блок реферальной программы -->
+    <div class="bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-3 shadow-xl">
+        <h3 class="text-sm font-bold text-[#b8ff00] flex items-center gap-2">🎁 Запрошуй друзів — отримуй жижу безкоштовно!</h3>
+        <p class="text-xs text-gray-300 leading-relaxed">
+            За кожного друга, який зробить замовлення за твоим посиланням, ти отримуєш **+10% знижки**!
+            <br>• 100% знижки = **1 баночка безкоштовно** 🔥
+            <br>• Максимум можна накопичити **200% (2 банки)**.
+        </p>
+        <div class="bg-gray-900/80 p-2.5 rounded-xl flex items-center justify-between border border-gray-800">
+            <span id="ref-link-text" class="text-[10px] text-gray-400 truncate max-w-[200px]">Генеруємо посилання...</span>
+            <button onclick="copyRefLink()" class="px-3 py-1.5 bg-[#b8ff00] text-black rounded-lg text-xs font-bold active:scale-95 transition-all">Скопіювати</button>
+        </div>
+        <p class="text-[11px] text-gray-400">Твоя накопичена знижка: <strong id="user-ref-discount" class="text-white">0%</strong></p>
+    </div>
+
     <h2 class="text-xl font-bold">Історія замовлень</h2>
     <div id="history-container" class="space-y-3"></div>
 </main>
@@ -236,6 +249,19 @@
         if (tg.initDataUnsafe?.user?.first_name) {
             document.getElementById('order-name').value = tg.initDataUnsafe.user.first_name + (tg.initDataUnsafe.user.last_name ? ' ' + tg.initDataUnsafe.user.last_name : '');
         }
+    }
+
+    function initRefLink() {
+        const userId = tg?.initDataUnsafe?.user?.id || '1005867951';
+        const refLink = `https://t.me/KrakenLabBot?start=ref_${userId}`;
+        document.getElementById('ref-link-text').innerText = refLink;
+    }
+
+    function copyRefLink() {
+        const link = document.getElementById('ref-link-text').innerText;
+        navigator.clipboard.writeText(link).then(() => {
+            alert("✅ Реферальне посилання скопійовано!");
+        });
     }
 
     function onCityInput() {
@@ -482,11 +508,12 @@
         } else if (tab === 'history') {
             document.getElementById('tab-history').classList.remove('hidden');
             document.getElementById('nav-history').classList.add('text-[#b8ff00]', 'active');
+            initRefLink();
             renderHistoryUI();
         }
     }
 
-    function renderHistoryUI() {
+    async function renderHistoryUI() {
         const container = document.getElementById('history-container');
         const orders = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
 
@@ -502,14 +529,27 @@
         }
 
         container.innerHTML = '';
-        orders.slice().reverse().forEach((order) => {
+
+        for (let order of orders.slice().reverse()) {
             let itemsStr = order.items.map(i => `${i.title} (${i.flavor || 'без смаку'}) x ${i.count}`).join(', ');
+
+            let currentStatus = '⏳ В обробці';
+            if (order.id) {
+                try {
+                    const res = await fetch(`https://kraken-lab.onrender.com/api/order/status/${order.id}`);
+                    const data = await res.json();
+                    if (data.status === 'Виконано') currentStatus = '✅ Виконано';
+                    else if (data.status === 'Скасовано') currentStatus = '❌ Скасовано';
+                    else currentStatus = '⏳ В обробці';
+                } catch(e){}
+            }
+
             const div = document.createElement('div');
             div.className = "bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-2 shadow-xl";
             div.innerHTML = `
                 <div class="flex justify-between items-center text-xs text-gray-400 border-b border-gray-800 pb-2">
                     <span>📅 ${order.date}</span>
-                    <span class="text-[#b8ff00] font-bold">⏳ Прийнято в обробку</span>
+                    <span class="text-[#b8ff00] font-bold">${currentStatus}</span>
                 </div>
                 <p class="text-xs text-white"><strong class="text-gray-400">Товари:</strong> ${itemsStr}</p>
                 <p class="text-xs text-white"><strong class="text-gray-400">Доставка:</strong> ${order.delivery}</p>
@@ -522,7 +562,7 @@
                 </a>
             `;
             container.appendChild(div);
-        });
+        }
     }
 
     async function submitOrder() {
@@ -577,9 +617,11 @@
                 body: JSON.stringify(orderData)
             });
 
+            const data = await response.json();
+
             if (response.ok) {
-                // Сохраняем в локальную историю устройства
                 const newOrder = {
+                    id: data.orderId,
                     date: new Date().toLocaleDateString('uk-UA') + ' ' + new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'}),
                     items: [...cart],
                     delivery: deliveryDesc,
