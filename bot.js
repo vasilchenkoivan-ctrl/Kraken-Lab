@@ -27,7 +27,7 @@ bot.start((ctx) => {
         {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "🛍 Відкрити магазин", web_app: { url: "ССЫЛКА_НА_ТВОЙ_GITHUB_PAGES" } }]
+                    [{ text: "🛍 Відкрити магазин", web_app: { url: "https://krakenlab.vercel.app" } }]
                 ]
             }
         }
