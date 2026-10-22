@@ -17,61 +17,73 @@ const ADMIN_CHAT_ID = '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Хранилище статусов заказов в памяти сервера
+// Память для статусов и рефералов
 const orderStatuses = {};
+const userReferrals = {}; // хранит количество рефералов для каждого ID
 
-// Обработка /start с поддержкой рефералок
 bot.start((ctx) => {
     const startPayload = ctx.message.text.split(' ')[1];
-    let welcomeExtra = '';
-
     if (startPayload && startPayload.startsWith('ref_')) {
         const referrerId = startPayload.replace('ref_', '');
-        welcomeExtra = `\n\n🎉 Ви перейшли за реферальним посиланням!`;
+        if (referrerId !== String(ctx.from.id)) {
+            userReferrals[referrerId] = (userReferrals[referrerId] || 0) + 1;
+        }
     }
 
     ctx.reply(
-        "Вітаємо в 🐙 Kraken Lab!\n\n" +
-        "🛍 Відгуки клієнтів: @KRAKENOTZYVVL\n" +
-        "👩‍💻 Зв'язок з менеджером: @telleportt" + welcomeExtra + "\n\n" +
-        "👇 Натискайте на кнопку нижче — це наш магазин:",
+        "🐙 Вітаємо в Kraken Lab!\n\n" +
+        "👥 Відгуки: @KRAKENOTZYVVL\n" +
+        "💬 Менеджер: @telleportt\n\n" +
+        "🛒 Переходьте до магазину за кнопкою нижче — обирайте товар, додавайте у кошик та оформлюйте замовлення в декілька кліків 👇",
         Markup.inlineKeyboard([
             [Markup.button.webApp("🛍 Відкрити магазин", "https://krakenlab.vercel.app")]
         ])
     );
 });
 
-// Эндпоинт приема заказов
+// Эндпоинт проверки реферальной скидки (1 реферал = +10%, макс 200%)
+app.get('/api/ref/discount/:id', (req, res) => {
+    const userId = req.params.id;
+    const count = userReferrals[userId] || 0;
+    const discount = Math.min(count * 10, 200);
+    res.json({ discount, count });
+});
+
 app.post('/api/order', async (req, res) => {
     try {
         const { user, items, totalPrice, deliveryType, address, phone } = req.body;
-        const orderId = 'ORD-' + Date.now().toString().slice(-6);
+        const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
         const isPickup = deliveryType === 'Самовивіз' || (address && address.includes('Самовивіз'));
 
         // Сообщение покупателю
-        let customerMessage = `✅ **Дякуємо за замовлення #${orderId}!**\n\n`;
+        let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n` +
+            `📦 Ваше замовлення успішно оформлено та передано менеджеру.\n` +
+            `🛒 **Товари:**\n${items}\n\n`;
+
         if (isPickup) {
-            customerMessage += `⏱️ **Оскільки це самовивіз**, напишіть менеджеру @telleportt для узгодження часу!\n`;
+            customerMessage += `🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом для уточнення деталей.\n` +
+                `⏱️ Оскільки це **самовивіз**, будь ласка, напишіть менеджеру @telleportt для узгодження часу!\n\n`;
         } else {
-            customerMessage += `🚚 Менеджер Kraken Lab 🐙 зв'яжеться з вами найближчим часом для підтвердження доставки.\n`;
+            customerMessage += `🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом для уточнення деталей.\n\n`;
         }
-        customerMessage += `\n📍 **Менеджер:** @telleportt`;
+        customerMessage += `💚 **Дякуємо, що обираєте KrakenLab!**`;
 
         if (user && user.id) {
-            await bot.telegram.sendMessage(user.id, customerMessage, { parse_mode: 'Markdown' });
+            await bot.telegram.sendMessage(user.id, customerMessage, { parse_mode: 'Markdown' }).catch(() => {});
         }
 
-        // Сообщение администратору с кнопками статусов
+        // Сообщение администратору
         const adminMessage = 
-            `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}!**\n\n` +
+            `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n` +
             `👤 **Покупець:** ${user?.first_name || 'Клієнт'} (@${user?.username || 'немає'})\n` +
             `🆔 **ID:** \`${user?.id || 'невідомо'}\`\n` +
             `📞 **Телефон:** ${phone || 'не вказано'}\n` +
             `🚚 **Спосіб:** ${deliveryType || 'не вказано'}\n` +
             `📍 **Деталі:** ${address || 'не вказано'}\n\n` +
-            `📦 **Товари:**\n${items || 'Не вказано'}\n\n` +
-            `💰 **Сума:** ${totalPrice} грн`;
+            `📦 **Товари:**\n${items}\n\n` +
+            `💰 **Сума:** ${totalPrice} грн\n\n` +
+            `📌 **Поточний статус:** В обробці`;
 
         orderStatuses[orderId] = 'В обробці';
 
@@ -95,14 +107,12 @@ app.post('/api/order', async (req, res) => {
     }
 });
 
-// Получение статуса заказа для сайта
 app.get('/api/order/status/:id', (req, res) => {
     const orderId = req.params.id;
     const status = orderStatuses[orderId] || 'В обробці';
     res.json({ orderId, status });
 });
 
-// Обработчик нажатия кнопок админом в Telegram
 bot.action(/status_(.+?)_(.+)/, async (ctx) => {
     const orderId = ctx.match[1];
     const action = ctx.match[2];
@@ -113,10 +123,15 @@ bot.action(/status_(.+?)_(.+)/, async (ctx) => {
 
     orderStatuses[orderId] = statusText;
 
-    await ctx.answerCbQuery(`Статус заказа ${orderId} изменен на: ${statusText}`);
-    await ctx.editMessageText(
-        ctx.callbackQuery.message.text + `\n\n📌 **Поточний статус:** ${statusText}`,
-        {
+    await ctx.answerCbQuery(`Статус ${orderId}: ${statusText}`);
+
+    const oldText = ctx.callbackQuery.message.text;
+    const baseText = oldText.substring(0, oldText.lastIndexOf('📌'));
+
+    const updatedText = baseText + `📌 **Поточний статус:** ${statusText}`;
+
+    try {
+        await ctx.editMessageText(updatedText, {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([
                 [
@@ -125,8 +140,8 @@ bot.action(/status_(.+?)_(.+)/, async (ctx) => {
                     Markup.button.callback(action === 'cancel' ? '❌ [Скасовано]' : '❌ Скасовано', `status_${orderId}_cancel`)
                 ]
             ])
-        }
-    );
+        });
+    } catch(e) {}
 });
 
 bot.launch().then(() => {
