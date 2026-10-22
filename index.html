@@ -172,7 +172,6 @@
 
 <!-- ВКЛАДКА: ІСТОРІЯ + РЕФЕРАЛКА -->
 <main id="tab-history" class="tab-content p-4 space-y-4 hidden">
-    <!-- Блок реферальной программы -->
     <div class="bg-[#121a29] border border-gray-800 p-4 rounded-2xl space-y-3 shadow-xl">
         <h3 class="text-sm font-bold text-[#b8ff00] flex items-center gap-2">🎁 Запрошуй друзів — отримуй жижу безкоштовно!</h3>
         <p class="text-xs text-gray-300 leading-relaxed">
@@ -251,11 +250,21 @@
         }
     }
 
-    function initRefLink() {
+    async function initRefLink() {
         const userId = tg?.initDataUnsafe?.user?.id || '1005867951';
-        // Жёстко прописан твой реальный бот @KrakenliquidLAB_bot
         const refLink = `https://t.me/KrakenliquidLAB_bot?start=ref_${userId}`;
         document.getElementById('ref-link-text').innerText = refLink;
+
+        // Подгружаем актуальную скидку с сервера
+        try {
+            const res = await fetch(`https://kraken-lab.onrender.com/api/ref/discount/${userId}`);
+            const data = await res.json();
+            if (data.discount > 0) {
+                discountPercent = data.discount;
+                document.getElementById('user-ref-discount').innerText = `${data.discount}%`;
+                updateCartUI();
+            }
+        } catch(e) {}
     }
 
     function copyRefLink() {
@@ -299,7 +308,6 @@
             msg.className = 'text-[11px] text-[#b8ff00] font-bold';
             msg.innerText = '✅ Промокод активовано! Знижка 10%';
         } else {
-            discountPercent = 0;
             msg.className = 'text-[11px] text-red-400 font-bold';
             msg.innerText = '❌ Невірний промокод';
         }
