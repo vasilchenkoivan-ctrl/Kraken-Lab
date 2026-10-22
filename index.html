@@ -255,7 +255,6 @@
         const refLink = `https://t.me/KrakenliquidLAB_bot?start=ref_${userId}`;
         document.getElementById('ref-link-text').innerText = refLink;
 
-        // Подгружаем актуальную скидку с сервера
         try {
             const res = await fetch(`https://kraken-lab.onrender.com/api/ref/discount/${userId}`);
             const data = await res.json();
