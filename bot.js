@@ -17,9 +17,8 @@ const ADMIN_CHAT_ID = '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Память для статусов и рефералов
 const orderStatuses = {};
-const userReferrals = {}; // хранит количество рефералов для каждого ID
+const userReferrals = {};
 
 bot.start((ctx) => {
     const startPayload = ctx.message.text.split(' ')[1];
@@ -41,7 +40,6 @@ bot.start((ctx) => {
     );
 });
 
-// Эндпоинт проверки реферальной скидки (1 реферал = +10%, макс 200%)
 app.get('/api/ref/discount/:id', (req, res) => {
     const userId = req.params.id;
     const count = userReferrals[userId] || 0;
@@ -56,7 +54,6 @@ app.post('/api/order', async (req, res) => {
 
         const isPickup = deliveryType === 'Самовивіз' || (address && address.includes('Самовивіз'));
 
-        // Сообщение покупателю
         let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n` +
             `📦 Ваше замовлення успішно оформлено та передано менеджеру.\n` +
             `🛒 **Товари:**\n${items}\n\n`;
@@ -73,7 +70,6 @@ app.post('/api/order', async (req, res) => {
             await bot.telegram.sendMessage(user.id, customerMessage, { parse_mode: 'Markdown' }).catch(() => {});
         }
 
-        // Сообщение администратору
         const adminMessage = 
             `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n` +
             `👤 **Покупець:** ${user?.first_name || 'Клієнт'} (@${user?.username || 'немає'})\n` +
@@ -102,7 +98,7 @@ app.post('/api/order', async (req, res) => {
 
         return res.status(200).json({ ok: true, orderId: orderId });
     } catch (error) {
-        console.error("Ошибка при отправке заказа:", error);
+        console.error("Помилка:", error);
         return res.status(500).json({ ok: false, error: error.message });
     }
 });
@@ -127,7 +123,6 @@ bot.action(/status_(.+?)_(.+)/, async (ctx) => {
 
     const oldText = ctx.callbackQuery.message.text;
     const baseText = oldText.substring(0, oldText.lastIndexOf('📌'));
-
     const updatedText = baseText + `📌 **Поточний статус:** ${statusText}`;
 
     try {
@@ -146,8 +141,6 @@ bot.action(/status_(.+?)_(.+)/, async (ctx) => {
 
 bot.launch().then(() => {
     console.log("🐙 Kraken Lab Bot успешно запущен!");
-}).catch(err => {
-    console.error("Ошибка запуска бота:", err);
 });
 
 const PORT = process.env.PORT || 10000;
