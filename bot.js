@@ -10,8 +10,9 @@ app.use((req, res, next) => {
     next();
 });
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '8523927755:AAFS-OILaqFWleNIHYdGnS-9tw8aEZSYCqE';
-const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
+const BOT_TOKEN = "8523927755:AAHCJKto1g_xWFUCAwqJSMKOH5nu5Fkg7j4";
+const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951'; // Твой ID админа
+
 
 const bot = new Telegraf(BOT_TOKEN);
 
