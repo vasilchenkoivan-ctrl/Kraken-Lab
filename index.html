@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClovySmok 🐙</title>
+    <title>Kraken Lab 🐙</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Telegram Web App SDK -->
@@ -20,7 +20,7 @@
     <div class="flex items-center gap-2">
         <span class="text-2xl">🐙</span>
         <div>
-            <h1 class="text-base font-bold leading-none tracking-wide text-white">ClovySmok</h1>
+            <h1 class="text-base font-bold leading-none tracking-wide text-white">Kraken Lab</h1>
             <p class="text-[10px] text-gray-400 font-medium">Premium Vape Shop</p>
         </div>
     </div>
@@ -139,7 +139,7 @@
         </div>
 
         <div id="pickup-fields" class="bg-[#121a29] border border-gray-800 p-3.5 rounded-xl hidden text-xs text-gray-300 space-y-1">
-            <p class="font-bold text-[#b8ff00] text-sm">📍 Самовивіз із магазину ClovySmok</p>
+            <p class="font-bold text-[#b8ff00] text-sm">📍 Самовивіз із магазину Kraken Lab</p>
             <p class="text-white font-medium">м. Київ, вул. Остафія Дашкевича</p>
         </div>
 
@@ -253,12 +253,8 @@
 
     function initRefLink() {
         const userId = tg?.initDataUnsafe?.user?.id || '1005867951';
-        // Автоматически берем юзернейм твоего бота из Telegram, либо используем ClovySmok_bot
-        let botUsername = "ClovySmok_bot";
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.bot_username) {
-            botUsername = tg.initDataUnsafe.bot_username;
-        }
-        const refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
+        // Жёстко прописан твой реальный бот @KrakenliquidLAB_bot
+        const refLink = `https://t.me/KrakenliquidLAB_bot?start=ref_${userId}`;
         document.getElementById('ref-link-text').innerText = refLink;
     }
 
