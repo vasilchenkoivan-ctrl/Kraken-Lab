@@ -1,5 +1,6 @@
 const express = require('express');
 const { Telegraf, Markup } = require('telegraf');
+const https = require('https');
 
 const app = express();
 app.use(express.json());
@@ -20,23 +21,46 @@ const bot = new Telegraf(BOT_TOKEN);
 const orderStatuses = {};
 const userReferrals = {};
 
-// Функция для отправки заказа в Google Таблицу через Webhook
-async function sendToGoogleSheet(orderData) {
+// Надежная функция отправки в Google Sheet без сторонних зависимостей
+function sendToGoogleSheet(orderData) {
     const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
     if (!scriptUrl) {
-        console.log("⚠️ GOOGLE_SCRIPT_URL не задана в Render!");
+        console.log("⚠️ GOOGLE_SCRIPT_URL не задана!");
         return;
     }
 
     try {
-        await fetch(scriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-        });
-        console.log("✅ Заказ успешно отправлен в Google Таблицу!");
+        const postData = JSON.stringify(orderData);
+        
+        const sendReq = (url) => {
+            const req = https.request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(postData)
+                }
+            }, (res) => {
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    // Обработка редиректа от Google Apps Script
+                    https.get(res.headers.location, (redirectRes) => {
+                        console.log("✅ Данные доставлены в Google Таблицу!");
+                    });
+                } else {
+                    console.log("✅ Ответ сервера Таблиц:", res.statusCode);
+                }
+            });
+
+            req.on('error', (e) => {
+                console.error("❌ Ошибка отправки:", e.message);
+            });
+
+            req.write(postData);
+            req.end();
+        };
+
+        sendReq(scriptUrl);
     } catch (err) {
-        console.error("❌ Ошибка отправки в Google Таблицу:", err.message);
+        console.error("❌ Ошибка:", err.message);
     }
 }
 
@@ -116,7 +140,7 @@ app.post('/api/order', async (req, res) => {
             ...keyboard 
         });
 
-        // Отправка финансового отчета в Google Таблицу
+        // Отправка в Google Таблицу
         sendToGoogleSheet({
             order_id: orderId,
             customer_name: `${user?.first_name || 'Клієнт'} (@${user?.username || 'немає'})`,
