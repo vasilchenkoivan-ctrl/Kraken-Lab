@@ -1,95 +1,102 @@
-const { Telegraf, Markup } = require('telegraf');
-const axios = require('axios');
 const express = require('express');
+const cors = require('cors');
+const { Telegraf } = require('telegraf');
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+// 1. Инициализация Express
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Веб-сервер, чтобы Render видел, что приложение живое
+// Обязательные настройки для работы Mini App
+app.use(cors());
+app.use(express.json());
+
+// 2. Инициализация Telegram Бота
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const bot = new Telegraf(BOT_TOKEN);
+
+// Конфигурация
+const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID; // ID админа для уведомлений
+const WEB_APP_URL = process.env.WEB_APP_URL || 'https://krakenlab.vercel.app'; // Ссылка на Vercel
+
+// --- РОУТЫ ДЛЯ VERCEL (WEB APP) ---
+
+// Проверка работы сервера
 app.get('/', (req, res) => {
-  res.send('Kraken Lab Bot is running!');
+    res.send('Бэкенд Kraken Lab работает!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
-});
-
-// Хранилище сессий для ввода себестоимости
-const userSessions = {};
-
-// Функция отправки уведомления администратору
-async function sendAdminOrderNotification(adminChatId, orderData) {
-  const messageText = 
-    `🛍️ **НОВЕ ЗАМОВЛЕННЯ #${orderData.order_id}**\n\n` +
-    `👤 **Покупець:** ${orderData.customer_name}\n` +
-    `📞 **Телефон:** ${orderData.phone || '-'}\n` +
-    `🚚 **Спосіб:** ${orderData.delivery_method || '-'}\n\n` +
-    `📦 **Товари:**\n${orderData.items}\n\n` +
-    `💰 **Сума:** ${orderData.total_price} грн\n` +
-    `📌 **Поточний статус:** В обробці`;
-
-  const adminKeyboard = Markup.inlineKeyboard([
-    [
-      Markup.button.callback('⏳ В обробці', `status_processing_${orderData.order_id}`),
-      Markup.button.callback('✅ Виконано', `status_completed_${orderData.order_id}`),
-      Markup.button.callback('❌ Скасовано', `status_cancelled_${orderData.order_id}`)
-    ],
-    [
-      Markup.button.callback('✏️ Собівартість', `edit_cost_${orderData.order_id}`)
-    ]
-  ]);
-
-  await bot.telegram.sendMessage(adminChatId, messageText, { 
-    parse_mode: 'Markdown', 
-    ...adminKeyboard 
-  });
-}
-
-// Обработка кнопки себестоимости
-bot.action(/edit_cost_(.+)/, async (ctx) => {
-  const orderId = ctx.match[1];
-  userSessions[ctx.from.id] = { action: 'awaiting_cost', orderId: orderId };
-  await ctx.reply(`Введіть нову собівартість (грн) для замовлення #${orderId}:`);
-  await ctx.answerCbQuery();
-});
-
-// Перехват текста с суммой себестоимости
-bot.on('text', async (ctx, next) => {
-  const session = userSessions[ctx.from.id];
-  
-  if (session && session.action === 'awaiting_cost') {
-    const cost = parseFloat(ctx.message.text.replace(',', '.'));
-
-    if (isNaN(cost)) {
-      return ctx.reply('❌ Будь ласка, введіть число (наприклад, 210).');
-    }
-
-    delete userSessions[ctx.from.id];
-
+// Прием заказа из Telegram Mini App
+app.post('/api/order', async (req, res) => {
     try {
-      await axios.post(process.env.GOOGLE_SCRIPT_URL, {
-        action: 'update_cost',
-        order_id: session.orderId,
-        cost_price: cost
-      });
+        const orderData = req.body;
+        console.log('Новый заказ:', orderData);
 
-      await ctx.reply(`✅ Собівартість для замовлення #${session.orderId} оновлена: ${cost} грн!`);
-    } catch (err) {
-      await ctx.reply(`❌ Помилка оновлення в таблиці: ${err.message}`);
+        // Формируем текст сообщения для админа
+        let message = `🛍 <b>НОВЫЙ ЗАКАЗ!</b>\n\n`;
+        message += `👤 <b>Клиент:</b> ${orderData.phone || 'Не указан'}\n`;
+        message += `🚚 <b>Доставка:</b> ${orderData.deliveryMethod || 'Не указан'}\n`;
+        if (orderData.comment) {
+            message += `💬 <b>Комментарий:</b> ${orderData.comment}\n`;
+        }
+        message += `\n📦 <b>Товары:</b>\n`;
+
+        let totalCostPrice = 0; // Для подсчета себестоимости
+
+        if (orderData.items && orderData.items.length > 0) {
+            orderData.items.forEach((item, index) => {
+                message += `${index + 1}. ${item.title || item.name} — ${item.quantity || 1} шт. (${item.price} грн)\n`;
+                
+                // Учитываем себестоимость, если она передается с товара
+                if (item.costPrice) {
+                    totalCostPrice += (Number(item.costPrice) * (item.quantity || 1));
+                }
+            });
+        }
+
+        message += `\n💰 <b>Сумма к оплате:</b> ${orderData.totalPrice || 0} грн`;
+
+        // Добавляем инфо о себестоимости для администратора
+        if (totalCostPrice > 0) {
+            const profit = (orderData.totalPrice || 0) - totalCostPrice;
+            message += `\n📊 <b>Себестоимость:</b> ${totalCostPrice} грн`;
+            message += `\n💵 <b>Чистая прибыль:</b> ${profit} грн`;
+        }
+
+        // Отправка уведомления админу в Telegram
+        if (ADMIN_CHAT_ID) {
+            await bot.telegram.sendMessage(ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
+        }
+
+        return res.status(200).json({ success: true, message: 'Заказ успешно создан' });
+    } catch (error) {
+        console.error('Ошибка при обработке заказа:', error);
+        return res.status(500).json({ success: false, error: 'Ошибка сервера при создании заказа' });
     }
-    return;
-  }
-
-  return next();
 });
 
-// Запуск бота
-bot.launch().then(() => {
-  console.log('🤖 Bot Kraken Lab successfully started!');
+// --- КОМАНДЫ БОТА ---
+
+// Команда /start
+bot.start((ctx) => {
+    ctx.reply('Приветствуем в Kraken LAB! Нажмите кнопку ниже, чтобы открыть каталог товаров:', {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: '🛒 Открыть магазин', web_app: { url: WEB_APP_URL } }]
+            ]
+        }
+    });
 });
 
+// Запуск сервера Express
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
+});
+
+// Запуск Telegram бота
+bot.launch()
+    .then(() => console.log('Telegram бот успешно запущен'))
+    .catch((err) => console.error('Ошибка запуска бота:', err));
+
+// Плавная остановка бота при перезапуске сервера
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
-
-module.exports = { bot, sendAdminOrderNotification };
