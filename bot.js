@@ -72,7 +72,7 @@ app.post('/api/order', async (req, res) => {
 });
 
 bot.start((ctx) => {
-    ctx.reply('Вітаємо в Kraken Lab!\n\n👥 Відгуки: @KRAKENOTZYVVL\n💬 Менеджер: @telleportt\n\n🛒 Переходьте до магазину за кнопкою нижче — обирайте товар, додавайте у кошик та оформлюйте замовлення в декілька кліків 👇', {
+    ctx.reply('🐙 Вітаємо в Kraken Lab!\n\n👥 Відгуки: @KRAKENOTZYVVL\n💬 Менеджер: @telleportt\n\n🛒 Переходьте до магазину за кнопкою нижче — обирайте товар, додавайте у кошик та оформлюйте замовлення в декілька кліків 👇', {
         reply_markup: {
             inline_keyboard: [
                 [{ text: '🛒 Відкрити магазин', web_app: { url: WEB_APP_URL } }]
