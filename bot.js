@@ -6,7 +6,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Обязательный корень, чтобы Render видел, что сервер живой
+// Веб-сервер, чтобы Render видел, что приложение живое
 app.get('/', (req, res) => {
   res.send('Kraken Lab Bot is running!');
 });
@@ -54,7 +54,7 @@ bot.action(/edit_cost_(.+)/, async (ctx) => {
   await ctx.answerCbQuery();
 });
 
-// Перехват текста с суммой
+// Перехват текста с суммой себестоимости
 bot.on('text', async (ctx, next) => {
   const session = userSessions[ctx.from.id];
   
