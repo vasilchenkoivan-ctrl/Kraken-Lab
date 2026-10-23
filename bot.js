@@ -12,13 +12,33 @@ app.use((req, res, next) => {
     next();
 });
 
-const BOT_TOKEN = '8523927755:AAEyK603j5vEaoSzGgHREpVVAJa4a_uEx-o';
-const ADMIN_CHAT_ID = '1005867951';
+const BOT_TOKEN = process.env.BOT_TOKEN || '8523927755:AAEyK603j5vEaoSzGgHREpVVAJa4a_uEx-o';
+const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
 
 const orderStatuses = {};
 const userReferrals = {};
+
+// Функция для отправки заказа в Google Таблицу через Webhook
+async function sendToGoogleSheet(orderData) {
+    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
+    if (!scriptUrl) {
+        console.log("⚠️ GOOGLE_SCRIPT_URL не задана в Render!");
+        return;
+    }
+
+    try {
+        await fetch(scriptUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+        console.log("✅ Заказ успешно отправлен в Google Таблицу!");
+    } catch (err) {
+        console.error("❌ Ошибка отправки в Google Таблицу:", err.message);
+    }
+}
 
 bot.start((ctx) => {
     const startPayload = ctx.message.text.split(' ')[1];
@@ -49,7 +69,7 @@ app.get('/api/ref/discount/:id', (req, res) => {
 
 app.post('/api/order', async (req, res) => {
     try {
-        const { user, items, totalPrice, deliveryType, address, phone } = req.body;
+        const { user, items, totalPrice, costPrice, deliveryType, address, phone } = req.body;
         const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
         const isPickup = deliveryType === 'Самовивіз' || (address && address.includes('Самовивіз'));
@@ -94,6 +114,16 @@ app.post('/api/order', async (req, res) => {
         await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, { 
             parse_mode: 'Markdown',
             ...keyboard 
+        });
+
+        // Отправка финансового отчета в Google Таблицу
+        sendToGoogleSheet({
+            order_id: orderId,
+            customer_name: `${user?.first_name || 'Клієнт'} (@${user?.username || 'немає'})`,
+            phone: phone || 'не вказано',
+            items: items,
+            total_price: totalPrice,
+            cost_price: costPrice || 0
         });
 
         return res.status(200).json({ ok: true, orderId: orderId });
