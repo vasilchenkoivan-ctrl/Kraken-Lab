@@ -1,10 +1,8 @@
 const express = require('express');
 const { Telegraf } = require('telegraf');
 
-// 1. Инициализация Express
 const app = express();
 
-// Включаем CORS стандартными заголовками (без внешних модулей)
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -17,31 +15,31 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// 2. Твои данные
 const BOT_TOKEN = '8523927755:AAEyK603j5vEaoSzGgHREpVVAJa4a_uEx-o'; 
 const ADMIN_CHAT_ID = '1005867951'; 
 const WEB_APP_URL = 'https://krakenlab.vercel.app';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Проверка работы сервера
 app.get('/', (req, res) => {
     res.send('Бэкенд Kraken Lab работает!');
 });
 
-// Прием заказа из Telegram Mini App
 app.post('/api/order', async (req, res) => {
     try {
         const orderData = req.body;
         console.log('Новый заказ:', orderData);
 
-        let message = `🛍 <b>НОВЫЙ ЗАКАЗ!</b>\n\n`;
-        message += `👤 <b>Клиент:</b> ${orderData.phone || 'Не указан'}\n`;
-        message += `🚚 <b>Доставка:</b> ${orderData.deliveryMethod || 'Не указан'}\n`;
-        if (orderData.comment) {
-            message += `💬 <b>Комментарий:</b> ${orderData.comment}\n`;
+        let message = `🛍 <b>НОВЕ ЗАМОВЛЕННЯ</b>\n\n`;
+        message += `👤 <b>Покупець:</b> ${orderData.name || orderData.phone || 'Не вказано'}\n`;
+        if (orderData.phone) {
+            message += `📞 <b>Телефон:</b> ${orderData.phone}\n`;
         }
-        message += `\n📦 <b>Товары:</b>\n`;
+        message += `🚚 <b>Спосіб:</b> ${orderData.deliveryMethod || 'Не вказано'}\n`;
+        if (orderData.comment) {
+            message += `💬 <b>Коментар:</b> ${orderData.comment}\n`;
+        }
+        message += `\n📦 <b>Товари:</b>\n`;
 
         let totalCostPrice = 0;
 
@@ -54,45 +52,43 @@ app.post('/api/order', async (req, res) => {
             });
         }
 
-        message += `\n💰 <b>Сумма к оплате:</b> ${orderData.totalPrice || 0} грн`;
+        message += `\n💰 <b>Сума:</b> ${orderData.totalPrice || 0} грн`;
 
         if (totalCostPrice > 0) {
             const profit = (orderData.totalPrice || 0) - totalCostPrice;
-            message += `\n📊 <b>Себестоимость:</b> ${totalCostPrice} грн`;
-            message += `\n💵 <b>Чистая прибыль:</b> ${profit} грн`;
+            message += `\n📊 <b>Собівартість:</b> ${totalCostPrice} грн`;
+            message += `\n💵 <b>Чистий прибуток:</b> ${profit} грн`;
         }
 
         if (ADMIN_CHAT_ID) {
             await bot.telegram.sendMessage(ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
         }
 
-        return res.status(200).json({ success: true, message: 'Заказ успешно создан' });
+        return res.status(200).json({ success: true, message: 'Замовлення успішно створено' });
     } catch (error) {
-        console.error('Ошибка при обработке заказа:', error);
-        return res.status(500).json({ success: false, error: 'Ошибка сервера' });
+        console.error('Помилка при обробці замовлення:', error);
+        return res.status(500).json({ success: false, error: 'Помилка сервера' });
     }
 });
 
-// Команда /start
 bot.start((ctx) => {
-    ctx.reply('Приветствуем в Kraken LAB! Нажмите кнопку ниже, чтобы открыть каталог товаров:', {
+    ctx.reply('Вітаємо в Kraken Lab!\n\n👥 Відгуки: @KRAKENOTZYVVL\n💬 Менеджер: @telleportt\n\n🛒 Переходьте до магазину за кнопкою нижче — обирайте товар, додавайте у кошик та оформлюйте замовлення в декілька кліків 👇', {
         reply_markup: {
             inline_keyboard: [
-                [{ text: '🛒 Открыть магазин', web_app: { url: WEB_APP_URL } }]
+                [{ text: '🛒 Відкрити магазин', web_app: { url: WEB_APP_URL } }]
             ]
         }
     });
 });
 
-// Запуск сервера
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
 
 bot.launch()
-    .then(() => console.log('Telegram бот запущен'))
-    .catch((err) => console.error('Ошибка запуска бота:', err));
+    .then(() => console.log('Telegram бот запущено'))
+    .catch((err) => console.error('Помилка запуску бота:', err));
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
