@@ -12,7 +12,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Неоновые свечения в стиле логотипа Kraken Lab */
         .neon-border {
             border: 1px solid rgba(57, 255, 20, 0.3);
             box-shadow: 0 0 15px rgba(57, 255, 20, 0.15);
@@ -211,25 +210,21 @@
     <div id="history-container" class="space-y-3"></div>
 </main>
 
-<!-- НАВИГАЦИЯ -->
-<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#05080c]/95 backdrop-blur-lg border-t border-[#39ff14]/20 px-2 py-2">
-    <div class="max-w-md mx-auto grid grid-cols-4 gap-1 text-center">
-        <button onclick="switchTab('home')" id="nav-home" class="nav-btn active flex flex-col items-center justify-center py-1 rounded-xl text-[#39ff14] transition-all">
-            <svg class="w-5 h-5 mb-0.5 fill-current filter drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            <span class="text-[9px] font-black uppercase tracking-wider">Головна</span>
-        </button>
-        <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-500 transition-all">
-            <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4v4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
-            <span class="text-[9px] font-black uppercase tracking-wider">Каталог</span>
+<!-- НАВИГАЦИЯ (3 ВКЛАДКИ) -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#05080c]/95 backdrop-blur-lg border-t border-[#39ff14]/20 px-4 py-2">
+    <div class="max-w-md mx-auto grid grid-cols-3 gap-2 text-center">
+        <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn active flex flex-col items-center justify-center py-1 rounded-xl text-[#39ff14] transition-all">
+            <svg class="w-5 h-5 mb-0.5 fill-current filter drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4v4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+            <span class="text-[10px] font-black uppercase tracking-wider">Каталог</span>
         </button>
         <button onclick="switchTab('cart')" id="nav-cart" class="nav-btn relative flex flex-col items-center justify-center py-1 rounded-xl text-gray-500 transition-all">
-            <span id="cart-badge" class="absolute top-0.5 right-3 bg-[#39ff14] text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center hidden shadow-[0_0_8px_rgba(57,255,20,0.8)]">0</span>
+            <span id="cart-badge" class="absolute top-0.5 right-6 bg-[#39ff14] text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center hidden shadow-[0_0_8px_rgba(57,255,20,0.8)]">0</span>
             <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            <span class="text-[9px] font-black uppercase tracking-wider">Кошик</span>
+            <span class="text-[10px] font-black uppercase tracking-wider">Кошик</span>
         </button>
         <button onclick="switchTab('history')" id="nav-history" class="nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-gray-500 transition-all">
             <svg class="w-5 h-5 mb-0.5 fill-current" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-            <span class="text-[9px] font-black uppercase tracking-wider">Історія</span>
+            <span class="text-[10px] font-black uppercase tracking-wider">Історія</span>
         </button>
     </div>
 </nav>
@@ -379,7 +374,7 @@
             card.className = "glass-card p-3 rounded-2xl border border-gray-800 hover:border-[#39ff14]/50 flex flex-col justify-between cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(57,255,20,0.15)]";
             card.onclick = () => openProductDetail(product.id);
 
-            const img = product.image ? `<img src="${product.image}" class="w-full h-28 object-cover rounded-xl mb-2">` : '<div class="w-full h-28 bg-gray-900 rounded-xl mb-2 flex items-center justify-center text-2xl">📦</div>';
+            const img = product.image ? `<div class="w-full aspect-square rounded-xl mb-2 overflow-hidden bg-black/40 border border-gray-800 flex items-center justify-center"><img src="${product.image}" class="w-full h-full object-cover"></div>` : '<div class="w-full aspect-square bg-gray-900 rounded-xl mb-2 flex items-center justify-center text-2xl">📦</div>';
 
             card.innerHTML = `
                 <div>${img}<h3 class="text-xs font-bold line-clamp-1 text-white">${product.title}</h3></div>
@@ -401,7 +396,7 @@
         let rawFlavors = product.flavors ? product.flavors.split(/[,;\n]/).map(s => s.trim()).filter(Boolean) : [];
         selectedFlavor = rawFlavors.length > 0 ? rawFlavors[0] : '';
 
-        const img = product.image ? `<img src="${product.image}" class="w-full h-48 object-cover rounded-2xl mb-3 border border-[#39ff14]/30">` : '<div class="w-full h-48 bg-gray-900 rounded-2xl mb-3 flex items-center justify-center text-4xl">📦</div>';
+        const img = product.image ? `<div class="w-full aspect-square rounded-2xl mb-3 border border-[#39ff14]/30 overflow-hidden bg-black/50 flex items-center justify-center"><img src="${product.image}" class="w-full h-full object-cover"></div>` : '<div class="w-full aspect-square bg-gray-900 rounded-2xl mb-3 flex items-center justify-center text-4xl">📦</div>';
 
         let flavorsHtml = rawFlavors.length > 0 ? `
             <div class="space-y-2">
@@ -528,9 +523,9 @@
             if (svg) svg.classList.remove('drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]');
         });
 
-        if (tab === 'home' || tab === 'catalog') {
+        if (tab === 'catalog') {
             document.getElementById('tab-catalog').classList.remove('hidden');
-            const btn = document.getElementById(tab === 'home' ? 'nav-home' : 'nav-catalog');
+            const btn = document.getElementById('nav-catalog');
             btn.classList.add('text-[#39ff14]', 'active');
             btn.querySelector('svg').classList.add('drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]');
         } else if (tab === 'detail') {
