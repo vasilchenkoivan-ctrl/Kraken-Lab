@@ -17,7 +17,7 @@ async function sendAdminOrderNotification(adminChatId, orderData) {
     `💰 **Сума:** ${orderData.total_price} грн\n` +
     `📌 **Поточний статус:** В обробці`;
 
-  // Клавиатура с 4 кнопками (статусы + изменить себестоимость)
+  // Клавиатура с кнопками статусов + кнопка себестоимости
   const adminKeyboard = Markup.inlineKeyboard([
     [
       Markup.button.callback('⏳ В обробці', `status_processing_${orderData.order_id}`),
@@ -39,7 +39,6 @@ async function sendAdminOrderNotification(adminChatId, orderData) {
 bot.action(/edit_cost_(.+)/, async (ctx) => {
   const orderId = ctx.match[1];
   
-  // Запоминаем, что админ сейчас будет вводить себестоимость для этого заказа
   userSessions[ctx.from.id] = { 
     action: 'awaiting_cost', 
     orderId: orderId 
@@ -57,21 +56,19 @@ bot.on('text', async (ctx, next) => {
     const cost = parseFloat(ctx.message.text.replace(',', '.'));
 
     if (isNaN(cost)) {
-      return ctx.reply('❌ Будь ласка, введіть коректне число (наприклад, 210 или 180.50).');
+      return ctx.reply('❌ Будь ласка, введіть коректне число (наприклад, 210 або 180.50).');
     }
 
-    // Сбрасываем сессию ожидания
     delete userSessions[ctx.from.id];
 
     try {
-      // Отправляем обновленную себестоимость в Google Таблицу
       await axios.post(process.env.GOOGLE_SCRIPT_URL, {
         action: 'update_cost',
         order_id: session.orderId,
         cost_price: cost
       });
 
-      await ctx.reply(`✅ Собівартість для замовлення #${session.orderId} оновлена: ${cost} грн!\nТаблиця успішно перерахована.`);
+      await ctx.reply(`✅ Собівартість для замовлення #${session.session?.orderId || session.orderId} оновлена: ${cost} грн!\nТаблиця успішно перерахована.`);
     } catch (err) {
       await ctx.reply(`❌ Помилка оновлення в таблиці: ${err.message}`);
     }
@@ -81,5 +78,15 @@ bot.on('text', async (ctx, next) => {
   return next();
 });
 
-// Экспорт или запуск бота
+// ЗАПУСК БОТА (чтобы Render не выключал приложение)
+bot.launch().then(() => {
+  console.log('🤖 Bot Kraken Lab successfully started!');
+}).catch((err) => {
+  console.error('Failed to start bot:', err);
+});
+
+// Graceful shutdown
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
 module.exports = { bot, sendAdminOrderNotification };
