@@ -1,183 +1,85 @@
-const express = require('express');
 const { Telegraf, Markup } = require('telegraf');
-const https = require('https');
+const axios = require('axios');
 
-const app = express();
-app.use(express.json());
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    if (req.method === 'OPTIONS') return res.sendStatus(200);
-    next();
-});
+// Хранилище сессий для ожидания ввода себестоимости
+const userSessions = {};
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '8523927755:AAEyK603j5vEaoSzGgHREpVVAJa4a_uEx-o';
-const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
+// 1. ФУНКЦИЯ ОТПРАВКИ УВЕДОМЛЕНИЯ О ЗАКАЗЕ В АДМИН-ЧАТ
+async function sendAdminOrderNotification(adminChatId, orderData) {
+  const messageText = 
+    `🛍️ **НОВЕ ЗАМОВЛЕННЯ #${orderData.order_id}**\n\n` +
+    `👤 **Покупець:** ${orderData.customer_name}\n` +
+    `📞 **Телефон:** ${orderData.phone || '-'}\n` +
+    `🚚 **Спосіб:** ${orderData.delivery_method || '-'}\n\n` +
+    `📦 **Товари:**\n${orderData.items}\n\n` +
+    `💰 **Сума:** ${orderData.total_price} грн\n` +
+    `📌 **Поточний статус:** В обробці`;
 
-const bot = new Telegraf(BOT_TOKEN);
-const orderStatuses = {};
-const userReferrals = {};
+  // Клавиатура с 4 кнопками (статусы + изменить себестоимость)
+  const adminKeyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.callback('⏳ В обробці', `status_processing_${orderData.order_id}`),
+      Markup.button.callback('✅ Виконано', `status_completed_${orderData.order_id}`),
+      Markup.button.callback('❌ Скасовано', `status_cancelled_${orderData.order_id}`)
+    ],
+    [
+      Markup.button.callback('✏️ Собівартість', `edit_cost_${orderData.order_id}`)
+    ]
+  ]);
 
-function sendToGoogleSheet(orderData) {
-    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-    if (!scriptUrl) return;
-
-    try {
-        const postData = JSON.stringify(orderData);
-        const req = https.request(scriptUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(postData)
-            }
-        }, (res) => {
-            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                https.get(res.headers.location, () => {});
-            }
-        });
-        req.on('error', () => {});
-        req.write(postData);
-        req.end();
-    } catch (err) {}
+  await bot.telegram.sendMessage(adminChatId, messageText, { 
+    parse_mode: 'Markdown', 
+    ...adminKeyboard 
+  });
 }
 
-bot.start((ctx) => {
-    const startPayload = ctx.message.text.split(' ')[1];
-    if (startPayload && startPayload.startsWith('ref_')) {
-        const referrerId = startPayload.replace('ref_', '');
-        if (referrerId !== String(ctx.from.id)) {
-            userReferrals[referrerId] = (userReferrals[referrerId] || 0) + 1;
-        }
+// 2. ОБРАБОТКА НАЖАТИЯ НА КНОПКУ "✏️ Собівартість"
+bot.action(/edit_cost_(.+)/, async (ctx) => {
+  const orderId = ctx.match[1];
+  
+  // Запоминаем, что админ сейчас будет вводить себестоимость для этого заказа
+  userSessions[ctx.from.id] = { 
+    action: 'awaiting_cost', 
+    orderId: orderId 
+  };
+
+  await ctx.reply(`Введіть нову собівартість (грн) для замовлення #${orderId}:`);
+  await ctx.answerCbQuery();
+});
+
+// 3. ПЕРЕХВАТ ТЕКСТОВОГО СООБЩЕНИЯ С СУММОЙ
+bot.on('text', async (ctx, next) => {
+  const session = userSessions[ctx.from.id];
+  
+  if (session && session.action === 'awaiting_cost') {
+    const cost = parseFloat(ctx.message.text.replace(',', '.'));
+
+    if (isNaN(cost)) {
+      return ctx.reply('❌ Будь ласка, введіть коректне число (наприклад, 210 или 180.50).');
     }
 
-    ctx.reply(
-        "🐙 Вітаємо в Kraken Lab!\n\n" +
-        "👥 Відгуки: @KRAKENOTZYVVL\n" +
-        "💬 Менеджер: @telleportt\n\n" +
-        "🛒 Переходьте до магазину за кнопкою нижче — обирайте товар, додавайте у кошик та оформлюйте замовлення в декілька кліків 👇",
-        Markup.inlineKeyboard([
-            [Markup.button.webApp("🛍 Відкрити магазин", "https://krakenlab.vercel.app")]
-        ])
-    );
-});
+    // Сбрасываем сессию ожидания
+    delete userSessions[ctx.from.id];
 
-app.get('/api/ref/discount/:id', (req, res) => {
-    const userId = req.params.id;
-    const count = userReferrals[userId] || 0;
-    const discount = Math.min(count * 10, 200);
-    res.json({ discount, count });
-});
-
-app.post('/api/order', async (req, res) => {
     try {
-        const { user, items, totalPrice, costPrice, deliveryType, address, phone } = req.body;
-        const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+      // Отправляем обновленную себестоимость в Google Таблицу
+      await axios.post(process.env.GOOGLE_SCRIPT_URL, {
+        action: 'update_cost',
+        order_id: session.orderId,
+        cost_price: cost
+      });
 
-        const isPickup = deliveryType === 'Самовивіз' || (address && address.includes('Самовивіз'));
-
-        let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n` +
-            `📦 Ваше замовлення успішно оформлено та передано менеджеру.\n` +
-            `🛒 **Товари:**\n${items}\n\n`;
-
-        if (isPickup) {
-            customerMessage += `🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом для уточнення деталей.\n` +
-                `⏱️ Оскільки це **самовивіз**, будь ласка, напишіть менеджеру @telleportt для узгодження часу!\n\n`;
-        } else {
-            customerMessage += `🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом для уточнення деталей.\n\n`;
-        }
-        customerMessage += `💚 **Дякуємо, що обираєте KrakenLab!**`;
-
-        if (user && user.id) {
-            await bot.telegram.sendMessage(user.id, customerMessage, { parse_mode: 'Markdown' }).catch(() => {});
-        }
-
-        const adminMessage = 
-            `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n` +
-            `👤 **Покупець:** ${user?.first_name || 'Клієнт'} (@${user?.username || 'немає'})\n` +
-            `🆔 **ID:** \`${user?.id || 'невідомо'}\`\n` +
-            `📞 **Телефон:** ${phone || 'не вказано'}\n` +
-            `🚚 **Спосіб:** ${deliveryType || 'не вказано'}\n` +
-            `📍 **Деталі:** ${address || 'не вказано'}\n\n` +
-            `📦 **Товари:**\n${items}\n\n` +
-            `💰 **Сума:** ${totalPrice} грн\n\n` +
-            `📌 **Поточний статус:** В обробці`;
-
-        orderStatuses[orderId] = 'В обробці';
-
-        const keyboard = Markup.inlineKeyboard([
-            [
-                Markup.button.callback('⏳ В обробці', `status_${orderId}_processing`),
-                Markup.button.callback('✅ Виконано', `status_${orderId}_done`),
-                Markup.button.callback('❌ Скасовано', `status_${orderId}_cancel`)
-            ]
-        ]);
-
-        await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, { 
-            parse_mode: 'Markdown',
-            ...keyboard 
-        });
-
-        sendToGoogleSheet({
-            order_id: orderId,
-            customer_name: `${user?.first_name || 'Клієнт'} (@${user?.username || 'немає'})`,
-            phone: phone || 'не вказано',
-            items: items,
-            total_price: totalPrice,
-            cost_price: costPrice || 0
-        });
-
-        return res.status(200).json({ ok: true, orderId: orderId });
-    } catch (error) {
-        return res.status(500).json({ ok: false, error: error.message });
+      await ctx.reply(`✅ Собівартість для замовлення #${session.orderId} оновлена: ${cost} грн!\nТаблиця успішно перерахована.`);
+    } catch (err) {
+      await ctx.reply(`❌ Помилка оновлення в таблиці: ${err.message}`);
     }
+    return;
+  }
+
+  return next();
 });
 
-app.get('/api/order/status/:id', (req, res) => {
-    const orderId = req.params.id;
-    const status = orderStatuses[orderId] || 'В обробці';
-    res.json({ orderId, status });
-});
-
-bot.action(/status_(.+?)_(.+)/, async (ctx) => {
-    const orderId = ctx.match[1];
-    const action = ctx.match[2];
-
-    let statusText = 'В обробці';
-    if (action === 'done') statusText = 'Виконано';
-    if (action === 'cancel') statusText = 'Скасовано';
-
-    orderStatuses[orderId] = statusText;
-
-    await ctx.answerCbQuery(`Статус ${orderId}: ${statusText}`);
-
-    const oldText = ctx.callbackQuery.message.text;
-    const baseText = oldText.substring(0, oldText.lastIndexOf('📌'));
-    const updatedText = baseText + `📌 **Поточний статус:** ${statusText}`;
-
-    try {
-        await ctx.editMessageText(updatedText, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([
-                [
-                    Markup.button.callback(action === 'processing' ? '⏳ [В обробці]' : '⏳ В обробці', `status_${orderId}_processing`),
-                    Markup.button.callback(action === 'done' ? '✅ [Виконано]' : '✅ Виконано', `status_${orderId}_done`),
-                    Markup.button.callback(action === 'cancel' ? '❌ [Скасовано]' : '❌ Скасовано', `status_${orderId}_cancel`)
-                ]
-            ])
-        });
-    } catch(e) {}
-});
-
-app.get('/', (req, res) => {
-    res.send('Kraken Lab Bot is running!');
-});
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    bot.launch().then(() => {
-        console.log("Bot started successfully!");
-    });
-});
+// Экспорт или запуск бота
+module.exports = { bot, sendAdminOrderNotification };
