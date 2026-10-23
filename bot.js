@@ -1,15 +1,23 @@
 const express = require('express');
-const cors = require('cors');
 const { Telegraf } = require('telegraf');
 
 // 1. Инициализация Express
 const app = express();
 
-// Настройки безопасности CORS и работы JSON (фикс ошибки Load failed)
-app.use(cors());
+// Включаем CORS стандартными заголовками (без внешних модулей)
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 app.use(express.json());
 
-// 2. Актуальные данные: Токен бота и твой ID
+// 2. Твои данные
 const BOT_TOKEN = '8523927755:AAEyK603j5vEaoSzGgHREpVVAJa4a_uEx-o'; 
 const ADMIN_CHAT_ID = '1005867951'; 
 const WEB_APP_URL = 'https://krakenlab.vercel.app';
@@ -54,7 +62,6 @@ app.post('/api/order', async (req, res) => {
             message += `\n💵 <b>Чистая прибыль:</b> ${profit} грн`;
         }
 
-        // Отправляем уведомление админу в Telegram
         if (ADMIN_CHAT_ID) {
             await bot.telegram.sendMessage(ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
         }
@@ -77,13 +84,12 @@ bot.start((ctx) => {
     });
 });
 
-// Запуск сервера Express
+// Запуск сервера
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
 
-// Запуск бота
 bot.launch()
     .then(() => console.log('Telegram бот запущен'))
     .catch((err) => console.error('Ошибка запуска бота:', err));
