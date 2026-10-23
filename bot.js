@@ -17,78 +17,42 @@ const BOT_TOKEN = process.env.BOT_TOKEN || '8523927755:AAEyK603j5vEaoSzGgHREpVVA
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
 
 const bot = new Telegraf(BOT_TOKEN);
-
 const orderStatuses = {};
 const userReferrals = {};
 
-// Надежная функция отправки в Google Sheet без сторонних зависимостей
 function sendToGoogleSheet(orderData) {
     const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-    if (!scriptUrl) {
-        console.log("⚠️ GOOGLE_SCRIPT_URL не задана!");
-        return;
-    }
+    if (!scriptUrl) return;
 
     try {
         const postData = JSON.stringify(orderData);
-        
-        const sendReq = (url) => {
-            const req = https.request(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(postData)
-                }
-            }, (res) => {
-                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                    // Обработка редиректа от Google Apps Script
-                    https.get(res.headers.location, (redirectRes) => {
-                        console.log("✅ Данные доставлены в Google Таблицу!");
-                    });
-                } else {
-                    console.log("✅ Ответ сервера Таблиц:", res.statusCode);
-                }
-            });
-
-            req.on('error', (e) => {
-                console.error("❌ Ошибка отправки:", e.message);
-            });
-
-            req.write(postData);
-            req.end();
-        };
-
-        sendReq(scriptUrl);
-    } catch (err) {
-        console.error("❌ Ошибка:", err.message);
-    }
+        const req = https.request(scriptUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        }, (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                https.get(res.headers.location, () => {});
+            }
+        });
+        req.on('error', () => {});
+        req.write(postData);
+        req.end();
+    } catch (err) {}
 }
 
 bot.start((ctx) => {
-    const startPayload = ctx.message.text.split(' ')[1];
-    if (startPayload && startPayload.startsWith('ref_')) {
-        const referrerId = startPayload.replace('ref_', '');
-        if (referrerId !== String(ctx.from.id)) {
-            userReferrals[referrerId] = (userReferrals[referrerId] || 0) + 1;
-        }
-    }
-
     ctx.reply(
         "🐙 Вітаємо в Kraken Lab!\n\n" +
         "👥 Відгуки: @KRAKENOTZYVVL\n" +
         "💬 Менеджер: @telleportt\n\n" +
-        "🛒 Переходьте до магазину за кнопкою нижче — обирайте товар, додавайте у кошик та оформлюйте замовлення в декілька кліків 👇",
+        "🛒 Переходьте до магазину за кнопкою нижче 👇",
         Markup.inlineKeyboard([
             [Markup.button.webApp("🛍 Відкрити магазин", "https://krakenlab.vercel.app")]
         ])
     );
-});
-
-app.get('/api/ref/discount/:id', (req, res) => {
-    const userId = req.params.id;
-    const count = userReferrals[userId] || 0;
-    const discount = Math.min(count * 10, 200);
-    res.json({ discount, count });
 });
 
 app.post('/api/order', async (req, res) => {
@@ -96,20 +60,7 @@ app.post('/api/order', async (req, res) => {
         const { user, items, totalPrice, costPrice, deliveryType, address, phone } = req.body;
         const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
-        const isPickup = deliveryType === 'Самовивіз' || (address && address.includes('Самовивіз'));
-
-        let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n` +
-            `📦 Ваше замовлення успішно оформлено та передано менеджеру.\n` +
-            `🛒 **Товари:**\n${items}\n\n`;
-
-        if (isPickup) {
-            customerMessage += `🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом для уточнення деталей.\n` +
-                `⏱️ Оскільки це **самовивіз**, будь ласка, напишіть менеджеру @telleportt для узгодження часу!\n\n`;
-        } else {
-            customerMessage += `🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом для уточнення деталей.\n\n`;
-        }
-        customerMessage += `💚 **Дякуємо, що обираєте KrakenLab!**`;
-
+        let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n📦 Замовлення #${orderId} прийнято в обробку.`;
         if (user && user.id) {
             await bot.telegram.sendMessage(user.id, customerMessage, { parse_mode: 'Markdown' }).catch(() => {});
         }
@@ -117,30 +68,12 @@ app.post('/api/order', async (req, res) => {
         const adminMessage = 
             `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n` +
             `👤 **Покупець:** ${user?.first_name || 'Клієнт'} (@${user?.username || 'немає'})\n` +
-            `🆔 **ID:** \`${user?.id || 'невідомо'}\`\n` +
             `📞 **Телефон:** ${phone || 'не вказано'}\n` +
-            `🚚 **Спосіб:** ${deliveryType || 'не вказано'}\n` +
-            `📍 **Деталі:** ${address || 'не вказано'}\n\n` +
             `📦 **Товари:**\n${items}\n\n` +
-            `💰 **Сума:** ${totalPrice} грн\n\n` +
-            `📌 **Поточний статус:** В обробці`;
+            `💰 **Сума:** ${totalPrice} грн`;
 
-        orderStatuses[orderId] = 'В обробці';
+        await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, { parse_mode: 'Markdown' });
 
-        const keyboard = Markup.inlineKeyboard([
-            [
-                Markup.button.callback('⏳ В обробці', `status_${orderId}_processing`),
-                Markup.button.callback('✅ Виконано', `status_${orderId}_done`),
-                Markup.button.callback('❌ Скасовано', `status_${orderId}_cancel`)
-            ]
-        ]);
-
-        await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, { 
-            parse_mode: 'Markdown',
-            ...keyboard 
-        });
-
-        // Отправка в Google Таблицу
         sendToGoogleSheet({
             order_id: orderId,
             customer_name: `${user?.first_name || 'Клієнт'} (@${user?.username || 'немає'})`,
@@ -152,52 +85,19 @@ app.post('/api/order', async (req, res) => {
 
         return res.status(200).json({ ok: true, orderId: orderId });
     } catch (error) {
-        console.error("Помилка:", error);
         return res.status(500).json({ ok: false, error: error.message });
     }
 });
 
-app.get('/api/order/status/:id', (req, res) => {
-    const orderId = req.params.id;
-    const status = orderStatuses[orderId] || 'В обробці';
-    res.json({ orderId, status });
-});
-
-bot.action(/status_(.+?)_(.+)/, async (ctx) => {
-    const orderId = ctx.match[1];
-    const action = ctx.match[2];
-
-    let statusText = 'В обробці';
-    if (action === 'done') statusText = 'Виконано';
-    if (action === 'cancel') statusText = 'Скасовано';
-
-    orderStatuses[orderId] = statusText;
-
-    await ctx.answerCbQuery(`Статус ${orderId}: ${statusText}`);
-
-    const oldText = ctx.callbackQuery.message.text;
-    const baseText = oldText.substring(0, oldText.lastIndexOf('📌'));
-    const updatedText = baseText + `📌 **Поточний статус:** ${statusText}`;
-
-    try {
-        await ctx.editMessageText(updatedText, {
-            parse_mode: 'Markdown',
-            ...Markup.inlineKeyboard([
-                [
-                    Markup.button.callback(action === 'processing' ? '⏳ [В обробці]' : '⏳ В обробці', `status_${orderId}_processing`),
-                    Markup.button.callback(action === 'done' ? '✅ [Виконано]' : '✅ Виконано', `status_${orderId}_done`),
-                    Markup.button.callback(action === 'cancel' ? '❌ [Скасовано]' : '❌ Скасовано', `status_${orderId}_cancel`)
-                ]
-            ])
-        });
-    } catch(e) {}
-});
-
-bot.launch().then(() => {
-    console.log("🐙 Kraken Lab Bot успешно запущен!");
+// Обязательный эндпоинт, чтобы Render видел, что сервер живой
+app.get('/', (req, res) => {
+    res.send('Kraken Lab Bot is running!');
 });
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    bot.launch().then(() => {
+        console.log("Bot started successfully!");
+    });
 });
