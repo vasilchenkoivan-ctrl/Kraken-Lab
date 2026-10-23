@@ -1,12 +1,24 @@
 const { Telegraf, Markup } = require('telegraf');
 const axios = require('axios');
+const express = require('express');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Хранилище сессий для ожидания ввода себестоимости
+// Обязательный корень, чтобы Render видел, что сервер живой
+app.get('/', (req, res) => {
+  res.send('Kraken Lab Bot is running!');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
+});
+
+// Хранилище сессий для ввода себестоимости
 const userSessions = {};
 
-// 1. ФУНКЦИЯ ОТПРАВКИ УВЕДОМЛЕНИЯ О ЗАКАЗЕ В АДМИН-ЧАТ
+// Функция отправки уведомления администратору
 async function sendAdminOrderNotification(adminChatId, orderData) {
   const messageText = 
     `🛍️ **НОВЕ ЗАМОВЛЕННЯ #${orderData.order_id}**\n\n` +
@@ -17,7 +29,6 @@ async function sendAdminOrderNotification(adminChatId, orderData) {
     `💰 **Сума:** ${orderData.total_price} грн\n` +
     `📌 **Поточний статус:** В обробці`;
 
-  // Клавиатура с кнопками статусов + кнопка себестоимости
   const adminKeyboard = Markup.inlineKeyboard([
     [
       Markup.button.callback('⏳ В обробці', `status_processing_${orderData.order_id}`),
@@ -35,20 +46,15 @@ async function sendAdminOrderNotification(adminChatId, orderData) {
   });
 }
 
-// 2. ОБРАБОТКА НАЖАТИЯ НА КНОПКУ "✏️ Собівартість"
+// Обработка кнопки себестоимости
 bot.action(/edit_cost_(.+)/, async (ctx) => {
   const orderId = ctx.match[1];
-  
-  userSessions[ctx.from.id] = { 
-    action: 'awaiting_cost', 
-    orderId: orderId 
-  };
-
+  userSessions[ctx.from.id] = { action: 'awaiting_cost', orderId: orderId };
   await ctx.reply(`Введіть нову собівартість (грн) для замовлення #${orderId}:`);
   await ctx.answerCbQuery();
 });
 
-// 3. ПЕРЕХВАТ ТЕКСТОВОГО СООБЩЕНИЯ С СУММОЙ
+// Перехват текста с суммой
 bot.on('text', async (ctx, next) => {
   const session = userSessions[ctx.from.id];
   
@@ -56,7 +62,7 @@ bot.on('text', async (ctx, next) => {
     const cost = parseFloat(ctx.message.text.replace(',', '.'));
 
     if (isNaN(cost)) {
-      return ctx.reply('❌ Будь ласка, введіть коректне число (наприклад, 210 або 180.50).');
+      return ctx.reply('❌ Будь ласка, введіть число (наприклад, 210).');
     }
 
     delete userSessions[ctx.from.id];
@@ -68,7 +74,7 @@ bot.on('text', async (ctx, next) => {
         cost_price: cost
       });
 
-      await ctx.reply(`✅ Собівартість для замовлення #${session.session?.orderId || session.orderId} оновлена: ${cost} грн!\nТаблиця успішно перерахована.`);
+      await ctx.reply(`✅ Собівартість для замовлення #${session.orderId} оновлена: ${cost} грн!`);
     } catch (err) {
       await ctx.reply(`❌ Помилка оновлення в таблиці: ${err.message}`);
     }
@@ -78,14 +84,11 @@ bot.on('text', async (ctx, next) => {
   return next();
 });
 
-// ЗАПУСК БОТА (чтобы Render не выключал приложение)
+// Запуск бота
 bot.launch().then(() => {
   console.log('🤖 Bot Kraken Lab successfully started!');
-}).catch((err) => {
-  console.error('Failed to start bot:', err);
 });
 
-// Graceful shutdown
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
