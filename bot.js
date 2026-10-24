@@ -41,31 +41,40 @@ app.post('/api/order', async (req, res) => {
         console.log('Отримано замовлення:', JSON.stringify(orderData, null, 2));
 
         const orderId = orderData.orderId || (orderData.order && orderData.order.orderId) || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-        const name = orderData.name || orderData.userName || (orderData.order && orderData.order.name) || 'Vanyok';
+        const name = orderData.name || orderData.userName || (orderData.order && orderData.order.name) || 'Покупець';
+        
         const rawUsername = orderData.username || (orderData.order && orderData.order.username) || '';
-        const username = rawUsername ? `@${rawUsername.replace('@', '')}` : '@Telleportt';
+        const username = rawUsername ? `@${rawUsername.replace('@', '')}` : '';
         
-        const userId = orderData.userId || orderData.telegramId || (orderData.order && orderData.order.userId) || '1005867951';
-        const phone = orderData.phone || orderData.userPhone || (orderData.order && orderData.order.phone) || '+380687552003';
+        const userId = orderData.userId || orderData.telegramId || (orderData.order && orderData.order.userId) || '';
+        const phone = orderData.phone || orderData.userPhone || (orderData.order && orderData.order.phone) || 'не вказано';
         
-        // Способ доставки и детали
+        // --- СПОСІБ ДОСТАВКИ ТА ДЕТАЛІ ---
         const delivery = orderData.deliveryMethod || orderData.deliveryType || orderData.delivery || (orderData.order && orderData.order.deliveryMethod) || 'Самовивіз';
-        const deliveryDetails = orderData.deliveryDetails || orderData.details || orderData.comment || (orderData.order && orderData.order.comment) || 'не вказано';
         
-        // Разбор массива товаров
+        let deliveryDetails = orderData.deliveryDetails || orderData.details || orderData.comment || orderData.address || (orderData.order && orderData.order.comment) || '';
+        
+        if (!deliveryDetails && (orderData.city || orderData.warehouse || orderData.novaPoshta)) {
+            const city = orderData.city || '';
+            const warehouse = orderData.warehouse || orderData.novaPoshta || '';
+            deliveryDetails = `${city} ${warehouse}`.trim();
+        }
+        
+        if (!deliveryDetails) {
+            deliveryDetails = 'не вказано';
+        }
+
+        // --- ТОВАРИ ---
         let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || (orderData.order && orderData.order.items) || (orderData.order && orderData.order.cart) || [];
         if (typeof rawItems === 'string') {
             try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
         }
         const items = Array.isArray(rawItems) ? rawItems : [];
-
         const totalPrice = orderData.totalPrice || orderData.total || (orderData.order && orderData.order.totalPrice) || 0;
-        
-        // Проверка на самовывоз (только если действительно выбрано "самовивіз" или "pickup")
+
         const deliveryLower = String(delivery).toLowerCase();
         const isPickup = deliveryLower.includes('самов') || deliveryLower.includes('pickup');
 
-        // Формирование текста товаров
         let itemsFormattedText = '';
         if (items.length > 0) {
             items.forEach((item, index) => {
@@ -78,7 +87,7 @@ app.post('/api/order', async (req, res) => {
             itemsFormattedText = `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
         }
 
-        // Сообщение для администратора
+        // --- ПОВІДОМЛЕННЯ АДМІНІСТРАТОРУ ---
         let adminMessage = `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n`;
         adminMessage += `👤 **Покупець:** ${name} (${username})\n`;
         adminMessage += `🆔 **ID:** ${userId}\n`;
@@ -96,7 +105,7 @@ app.post('/api/order', async (req, res) => {
             });
         }
 
-        // Сообщение для клиента
+        // --- ПОВІДОМЛЕННЯ КЛІЄНТУ ---
         if (userId) {
             try {
                 let clientMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
@@ -104,7 +113,6 @@ app.post('/api/order', async (req, res) => {
                 clientMessage += `🛒 **Товари:**\n${itemsFormattedText}\n`;
                 clientMessage += `🕖 **Очікуйте на підтвердження** — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n\n`;
                 
-                // Добавляем инфо про самовывоз ТОЛЬКО если это действительно самовывоз
                 if (isPickup) {
                     clientMessage += `⏱ **Оскільки це самовивіз, будь ласка, напишіть менеджеру @telleportt для узгодження часу!**\n\n`;
                 }
