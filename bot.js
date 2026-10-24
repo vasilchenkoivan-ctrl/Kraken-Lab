@@ -40,15 +40,15 @@ app.post('/api/order', async (req, res) => {
         const orderData = req.body || {};
         console.log('Отримано замовлення:', JSON.stringify(orderData, null, 2));
 
-        const orderId = orderData.orderId || (orderData.order && orderData.order.orderId) || `#ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+        const orderId = orderData.orderId || (orderData.order && orderData.order.orderId) || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
         const name = orderData.name || orderData.userName || (orderData.order && orderData.order.name) || 'Vanyok';
-        const username = orderData.username || (orderData.order && orderData.order.username) ? `(@${orderData.username || orderData.order.username})` : '(@Telleportt)';
+        const username = orderData.username || (orderData.order && orderData.order.username) ? `@${orderData.username || orderData.order.username}` : 'Telleportt';
         const userId = orderData.userId || orderData.telegramId || (orderData.order && orderData.order.userId) || '1005867951';
         const phone = orderData.phone || orderData.userPhone || (orderData.order && orderData.order.phone) || '+380687552003';
         const delivery = orderData.deliveryMethod || orderData.delivery || (orderData.order && orderData.order.deliveryMethod) || 'Самовивіз';
         const deliveryDetails = orderData.deliveryDetails || orderData.comment || (orderData.order && orderData.order.comment) || 'Самовивіз (Київ, вул. Остафія Дашкевича)';
         
-        // Всевозможные варианты путей к массиву товаров
+        // Универсальный поиск массива товаров
         let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || (orderData.order && orderData.order.items) || (orderData.order && orderData.order.cart) || [];
         if (typeof rawItems === 'string') {
             try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
@@ -56,60 +56,54 @@ app.post('/api/order', async (req, res) => {
         const items = Array.isArray(rawItems) ? rawItems : [];
 
         const totalPrice = orderData.totalPrice || orderData.total || (orderData.order && orderData.order.totalPrice) || 0;
+        const isPickup = String(delivery).toLowerCase().includes('самов') || String(delivery).toLowerCase().includes('pickup');
 
-        // Сообщение для администратора
-        let adminMessage = `🛍 <b>НОВЕ ЗАМОВЛЕННЯ</b> <code>${orderId}</code>\n\n`;
-        adminMessage += `👤 <b>Покупець:</b> ${name} ${username}\n`;
-        adminMessage += `🆔 <b>ID:</b> ${userId}\n`;
-        adminMessage += `📞 <b>Телефон:</b> ${phone}\n`;
-        adminMessage += `🚚 <b>Спосіб:</b> ${delivery}\n`;
-        adminMessage += `📍 <b>Деталі:</b> ${deliveryDetails}\n\n`;
-        adminMessage += `📦 <b>Товари:</b>\n`;
-
+        // Формируем список товаров с точным названием клиента
+        let itemsFormattedText = '';
         if (items.length > 0) {
             items.forEach((item, index) => {
                 const title = item.title || item.name || item.productName || item.label || item.text || 'Товар';
                 const qty = item.quantity || item.count || item.qty || 1;
                 const price = item.price || 0;
-                adminMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
+                itemsFormattedText += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
             });
         } else {
-            adminMessage += `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
+            itemsFormattedText = `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
         }
 
-        adminMessage += `\n💰 <b>Сума:</b> ${totalPrice} грн\n\n`;
-        adminMessage += `📌 <b>Поточний статус:</b> В обробці`;
+        // Сообщение для администратора (твои тексты)
+        let adminMessage = `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n`;
+        adminMessage += `👤 **Покупець:** ${name} (@${username})\n`;
+        adminMessage += `🆔 **ID:** ${userId}\n`;
+        adminMessage += `📞 **Телефон:** ${phone}\n`;
+        adminMessage += `🚚 **Спосіб:** ${delivery}\n`;
+        adminMessage += `📍 **Деталі:** ${deliveryDetails}\n\n`;
+        adminMessage += `📦 **Товари:**\n${itemsFormattedText}`;
+        adminMessage += `\n💰 **Сума:** ${totalPrice} грн\n\n`;
+        adminMessage += `📌 **Поточний статус:** В обробці`;
 
         if (ADMIN_CHAT_ID) {
             await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, {
-                parse_mode: 'HTML',
+                parse_mode: 'Markdown',
                 ...getStatusKeyboard(orderId)
             });
         }
 
-        // Сообщение для клиента
+        // Сообщение для клиента (твои тексты)
         if (userId) {
             try {
-                let clientMessage = `✅ <b>Дякуємо за замовлення в KrakenLab!</b>\n\n`;
-                clientMessage += `📦 <b>Ваше замовлення успішно оформлено та передано менеджеру.</b>\n`;
-                clientMessage += `🛒 <b>Товари:</b>\n`;
-
-                if (items.length > 0) {
-                    items.forEach((item, index) => {
-                        const title = item.title || item.name || item.productName || item.label || item.text || 'Товар';
-                        const qty = item.quantity || item.count || item.qty || 1;
-                        const price = item.price || 0;
-                        clientMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
-                    });
-                } else {
-                    clientMessage += `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
+                let clientMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
+                clientMessage += `📦 **Ваше замовлення успішно оформлено та передано менеджеру.**\n`;
+                clientMessage += `🛒 **Товари:**\n${itemsFormattedText}\n`;
+                clientMessage += `🕖 **Очікуйте на підтвердження** — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n\n`;
+                
+                if (isPickup) {
+                    clientMessage += `⏱ **Оскільки це самовивіз, будь ласка, напишіть менеджеру @telleportt для узгодження часу!**\n\n`;
                 }
 
-                clientMessage += `\n⏱ <b>Очікуйте на підтвердження</b> — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n`;
-                clientMessage += `⏱ <b>Оскільки це самовивіз, будь ласка, напишіть менеджеру @telleportt для узгодження часу!</b>\n\n`;
-                clientMessage += `💚 <b>Дякуємо, що обираєте KrakenLab!</b>`;
+                clientMessage += `💚 **Дякуємо, що обираєте KrakenLab!**`;
 
-                await bot.telegram.sendMessage(userId, clientMessage, { parse_mode: 'HTML' });
+                await bot.telegram.sendMessage(userId, clientMessage, { parse_mode: 'Markdown' });
             } catch (clientErr) {
                 console.error('Не вдалося надіслати повідомлення клієнту:', clientErr);
             }
@@ -122,31 +116,27 @@ app.post('/api/order', async (req, res) => {
     }
 });
 
-bot.action(/status_(proc|done|canc)_(.+)/, async (ctx) => {
+bot.action(/status_(.+?)_(.+)/, async (ctx) => {
     try {
-        const type = ctx.match[1];
+        const action = ctx.match[1];
         const orderId = ctx.match[2];
 
-        let statusText = 'В обробці';
-        if (type === 'done') statusText = 'Виконано ✅';
-        if (type === 'canc') statusText = 'Скасовано ❌';
+        let newStatus = 'В обробці';
+        if (action === 'done') newStatus = 'Виконано ✅';
+        if (action === 'canc') newStatus = 'Скасовано ❌';
 
-        let currentText = ctx.callbackQuery.message.text || '';
+        const oldText = ctx.callbackQuery.message.text || '';
+        const baseText = oldText.substring(0, oldText.lastIndexOf('📌 Поточний статус:'));
+        const updatedText = baseText + `📌 **Поточний статус:** ${newStatus}`;
 
-        if (currentText.includes('📌 Поточний статус:')) {
-            currentText = currentText.replace(/📌 Поточний статус:.*/, `📌 Поточний статус: ${statusText}`);
-        } else {
-            currentText += `\n\n📌 Поточний статус: ${statusText}`;
-        }
-
-        await ctx.editMessageText(currentText, {
-            parse_mode: 'HTML',
-            ...getStatusKeyboard(orderId)
+        await ctx.editMessageText(updatedText, {
+            parse_mode: 'Markdown',
+            reply_markup: ctx.callbackQuery.message.reply_markup
         });
 
-        await ctx.answerCbQuery(`Статус змінено на: ${statusText}`);
+        await ctx.answerCbQuery(`Статус змінено на: ${newStatus}`);
     } catch (err) {
-        console.error('Помилка при зміні статусу:', err);
+        console.error('Помилка статусу:', err);
         await ctx.answerCbQuery('Помилка при зміні статусу');
     }
 });
