@@ -38,7 +38,9 @@ const getStatusKeyboard = (orderId) => {
 app.post('/api/order', async (req, res) => {
     try {
         const orderData = req.body || {};
-        console.log('Отримано замовлення:', JSON.stringify(orderData, null, 2));
+        
+        // 🔥 ДИАГНОСТИЧЕСКИЙ ЛОГ: распечатает всё, что слал фронтенд/скрипт
+        console.log('🔥🔥🔥 ПОЛНЫЙ ОБЪЕКТ ОТ ФРОНТА:', JSON.stringify(orderData, null, 2));
 
         const orderId = orderData.orderId || (orderData.order && orderData.order.orderId) || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
         const name = orderData.name || orderData.userName || (orderData.order && orderData.order.name) || 'Vanyok';
@@ -48,7 +50,7 @@ app.post('/api/order', async (req, res) => {
         const delivery = orderData.deliveryMethod || orderData.delivery || (orderData.order && orderData.order.deliveryMethod) || 'Самовивіз';
         const deliveryDetails = orderData.deliveryDetails || orderData.comment || (orderData.order && orderData.order.comment) || 'Самовивіз (Київ, вул. Остафія Дашкевича)';
         
-        // Универсальный поиск массива товаров
+        // Поиск массива товаров
         let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || (orderData.order && orderData.order.items) || (orderData.order && orderData.order.cart) || [];
         if (typeof rawItems === 'string') {
             try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
@@ -58,11 +60,11 @@ app.post('/api/order', async (req, res) => {
         const totalPrice = orderData.totalPrice || orderData.total || (orderData.order && orderData.order.totalPrice) || 0;
         const isPickup = String(delivery).toLowerCase().includes('самов') || String(delivery).toLowerCase().includes('pickup');
 
-        // Формируем список товаров с точным названием клиента
+        // Формирование текста товаров
         let itemsFormattedText = '';
         if (items.length > 0) {
             items.forEach((item, index) => {
-                const title = item.title || item.name || item.productName || item.label || item.text || 'Товар';
+                const title = item.title || item.name || item.productName || item.label || item.text || (typeof item === 'string' ? item : 'Товар');
                 const qty = item.quantity || item.count || item.qty || 1;
                 const price = item.price || 0;
                 itemsFormattedText += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
@@ -71,7 +73,7 @@ app.post('/api/order', async (req, res) => {
             itemsFormattedText = `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
         }
 
-        // Сообщение для администратора (твои тексты)
+        // Сообщение для администратора
         let adminMessage = `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n`;
         adminMessage += `👤 **Покупець:** ${name} (@${username})\n`;
         adminMessage += `🆔 **ID:** ${userId}\n`;
@@ -89,7 +91,7 @@ app.post('/api/order', async (req, res) => {
             });
         }
 
-        // Сообщение для клиента (твои тексты)
+        // Сообщение для клиента
         if (userId) {
             try {
                 let clientMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
