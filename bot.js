@@ -27,35 +27,42 @@ app.get('/', (req, res) => {
 
 app.post('/api/order', async (req, res) => {
     try {
-        const orderData = req.body;
-        console.log('Новый заказ:', orderData);
+        const orderData = req.body || {};
+        console.log('Отримано замовлення:', orderData);
+
+        const phone = orderData.phone || orderData.userPhone || 'Не вказано';
+        const delivery = orderData.deliveryMethod || orderData.delivery || 'Не вказано';
+        const comment = orderData.comment || orderData.details || '';
+        const items = orderData.items || orderData.cart || [];
+        const totalPrice = orderData.totalPrice || orderData.total || 0;
 
         let message = `🛍 <b>НОВЕ ЗАМОВЛЕННЯ</b>\n\n`;
-        message += `👤 <b>Покупець:</b> ${orderData.name || orderData.phone || 'Не вказано'}\n`;
-        if (orderData.phone) {
-            message += `📞 <b>Телефон:</b> ${orderData.phone}\n`;
-        }
-        message += `🚚 <b>Спосіб:</b> ${orderData.deliveryMethod || 'Не вказано'}\n`;
-        if (orderData.comment) {
-            message += `💬 <b>Коментар:</b> ${orderData.comment}\n`;
+        message += `👤 <b>Покупець:</b> ${phone}\n`;
+        message += `🚚 <b>Спосіб:</b> ${delivery}\n`;
+        if (comment) {
+            message += `💬 <b>Коментар:</b> ${comment}\n`;
         }
         message += `\n📦 <b>Товари:</b>\n`;
 
         let totalCostPrice = 0;
 
-        if (orderData.items && orderData.items.length > 0) {
-            orderData.items.forEach((item, index) => {
-                message += `${index + 1}. ${item.title || item.name} — ${item.quantity || 1} шт. (${item.price} грн)\n`;
+        if (Array.isArray(items) && items.length > 0) {
+            items.forEach((item, index) => {
+                const title = item.title || item.name || 'Товар';
+                const qty = item.quantity || item.count || 1;
+                const price = item.price || 0;
+                message += `${index + 1}. ${title} — ${qty} шт. (${price} грн)\n`;
+
                 if (item.costPrice) {
-                    totalCostPrice += (Number(item.costPrice) * (item.quantity || 1));
+                    totalCostPrice += (Number(item.costPrice) * qty);
                 }
             });
         }
 
-        message += `\n💰 <b>Сума:</b> ${orderData.totalPrice || 0} грн`;
+        message += `\n💰 <b>Сума:</b> ${totalPrice} грн`;
 
         if (totalCostPrice > 0) {
-            const profit = (orderData.totalPrice || 0) - totalCostPrice;
+            const profit = totalPrice - totalCostPrice;
             message += `\n📊 <b>Собівартість:</b> ${totalCostPrice} грн`;
             message += `\n💵 <b>Чистий прибуток:</b> ${profit} грн`;
         }
@@ -67,7 +74,7 @@ app.post('/api/order', async (req, res) => {
         return res.status(200).json({ success: true, message: 'Замовлення успішно створено' });
     } catch (error) {
         console.error('Помилка при обробці замовлення:', error);
-        return res.status(500).json({ success: false, error: 'Помилка сервера' });
+        return res.status(500).json({ success: false, error: error.message || 'Помилка сервера' });
     }
 });
 
