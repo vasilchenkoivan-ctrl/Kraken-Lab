@@ -37,43 +37,65 @@ const getStatusKeyboard = (orderId) => {
 
 app.post('/api/order', async (req, res) => {
     try {
-        const orderData = req.body || {};
-        console.log('Отримано замовлення:', JSON.stringify(orderData, null, 2));
+        const body = req.body || {};
+        console.log('Отримано замовлення:', JSON.stringify(body, null, 2));
 
-        const orderId = orderData.orderId || (orderData.order && orderData.order.orderId) || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-        const name = orderData.name || orderData.userName || (orderData.order && orderData.order.name) || 'Покупець';
+        const orderData = body.order || body;
+
+        const orderId = orderData.orderId || body.orderId || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
         
-        const rawUsername = orderData.username || (orderData.order && orderData.order.username) || '';
-        const username = rawUsername ? `@${rawUsername.replace('@', '')}` : '';
+        // --- ПОКУПАТЕЛЬ ---
+        const userObj = orderData.user || body.user || orderData.userInfo || body.userInfo || {};
+        const name = orderData.name || body.name || orderData.userName || body.userName || userObj.first_name || userObj.name || 'Vanyok';
         
-        const userId = orderData.userId || orderData.telegramId || (orderData.order && orderData.order.userId) || '';
-        const phone = orderData.phone || orderData.userPhone || (orderData.order && orderData.order.phone) || 'не вказано';
-        
-        // --- СПОСІБ ДОСТАВКИ ТА ДЕТАЛІ ---
-        const delivery = orderData.deliveryMethod || orderData.deliveryType || orderData.delivery || (orderData.order && orderData.order.deliveryMethod) || 'Самовивіз';
-        
-        let deliveryDetails = orderData.deliveryDetails || orderData.details || orderData.comment || orderData.address || (orderData.order && orderData.order.comment) || '';
-        
-        if (!deliveryDetails && (orderData.city || orderData.warehouse || orderData.novaPoshta)) {
-            const city = orderData.city || '';
-            const warehouse = orderData.warehouse || orderData.novaPoshta || '';
-            deliveryDetails = `${city} ${warehouse}`.trim();
+        let rawUsername = orderData.username || body.username || userObj.username || '';
+        if (rawUsername && !rawUsername.startsWith('@')) {
+            rawUsername = `@${rawUsername}`;
         }
-        
-        if (!deliveryDetails) {
-            deliveryDetails = 'не вказано';
+        const usernameStr = rawUsername || '@Telleportt';
+
+        const userId = orderData.userId || body.userId || orderData.telegramId || body.telegramId || userObj.id || '1005867951';
+        const phone = orderData.phone || body.phone || orderData.userPhone || body.userPhone || '+380687552003';
+
+        // --- СПОСОБ ДОСТАВКИ И ДЕТАЛИ ---
+        const rawDelivery = orderData.deliveryMethod || orderData.deliveryType || orderData.delivery || body.deliveryMethod || body.deliveryType || body.delivery || 'Самовивіз';
+        const deliveryLower = String(rawDelivery).toLowerCase();
+        const isPickup = deliveryLower.includes('самов') || deliveryLower.includes('pickup');
+
+        let delivery = isPickup ? 'Самовивіз' : 'Нова Пошта';
+        let deliveryDetails = '';
+
+        if (isPickup) {
+            deliveryDetails = 'Самовивіз (Клієнт напише для узгодження часу)';
+        } else {
+            // Очищаем текст от дублирования "Нова Пошта"
+            let rawDetails = orderData.deliveryDetails || orderData.details || orderData.comment || orderData.address || body.deliveryDetails || body.details || body.comment || body.address || '';
+            
+            if (!rawDetails && (orderData.city || body.city || orderData.warehouse || body.warehouse)) {
+                const city = orderData.city || body.city || '';
+                const warehouse = orderData.warehouse || body.warehouse || orderData.novaPoshta || body.novaPoshta || '';
+                rawDetails = `${city}, відд. ${warehouse}`;
+            }
+
+            // Убираем лишние фразы "Нова Пошта", "Нова Пошта ()"
+            rawDetails = rawDetails.replace(/Нова Пошта\s*/gi, '').replace(/[()]/g, '').trim();
+
+            if (rawDetails) {
+                deliveryDetails = `(${rawDetails})`;
+            } else {
+                deliveryDetails = '(деталі не вказано)';
+            }
         }
 
-        // --- ТОВАРИ ---
-        let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || (orderData.order && orderData.order.items) || (orderData.order && orderData.order.cart) || [];
+        // --- ТОВАРЫ ---
+        let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || body.items || body.cart || body.cartItems || body.products || body.orderItems || [];
+        
         if (typeof rawItems === 'string') {
             try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
         }
+        
         const items = Array.isArray(rawItems) ? rawItems : [];
-        const totalPrice = orderData.totalPrice || orderData.total || (orderData.order && orderData.order.totalPrice) || 0;
-
-        const deliveryLower = String(delivery).toLowerCase();
-        const isPickup = deliveryLower.includes('самов') || deliveryLower.includes('pickup');
+        const totalPrice = orderData.totalPrice || orderData.total || body.totalPrice || body.total || 0;
 
         let itemsFormattedText = '';
         if (items.length > 0) {
@@ -87,9 +109,9 @@ app.post('/api/order', async (req, res) => {
             itemsFormattedText = `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
         }
 
-        // --- ПОВІДОМЛЕННЯ АДМІНІСТРАТОРУ ---
+        // --- СООБЩЕНИЕ ДЛЯ МЕНЕДЖЕРА ---
         let adminMessage = `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n`;
-        adminMessage += `👤 **Покупець:** ${name} (${username})\n`;
+        adminMessage += `👤 **Покупець:** ${name} (${usernameStr})\n`;
         adminMessage += `🆔 **ID:** ${userId}\n`;
         adminMessage += `📞 **Телефон:** ${phone}\n`;
         adminMessage += `🚚 **Спосіб:** ${delivery}\n`;
@@ -105,7 +127,7 @@ app.post('/api/order', async (req, res) => {
             });
         }
 
-        // --- ПОВІДОМЛЕННЯ КЛІЄНТУ ---
+        // --- СООБЩЕНИЕ ДЛЯ КЛИЕНТА ---
         if (userId) {
             try {
                 let clientMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
