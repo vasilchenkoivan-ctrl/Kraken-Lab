@@ -55,12 +55,12 @@ app.get('/', (req, res) => {
 app.post('/api/order', async (req, res) => {
     try {
         const body = req.body || {};
-        console.log('📦 ПРИЙШОВ JSON ВІД ФРОНТУ/СКРИПТУ:', JSON.stringify(body, null, 2));
+        console.log('📦 Отримано замовлення:', JSON.stringify(body, null, 2));
 
         const orderId = body.orderId || (body.order && body.order.orderId) || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
         const user = body.user || body.userInfo || (body.order && body.order.user) || { id: body.userId, first_name: body.name || body.userName, username: body.username };
         
-        // ВСЕВОЗМОЖНЫЕ варианты ключей для товаров (включая парсинг из строки на случай передачи через Google Script)
+        // Универсальный сбор товаров из любых возможных ключей
         let rawItems = body.items || body.cart || body.cartItems || body.products || body.orderItems || (body.order && body.order.items) || (body.order && body.order.cart) || [];
         
         if (typeof rawItems === 'string') {
@@ -80,22 +80,25 @@ app.post('/api/order', async (req, res) => {
 
         const isPickup = String(deliveryType).toLowerCase().includes('самов') || String(deliveryType).toLowerCase().includes('pickup');
 
-        // Сообщение клиенту
-        let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
-        customerMessage += `📦 **Ваше замовлення успішно оформлено та передано менеджеру.**\n🛒 **Товари:**\n`;
-
+        // Формирование списка товаров с точным названием, количеством и ценой (как на скриншотах 14-15)
+        let itemsFormattedText = '';
         if (items.length > 0) {
             items.forEach((item, index) => {
                 const title = item.title || item.name || item.productName || item.text || 'Товар';
                 const qty = item.quantity || item.count || item.qty || 1;
                 const price = item.price || 0;
-                customerMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
+                itemsFormattedText += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
             });
         } else {
-            customerMessage += `1. Товар з кошика — 1 шт.\n`;
+            itemsFormattedText = `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
         }
 
+        // Сообщение клиенту
+        let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
+        customerMessage += `📦 **Ваше замовлення успішно оформлено та передано менеджеру.**\n`;
+        customerMessage += `🛒 **Товари:**\n${itemsFormattedText}`;
         customerMessage += `\n⏱ **Очікуйте на підтвердження** — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n`;
+        
         if (isPickup) {
             customerMessage += `⏱ **Оскільки це самовивіз, будь ласка, напишіть менеджеру @telleportt для узгодження часу!**\n\n`;
         } else {
@@ -117,20 +120,10 @@ app.post('/api/order', async (req, res) => {
         adminMessage += `🆔 **ID:** ${user?.id || 'нет'}\n`;
         adminMessage += `📞 **Телефон:** ${phone}\n`;
         adminMessage += `🚚 **Спосіб:** ${deliveryType}\n`;
-        adminMessage += `📍 **Деталі:** ${details}\n\n📦 **Товари:**\n`;
-
-        if (items.length > 0) {
-            items.forEach((item, index) => {
-                const title = item.title || item.name || item.productName || item.text || 'Товар';
-                const qty = item.quantity || item.count || item.qty || 1;
-                const price = item.price || 0;
-                adminMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
-            });
-        } else {
-            adminMessage += `1. Товар з кошика — 1 шт.\n`;
-        }
-
-        adminMessage += `\n💰 **Сума:** ${totalPrice} грн\n\n📌 **Поточний статус:** В обробці`;
+        adminMessage += `📍 **Деталі:** ${details}\n\n`;
+        adminMessage += `📦 **Товари:**\n${itemsFormattedText}`;
+        adminMessage += `\n💰 **Сума:** ${totalPrice} грн\n\n`;
+        adminMessage += `📌 **Поточний статус:** В обробці`;
 
         const keyboard = Markup.inlineKeyboard([
             [
