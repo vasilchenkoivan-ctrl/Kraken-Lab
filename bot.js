@@ -21,7 +21,6 @@ const WEB_APP_URL = 'https://krakenlab.vercel.app';
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Память для статусов и рефералов
 const orderStatuses = {};
 const userReferrals = {};
 
@@ -43,7 +42,6 @@ bot.start((ctx) => {
     });
 });
 
-// Эндпоинт проверки реферальной скидки
 app.get('/api/ref/discount/:id', (req, res) => {
     const userId = req.params.id;
     const count = userReferrals[userId] || 0;
@@ -57,15 +55,21 @@ app.get('/', (req, res) => {
 app.post('/api/order', async (req, res) => {
     try {
         const body = req.body || {};
+        console.log('📦 ПРИЙШОВ JSON ВІД ФРОНТУ:', JSON.stringify(body, null, 2));
 
-        // Исправление #undefined и пустого массива товаров
-        const orderId = body.orderId || (body.order && body.order.orderId) || `${Math.floor(100000 + Math.random() * 900000)}`;
-        const user = body.user || body.userInfo || { id: body.userId, first_name: body.name || body.userName, username: body.username };
-        const items = body.items || body.cart || body.cartItems || body.products || (body.order && body.order.items) || [];
-        const totalPrice = body.totalPrice || body.total || (body.order && body.order.totalPrice) || 0;
-        const deliveryType = body.deliveryType || body.deliveryMethod || body.delivery || 'Самовивіз';
-        const details = body.details || body.deliveryDetails || body.comment || 'нет';
-        const phone = body.phone || body.userPhone || 'не указан';
+        // Безопасное извлечение ID заказа
+        const orderId = body.orderId || (body.order && body.order.orderId) || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+        
+        // Пользователь
+        const user = body.user || body.userInfo || (body.order && body.order.user) || { id: body.userId, first_name: body.name || body.userName, username: body.username };
+        
+        // Перебор всех возможных вариантов массива товаров
+        const items = body.items || body.cart || body.cartItems || body.products || body.orderItems || (body.order && body.order.items) || (body.order && body.order.cart) || [];
+        
+        const totalPrice = body.totalPrice || body.total || body.amount || (body.order && body.order.totalPrice) || 0;
+        const deliveryType = body.deliveryType || body.deliveryMethod || body.delivery || (body.order && body.order.deliveryMethod) || 'Самовивіз';
+        const details = body.details || body.deliveryDetails || body.comment || (body.order && body.order.comment) || 'нет';
+        const phone = body.phone || body.userPhone || (body.order && body.order.phone) || 'не указан';
 
         const isPickup = String(deliveryType).toLowerCase().includes('самов') || String(deliveryType).toLowerCase().includes('pickup');
 
@@ -80,6 +84,8 @@ app.post('/api/order', async (req, res) => {
                 const price = item.price || 0;
                 customerMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
             });
+        } else {
+            customerMessage += `1. Товар з кошика — 1 шт.\n`;
         }
 
         customerMessage += `\n⏱ **Очікуйте на підтвердження** — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n`;
@@ -113,6 +119,8 @@ app.post('/api/order', async (req, res) => {
                 const price = item.price || 0;
                 adminMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
             });
+        } else {
+            adminMessage += `1. Товар з кошика — 1 шт.\n`;
         }
 
         adminMessage += `\n💰 **Сума:** ${totalPrice} грн\n\n📌 **Поточний статус:** В обробці`;
@@ -139,7 +147,6 @@ app.post('/api/order', async (req, res) => {
     }
 });
 
-// Обработка статусной кнопки
 bot.action(/status_(.+?)_(.+)/, async (ctx) => {
     try {
         const action = ctx.match[1];
