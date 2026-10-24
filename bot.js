@@ -68,7 +68,6 @@ app.post('/api/order', async (req, res) => {
         if (isPickup) {
             deliveryDetails = 'Самовивіз (Клієнт напише для узгодження часу)';
         } else {
-            // Очищаем текст от дублирования "Нова Пошта"
             let rawDetails = orderData.deliveryDetails || orderData.details || orderData.comment || orderData.address || body.deliveryDetails || body.details || body.comment || body.address || '';
             
             if (!rawDetails && (orderData.city || body.city || orderData.warehouse || body.warehouse)) {
@@ -77,7 +76,6 @@ app.post('/api/order', async (req, res) => {
                 rawDetails = `${city}, відд. ${warehouse}`;
             }
 
-            // Убираем лишние фразы "Нова Пошта", "Нова Пошта ()"
             rawDetails = rawDetails.replace(/Нова Пошта\s*/gi, '').replace(/[()]/g, '').trim();
 
             if (rawDetails) {
@@ -87,7 +85,7 @@ app.post('/api/order', async (req, res) => {
             }
         }
 
-        // --- ТОВАРЫ ---
+        // --- ТОВАРИ ---
         let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || body.items || body.cart || body.cartItems || body.products || body.orderItems || [];
         
         if (typeof rawItems === 'string') {
@@ -100,9 +98,10 @@ app.post('/api/order', async (req, res) => {
         let itemsFormattedText = '';
         if (items.length > 0) {
             items.forEach((item, index) => {
-                const title = item.title || item.name || item.productName || item.label || item.text || (typeof item === 'string' ? item : 'Товар');
-                const qty = item.quantity || item.count || item.qty || 1;
-                const price = item.price || 0;
+                const title = item.productName || item.title || item.name || item.product || item.label || item.text || item.item || (typeof item === 'string' ? item : 'Товар');
+                const qty = item.quantity || item.count || item.qty || item.amount || 1;
+                const price = item.price || item.cost || 0;
+                
                 itemsFormattedText += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
             });
         } else {
