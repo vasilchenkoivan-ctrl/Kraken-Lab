@@ -85,7 +85,7 @@ app.post('/api/order', async (req, res) => {
             }
         }
 
-        // --- ТОВАРИ ---
+        // --- ТОВАРЫ ---
         let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || body.items || body.cart || body.cartItems || body.products || body.orderItems || [];
         
         if (typeof rawItems === 'string') {
@@ -98,14 +98,35 @@ app.post('/api/order', async (req, res) => {
         let itemsFormattedText = '';
         if (items.length > 0) {
             items.forEach((item, index) => {
-                const title = item.productName || item.title || item.name || item.product || item.label || item.text || item.item || (typeof item === 'string' ? item : 'Товар');
+                const mainName = item.title || item.name || item.productName || item.product || item.label || item.text || item.item || '';
+                const flavor = item.flavor || item.taste || item.selectedFlavor || item.option || item.variant || '';
+                const volume = item.volume || item.mg || item.strength || '';
+
+                let fullTitle = mainName;
+                if (flavor) fullTitle += ` (${flavor})`;
+                if (volume) fullTitle += ` ${volume}`;
+
+                if (!fullTitle.trim()) {
+                    fullTitle = typeof item === 'string' ? item : 'Товар';
+                }
+
                 const qty = item.quantity || item.count || item.qty || item.amount || 1;
                 const price = item.price || item.cost || 0;
                 
-                itemsFormattedText += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
+                itemsFormattedText += `${index + 1}. ${fullTitle.trim()} — ${qty} шт. х ${price} ₴\n`;
             });
         } else {
-            itemsFormattedText = `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
+            const singleTitle = orderData.productName || orderData.product || orderData.title || orderData.name || body.productName || body.product || body.title || body.name || '';
+            const singleFlavor = orderData.flavor || orderData.taste || body.flavor || body.taste || '';
+            
+            let singleFormatted = singleTitle;
+            if (singleFlavor) singleFormatted += ` (${singleFlavor})`;
+
+            if (singleFormatted.trim()) {
+                itemsFormattedText = `1. ${singleFormatted.trim()} — 1 шт. х ${totalPrice} ₴\n`;
+            } else {
+                itemsFormattedText = `1. Товар — 1 шт. х ${totalPrice} ₴\n`;
+            }
         }
 
         // --- СООБЩЕНИЕ ДЛЯ МЕНЕДЖЕРА ---
