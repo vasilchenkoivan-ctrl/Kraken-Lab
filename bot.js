@@ -55,16 +55,23 @@ app.get('/', (req, res) => {
 app.post('/api/order', async (req, res) => {
     try {
         const body = req.body || {};
-        console.log('📦 ПРИЙШОВ JSON ВІД ФРОНТУ:', JSON.stringify(body, null, 2));
+        console.log('📦 ПРИЙШОВ JSON ВІД ФРОНТУ/СКРИПТУ:', JSON.stringify(body, null, 2));
 
-        // Безопасное извлечение ID заказа
         const orderId = body.orderId || (body.order && body.order.orderId) || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-        
-        // Пользователь
         const user = body.user || body.userInfo || (body.order && body.order.user) || { id: body.userId, first_name: body.name || body.userName, username: body.username };
         
-        // Перебор всех возможных вариантов массива товаров
-        const items = body.items || body.cart || body.cartItems || body.products || body.orderItems || (body.order && body.order.items) || (body.order && body.order.cart) || [];
+        // ВСЕВОЗМОЖНЫЕ варианты ключей для товаров (включая парсинг из строки на случай передачи через Google Script)
+        let rawItems = body.items || body.cart || body.cartItems || body.products || body.orderItems || (body.order && body.order.items) || (body.order && body.order.cart) || [];
+        
+        if (typeof rawItems === 'string') {
+            try {
+                rawItems = JSON.parse(rawItems);
+            } catch (e) {
+                rawItems = [];
+            }
+        }
+
+        const items = Array.isArray(rawItems) ? rawItems : [];
         
         const totalPrice = body.totalPrice || body.total || body.amount || (body.order && body.order.totalPrice) || 0;
         const deliveryType = body.deliveryType || body.deliveryMethod || body.delivery || (body.order && body.order.deliveryMethod) || 'Самовивіз';
@@ -77,9 +84,9 @@ app.post('/api/order', async (req, res) => {
         let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
         customerMessage += `📦 **Ваше замовлення успішно оформлено та передано менеджеру.**\n🛒 **Товари:**\n`;
 
-        if (Array.isArray(items) && items.length > 0) {
+        if (items.length > 0) {
             items.forEach((item, index) => {
-                const title = item.title || item.name || item.productName || 'Товар';
+                const title = item.title || item.name || item.productName || item.text || 'Товар';
                 const qty = item.quantity || item.count || item.qty || 1;
                 const price = item.price || 0;
                 customerMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
@@ -112,9 +119,9 @@ app.post('/api/order', async (req, res) => {
         adminMessage += `🚚 **Спосіб:** ${deliveryType}\n`;
         adminMessage += `📍 **Деталі:** ${details}\n\n📦 **Товари:**\n`;
 
-        if (Array.isArray(items) && items.length > 0) {
+        if (items.length > 0) {
             items.forEach((item, index) => {
-                const title = item.title || item.name || item.productName || 'Товар';
+                const title = item.title || item.name || item.productName || item.text || 'Товар';
                 const qty = item.quantity || item.count || item.qty || 1;
                 const price = item.price || 0;
                 adminMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
