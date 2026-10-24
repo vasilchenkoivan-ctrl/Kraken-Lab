@@ -33,16 +33,20 @@ app.post('/api/order', async (req, res) => {
         const orderId = orderData.orderId || `#ORD-${Math.floor(100000 + Math.random() * 900000)}`;
         const name = orderData.name || 'Покупець';
         const username = orderData.username ? `(@${orderData.username})` : '';
-        const userId = orderData.userId || orderData.telegramId || 'Не вказано';
+        
+        // Универсальный поиск ID клиента, чтобы сообщение точно доходило
+        const userId = orderData.userId || orderData.telegramId || orderData.chatId || (orderData.user && orderData.user.id) || null;
+        
         const phone = orderData.phone || orderData.userPhone || 'Не вказано';
         const delivery = orderData.deliveryMethod || orderData.delivery || 'Не вказано';
-        const deliveryDetails = orderData.deliveryDetails || orderData.comment || 'Не вказано';
+        const deliveryDetails = orderData.deliveryDetails || orderData.comment || 'Самовивіз (Київ, вул. Остафія Дашкевича)';
         const items = orderData.items || orderData.cart || [];
         const totalPrice = orderData.totalPrice || orderData.total || 0;
 
+        // Сообщение для администратора
         let adminMessage = `🛍 <b>НОВЕ ЗАМОВЛЕННЯ</b> <code>${orderId}</code>\n\n`;
         adminMessage += `👤 <b>Покупець:</b> ${name} ${username}\n`;
-        adminMessage += `🆔 <b>ID:</b> ${userId}\n`;
+        adminMessage += `🆔 <b>ID:</b> ${userId || 'Не передано'}\n`;
         adminMessage += `📞 <b>Телефон:</b> ${phone}\n`;
         adminMessage += `🚚 <b>Спосіб:</b> ${delivery}\n`;
         adminMessage += `📍 <b>Деталі:</b> ${deliveryDetails}\n\n`;
@@ -77,7 +81,8 @@ app.post('/api/order', async (req, res) => {
             await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, { parse_mode: 'HTML' });
         }
 
-        if (userId && userId !== 'Не вказано') {
+        // Сообщение для клиента (точно как на твоем скриншоте)
+        if (userId) {
             try {
                 let clientMessage = `✅ <b>Дякуємо за замовлення в KrakenLab!</b>\n\n`;
                 clientMessage += `📦 <b>Ваше замовлення успішно оформлено та передано менеджеру.</b>\n`;
@@ -95,10 +100,11 @@ app.post('/api/order', async (req, res) => {
                 clientMessage += `\n⏱ <b>Очікуйте на підтвердження</b> — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n`;
                 clientMessage += `⏱ <b>Оскільки це самовивіз, будь ласка, напишіть менеджеру @telleportt для узгодження часу!</b>\n\n`;
                 clientMessage += `💚 <b>Дякуємо, що обираєте KrakenLab!</b>`;
+                clientMessage += `\n\n📌 <b>Поточний статус:</b> В обробці`;
 
                 await bot.telegram.sendMessage(userId, clientMessage, { parse_mode: 'HTML' });
             } catch (clientErr) {
-                console.error('Не вдалося надіслати повідомлення клієнту:', clientErr);
+                console.error('Не вдалося надіслати повідомлення клієнту (можливо, він не запускав бота /start):', clientErr);
             }
         }
 
