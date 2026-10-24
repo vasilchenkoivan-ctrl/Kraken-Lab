@@ -26,7 +26,7 @@ const orderStatuses = {};
 const userReferrals = {};
 
 bot.start((ctx) => {
-    const startPayload = ctx.message.text.split(' ')[1];
+    const startPayload = ctx.message.text ? ctx.message.text.split(' ')[1] : null;
     if (startPayload && startPayload.startsWith('ref_')) {
         const referrerId = startPayload.replace('ref_', '');
         if (referrerId !== String(ctx.from.id)) {
@@ -56,9 +56,18 @@ app.get('/', (req, res) => {
 
 app.post('/api/order', async (req, res) => {
     try {
-        const { orderId, user, items, totalPrice, deliveryType, details, phone } = req.body;
+        const body = req.body || {};
 
-        const isPickup = deliveryType === 'pickup' || (deliveryType && deliveryType.toLowerCase().includes('самов'));
+        // Исправление #undefined и пустого массива товаров
+        const orderId = body.orderId || (body.order && body.order.orderId) || `${Math.floor(100000 + Math.random() * 900000)}`;
+        const user = body.user || body.userInfo || { id: body.userId, first_name: body.name || body.userName, username: body.username };
+        const items = body.items || body.cart || body.cartItems || body.products || (body.order && body.order.items) || [];
+        const totalPrice = body.totalPrice || body.total || (body.order && body.order.totalPrice) || 0;
+        const deliveryType = body.deliveryType || body.deliveryMethod || body.delivery || 'Самовивіз';
+        const details = body.details || body.deliveryDetails || body.comment || 'нет';
+        const phone = body.phone || body.userPhone || 'не указан';
+
+        const isPickup = String(deliveryType).toLowerCase().includes('самов') || String(deliveryType).toLowerCase().includes('pickup');
 
         // Сообщение клиенту
         let customerMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
@@ -66,7 +75,10 @@ app.post('/api/order', async (req, res) => {
 
         if (Array.isArray(items) && items.length > 0) {
             items.forEach((item, index) => {
-                customerMessage += `${index + 1}. ${item.title || item.name} — ${item.quantity || item.count || 1} шт. х ${item.price} ₴\n`;
+                const title = item.title || item.name || item.productName || 'Товар';
+                const qty = item.quantity || item.count || item.qty || 1;
+                const price = item.price || 0;
+                customerMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
             });
         }
 
@@ -79,20 +91,27 @@ app.post('/api/order', async (req, res) => {
         customerMessage += `💚 **Дякуємо, що обираєте KrakenLab!**`;
 
         if (user && user.id) {
-            await bot.telegram.sendMessage(user.id, customerMessage, { parse_mode: 'Markdown' });
+            try {
+                await bot.telegram.sendMessage(user.id, customerMessage, { parse_mode: 'Markdown' });
+            } catch (errClient) {
+                console.error("Не удалось отправить клиенту:", errClient);
+            }
         }
 
         // Сообщение администратору
         let adminMessage = `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n`;
-        adminMessage += `👤 **Покупець:** ${user?.first_name || 'Клиент'} (@${user?.username || 'нет'})
-🆔 **ID:** ${user?.id || 'нет'}
-📞 **Телефон:** ${phone || 'не указан'}
-🚚 **Спосіб:** ${deliveryType || 'не указан'}
-📍 **Деталі:** ${details || 'нет'}\n\n📦 **Товари:**\n`;
+        adminMessage += `👤 **Покупець:** ${user?.first_name || 'Клиент'} (@${user?.username || 'нет'})\n`;
+        adminMessage += `🆔 **ID:** ${user?.id || 'нет'}\n`;
+        adminMessage += `📞 **Телефон:** ${phone}\n`;
+        adminMessage += `🚚 **Спосіб:** ${deliveryType}\n`;
+        adminMessage += `📍 **Деталі:** ${details}\n\n📦 **Товари:**\n`;
 
         if (Array.isArray(items) && items.length > 0) {
             items.forEach((item, index) => {
-                adminMessage += `${index + 1}. ${item.title || item.name} — ${item.quantity || item.count || 1} шт. х ${item.price} ₴\n`;
+                const title = item.title || item.name || item.productName || 'Товар';
+                const qty = item.quantity || item.count || item.qty || 1;
+                const price = item.price || 0;
+                adminMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
             });
         }
 
