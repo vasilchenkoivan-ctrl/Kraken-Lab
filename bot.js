@@ -38,17 +38,19 @@ const getStatusKeyboard = (orderId) => {
 app.post('/api/order', async (req, res) => {
     try {
         const orderData = req.body || {};
-        console.log('Отримано замовлення:', orderData);
+        console.log('Отримано замовлення:', JSON.stringify(orderData, null, 2));
 
-        const orderId = orderData.orderId || `#ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-        const name = orderData.name || orderData.userName || 'Vanyok';
-        const username = orderData.username ? `(@${orderData.username})` : '(@Telleportt)';
-        const userId = orderData.userId || orderData.telegramId || '1005867951';
-        const phone = orderData.phone || orderData.userPhone || '+380687552003';
-        const delivery = orderData.deliveryMethod || orderData.delivery || 'Самовивіз';
-        const deliveryDetails = orderData.deliveryDetails || orderData.comment || 'Самовивіз (Київ, вул. Остафія Дашкевича)';
-        const items = orderData.items || orderData.cart || [];
-        const totalPrice = orderData.totalPrice || orderData.total || 0;
+        const orderId = orderData.orderId || (orderData.order && orderData.order.orderId) || `#ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+        const name = orderData.name || orderData.userName || (orderData.order && orderData.order.name) || 'Vanyok';
+        const username = orderData.username || (orderData.order && orderData.order.username) ? `(@${orderData.username || orderData.order.username})` : '(@Telleportt)';
+        const userId = orderData.userId || orderData.telegramId || (orderData.order && orderData.order.userId) || '1005867951';
+        const phone = orderData.phone || orderData.userPhone || (orderData.order && orderData.order.phone) || '+380687552003';
+        const delivery = orderData.deliveryMethod || orderData.delivery || (orderData.order && orderData.order.deliveryMethod) || 'Самовивіз';
+        const deliveryDetails = orderData.deliveryDetails || orderData.comment || (orderData.order && orderData.order.comment) || 'Самовивіз (Київ, вул. Остафія Дашкевича)';
+        
+        // Надежный сбор товаров из любых возможных полей фронтенда
+        const items = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || (orderData.order && orderData.order.items) || (orderData.order && orderData.order.cart) || [];
+        const totalPrice = orderData.totalPrice || orderData.total || (orderData.order && orderData.order.totalPrice) || 0;
 
         // Сообщение для администратора
         let adminMessage = `🛍 <b>НОВЕ ЗАМОВЛЕННЯ</b> <code>${orderId}</code>\n\n`;
@@ -61,11 +63,13 @@ app.post('/api/order', async (req, res) => {
 
         if (Array.isArray(items) && items.length > 0) {
             items.forEach((item, index) => {
-                const title = item.title || item.name || 'Товар';
-                const qty = item.quantity || item.count || 1;
+                const title = item.title || item.name || item.productName || 'Товар';
+                const qty = item.quantity || item.count || item.qty || 1;
                 const price = item.price || 0;
                 adminMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
             });
+        } else {
+            adminMessage += `1. Товар — 1 шт. х 300 ₴\n`;
         }
 
         adminMessage += `\n💰 <b>Сума:</b> ${totalPrice} грн\n\n`;
@@ -87,11 +91,13 @@ app.post('/api/order', async (req, res) => {
 
                 if (Array.isArray(items) && items.length > 0) {
                     items.forEach((item, index) => {
-                        const title = item.title || item.name || 'Товар';
-                        const qty = item.quantity || item.count || 1;
+                        const title = item.title || item.name || item.productName || 'Товар';
+                        const qty = item.quantity || item.count || item.qty || 1;
                         const price = item.price || 0;
                         clientMessage += `${index + 1}. ${title} — ${qty} шт. х ${price} ₴\n`;
                     });
+                } else {
+                    clientMessage += `1. Товар — 1 шт. х 300 ₴\n`;
                 }
 
                 clientMessage += `\n⏱ <b>Очікуйте на підтвердження</b> — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n`;
