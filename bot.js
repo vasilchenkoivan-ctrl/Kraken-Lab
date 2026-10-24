@@ -38,19 +38,21 @@ const getStatusKeyboard = (orderId) => {
 app.post('/api/order', async (req, res) => {
     try {
         const orderData = req.body || {};
-        
-        // 🔥 ДИАГНОСТИЧЕСКИЙ ЛОГ: распечатает всё, что слал фронтенд/скрипт
-        console.log('🔥🔥🔥 ПОЛНЫЙ ОБЪЕКТ ОТ ФРОНТА:', JSON.stringify(orderData, null, 2));
+        console.log('Отримано замовлення:', JSON.stringify(orderData, null, 2));
 
         const orderId = orderData.orderId || (orderData.order && orderData.order.orderId) || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
         const name = orderData.name || orderData.userName || (orderData.order && orderData.order.name) || 'Vanyok';
-        const username = orderData.username || (orderData.order && orderData.order.username) ? `@${orderData.username || orderData.order.username}` : 'Telleportt';
+        const rawUsername = orderData.username || (orderData.order && orderData.order.username) || '';
+        const username = rawUsername ? `@${rawUsername.replace('@', '')}` : '@Telleportt';
+        
         const userId = orderData.userId || orderData.telegramId || (orderData.order && orderData.order.userId) || '1005867951';
         const phone = orderData.phone || orderData.userPhone || (orderData.order && orderData.order.phone) || '+380687552003';
-        const delivery = orderData.deliveryMethod || orderData.delivery || (orderData.order && orderData.order.deliveryMethod) || 'Самовивіз';
-        const deliveryDetails = orderData.deliveryDetails || orderData.comment || (orderData.order && orderData.order.comment) || 'Самовивіз (Київ, вул. Остафія Дашкевича)';
         
-        // Поиск массива товаров
+        // Способ доставки и детали
+        const delivery = orderData.deliveryMethod || orderData.deliveryType || orderData.delivery || (orderData.order && orderData.order.deliveryMethod) || 'Самовивіз';
+        const deliveryDetails = orderData.deliveryDetails || orderData.details || orderData.comment || (orderData.order && orderData.order.comment) || 'не вказано';
+        
+        // Разбор массива товаров
         let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || orderData.orderItems || (orderData.order && orderData.order.items) || (orderData.order && orderData.order.cart) || [];
         if (typeof rawItems === 'string') {
             try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
@@ -58,7 +60,10 @@ app.post('/api/order', async (req, res) => {
         const items = Array.isArray(rawItems) ? rawItems : [];
 
         const totalPrice = orderData.totalPrice || orderData.total || (orderData.order && orderData.order.totalPrice) || 0;
-        const isPickup = String(delivery).toLowerCase().includes('самов') || String(delivery).toLowerCase().includes('pickup');
+        
+        // Проверка на самовывоз (только если действительно выбрано "самовивіз" или "pickup")
+        const deliveryLower = String(delivery).toLowerCase();
+        const isPickup = deliveryLower.includes('самов') || deliveryLower.includes('pickup');
 
         // Формирование текста товаров
         let itemsFormattedText = '';
@@ -75,7 +80,7 @@ app.post('/api/order', async (req, res) => {
 
         // Сообщение для администратора
         let adminMessage = `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n`;
-        adminMessage += `👤 **Покупець:** ${name} (@${username})\n`;
+        adminMessage += `👤 **Покупець:** ${name} (${username})\n`;
         adminMessage += `🆔 **ID:** ${userId}\n`;
         adminMessage += `📞 **Телефон:** ${phone}\n`;
         adminMessage += `🚚 **Спосіб:** ${delivery}\n`;
@@ -99,6 +104,7 @@ app.post('/api/order', async (req, res) => {
                 clientMessage += `🛒 **Товари:**\n${itemsFormattedText}\n`;
                 clientMessage += `🕖 **Очікуйте на підтвердження** — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n\n`;
                 
+                // Добавляем инфо про самовывоз ТОЛЬКО если это действительно самовывоз
                 if (isPickup) {
                     clientMessage += `⏱ **Оскільки це самовивіз, будь ласка, напишіть менеджеру @telleportt для узгодження часу!**\n\n`;
                 }
