@@ -1,5 +1,5 @@
 const express = require('express');
-const { Telegraf } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 
 const app = express();
 
@@ -25,28 +25,41 @@ app.get('/', (req, res) => {
     res.send('Бэкенд Kraken Lab работает!');
 });
 
+// Кнопки смены статуса под сообщением админа
+const getStatusKeyboard = (orderId) => {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('⏳ В обробці', `status_proc_${orderId}`),
+            Markup.button.callback('✅ Виконано', `status_done_${orderId}`),
+            Markup.button.callback('❌ Скасовано', `status_canc_${orderId}`)
+        ]
+    ]);
+};
+
 app.post('/api/order', async (req, res) => {
     try {
         const orderData = req.body || {};
         console.log('Отримано замовлення:', orderData);
 
         const orderId = orderData.orderId || `#ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-        const name = orderData.name || 'Покупець';
-        const username = orderData.username ? `(@${orderData.username})` : '';
         
-        // Универсальный поиск ID клиента, чтобы сообщение точно доходило
+        // Исправлено: парсинг имени из всех возможных полей
+        const name = orderData.userName || orderData.customerName || orderData.fullName || orderData.name || orderData.first_name || (orderData.user && orderData.user.first_name) || 'Покупець';
+        const username = orderData.username || (orderData.user && orderData.user.username) ? `(@${orderData.username || orderData.user.username})` : '';
         const userId = orderData.userId || orderData.telegramId || orderData.chatId || (orderData.user && orderData.user.id) || null;
-        
         const phone = orderData.phone || orderData.userPhone || 'Не вказано';
-        const delivery = orderData.deliveryMethod || orderData.delivery || 'Не вказано';
-        const deliveryDetails = orderData.deliveryDetails || orderData.comment || 'Самовивіз (Київ, вул. Остафія Дашкевича)';
+        
+        const delivery = orderData.deliveryMethod || orderData.delivery || 'Самовивіз';
+        const isPickup = delivery.toLowerCase().includes('самовивіз') || delivery.toLowerCase().includes('самовывоз');
+        const deliveryDetails = orderData.deliveryDetails || orderData.comment || (isPickup ? 'Самовивіз (Київ, вул. Остафія Дашкевича)' : 'Не вказано');
+        
         const items = orderData.items || orderData.cart || [];
         const totalPrice = orderData.totalPrice || orderData.total || 0;
 
-        // Сообщение для администратора
+        // Сообщение админу
         let adminMessage = `🛍 <b>НОВЕ ЗАМОВЛЕННЯ</b> <code>${orderId}</code>\n\n`;
         adminMessage += `👤 <b>Покупець:</b> ${name} ${username}\n`;
-        adminMessage += `🆔 <b>ID:</b> ${userId || 'Не передано'}\n`;
+        adminMessage += `🆔 <b>ID:</b> ${userId || 'Не вказано'}\n`;
         adminMessage += `📞 <b>Телефон:</b> ${phone}\n`;
         adminMessage += `🚚 <b>Спосіб:</b> ${delivery}\n`;
         adminMessage += `📍 <b>Деталі:</b> ${deliveryDetails}\n\n`;
@@ -78,10 +91,13 @@ app.post('/api/order', async (req, res) => {
         adminMessage += `\n\n📌 <b>Поточний статус:</b> В обробці`;
 
         if (ADMIN_CHAT_ID) {
-            await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, { parse_mode: 'HTML' });
+            await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, {
+                parse_mode: 'HTML',
+                ...getStatusKeyboard(orderId)
+            });
         }
 
-        // Сообщение для клиента (точно как на твоем скриншоте)
+        // Сообщение клиенту
         if (userId) {
             try {
                 let clientMessage = `✅ <b>Дякуємо за замовлення в KrakenLab!</b>\n\n`;
@@ -98,13 +114,19 @@ app.post('/api/order', async (req, res) => {
                 }
 
                 clientMessage += `\n⏱ <b>Очікуйте на підтвердження</b> — менеджер зв'яжеться з вами найближчим часом для уточнення деталей.\n`;
-                clientMessage += `⏱ <b>Оскільки це самовивіз, будь ласка, напишіть менеджеру @telleportt для узгодження часу!</b>\n\n`;
+                
+                // Исправлено: текст про самовывоз отправляется только если выбран самовывоз
+                if (isPickup) {
+                    clientMessage += `⏱ <b>Оскільки це самовивіз, будь ласка, напишіть менеджеру @telleportt для узгодження часу!</b>\n\n`;
+                } else {
+                    clientMessage += `\n`;
+                }
+
                 clientMessage += `💚 <b>Дякуємо, що обираєте KrakenLab!</b>`;
-                clientMessage += `\n\n📌 <b>Поточний статус:</b> В обробці`;
 
                 await bot.telegram.sendMessage(userId, clientMessage, { parse_mode: 'HTML' });
             } catch (clientErr) {
-                console.error('Не вдалося надіслати повідомлення клієнту (можливо, він не запускав бота /start):', clientErr);
+                console.error('Не вдалося надіслати повідомлення клієнту:', clientErr);
             }
         }
 
@@ -112,6 +134,37 @@ app.post('/api/order', async (req, res) => {
     } catch (error) {
         console.error('Помилка при обробці замовлення:', error);
         return res.status(500).json({ success: false, error: error.message || 'Помилка сервера' });
+    }
+});
+
+// Обработка нажатий на кнопки статусов
+bot.action(/status_(proc|done|canc)_(.+)/, async (ctx) => {
+    try {
+        const type = ctx.match[1];
+        const orderId = ctx.match[2];
+        
+        let statusText = 'В обробці';
+        if (type === 'done') statusText = 'Виконано ✅';
+        if (type === 'canc') statusText = 'Скасовано ❌';
+
+        let currentText = ctx.callbackQuery.message.text || '';
+        
+        // Обновляем статус в тексте
+        if (currentText.includes('📌 Поточний статус:')) {
+            currentText = currentText.replace(/📌 Поточний статус:.*/, `📌 Поточний статус: ${statusText}`);
+        } else {
+            currentText += `\n\n📌 Поточний статус: ${statusText}`;
+        }
+
+        await ctx.editMessageText(currentText, {
+            parse_mode: 'HTML',
+            ...getStatusKeyboard(orderId)
+        });
+        
+        await ctx.answerCbQuery(`Статус змінено на: ${statusText}`);
+    } catch (err) {
+        console.error('Помилка при зміні статусу:', err);
+        await ctx.answerCbQuery('Помилка при зміні статусу');
     }
 });
 
