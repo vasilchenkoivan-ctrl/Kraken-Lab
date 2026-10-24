@@ -30,7 +30,7 @@ app.post('/api/order', async (req, res) => {
         const orderData = req.body || {};
         console.log('Отримано замовлення:', orderData);
 
-        const orderId = orderData.orderId || `#ORD-${Math.floor(100000 + Math.random() * 900000))}`;
+        const orderId = orderData.orderId || `#ORD-${Math.floor(100000 + Math.random() * 900000)}`;
         const name = orderData.name || 'Покупець';
         const username = orderData.username ? `(@${orderData.username})` : '';
         const userId = orderData.userId || orderData.telegramId || 'Не вказано';
@@ -40,7 +40,6 @@ app.post('/api/order', async (req, res) => {
         const items = orderData.items || orderData.cart || [];
         const totalPrice = orderData.totalPrice || orderData.total || 0;
 
-        // Сообщение для администратора (с себестоимостью и прибылью)
         let adminMessage = `🛍 <b>НОВЕ ЗАМОВЛЕННЯ</b> <code>${orderId}</code>\n\n`;
         adminMessage += `👤 <b>Покупець:</b> ${name} ${username}\n`;
         adminMessage += `🆔 <b>ID:</b> ${userId}\n`;
@@ -78,7 +77,6 @@ app.post('/api/order', async (req, res) => {
             await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, { parse_mode: 'HTML' });
         }
 
-        // Сообщение для клиента (если есть его Telegram ID)
         if (userId && userId !== 'Не вказано') {
             try {
                 let clientMessage = `✅ <b>Дякуємо за замовлення в KrakenLab!</b>\n\n`;
@@ -126,9 +124,11 @@ app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
 
-bot.launch()
-    .then(() => console.log('Telegram бот запущено'))
-    .catch((err) => console.error('Помилка запуску бота:', err));
+bot.launch().then(() => {
+    console.log('Telegram бот успішно запущено');
+}).catch((err) => {
+    console.error('Помилка запуску бота:', err);
+});
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
