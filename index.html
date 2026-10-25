@@ -1,551 +1,249 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#080908">
-<title>KRAKEN LAB</title>
-<style>
-:root{--bg:#080908;--panel:#111411;--panel2:#171b17;--green:#39ff14;--muted:#929992;--border:#293129;--white:#f4f7f3}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,Helvetica,sans-serif;padding-bottom:85px}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-header{position:sticky;top:0;z-index:5;background:rgba(8,9,8,.96);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;justify-content:space-between}
-.brand{font-size:21px;font-weight:900;letter-spacing:2px;color:var(--green);text-shadow:0 0 12px #39ff1440}
-.brand span{color:white}
-.iconbtn{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px;color:white}
-main{max-width:900px;margin:auto;padding:16px}
-.hero{background:linear-gradient(135deg,#152015,#090b09 65%);border:1px solid #294329;border-radius:20px;padding:23px 18px;margin-bottom:20px}
-.hero h1{margin:0 0 8px;font-size:28px;letter-spacing:1px}
-.hero h1 b{color:var(--green)}
-.hero p{color:#b8c0b8;line-height:1.5;margin:0}
-.search{width:100%;background:var(--panel);color:white;border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:14px;outline:none}
-.search:focus,input:focus,textarea:focus,select:focus{border-color:var(--green)}
-.categories{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px}
-.chip{white-space:nowrap;background:var(--panel);border:1px solid var(--border);color:#cdd2cd;border-radius:20px;padding:9px 14px}
-.chip.active{background:var(--green);color:#071006;border-color:var(--green);font-weight:bold}
-.section-title{display:flex;justify-content:space-between;align-items:center;margin:12px 0}
-.section-title h2{font-size:19px;margin:0}
-.section-title span{font-size:12px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:15px;overflow:hidden;min-width:0}
-.product-img{height:155px;background:#161a16;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--green);font-size:34px}
-.product-img img{width:100%;height:100%;object-fit:cover}
-.cardbody{padding:12px}
-.product-title{font-weight:800;line-height:1.3;min-height:35px}
-.category{font-size:12px;color:var(--muted);margin-top:5px}
-.price{font-size:18px;color:var(--green);font-weight:900;margin:11px 0}
-.add{width:100%;background:var(--green);color:#061006;border:0;border-radius:10px;padding:11px;font-weight:900}
-.empty{color:var(--muted);text-align:center;padding:35px 10px}
-.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:8;background:#0d100d;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:9px 4px calc(9px + env(safe-area-inset-bottom))}
-.navitem{background:none;border:0;color:var(--muted);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:60px}
-.navitem strong{font-size:19px}
-.navitem.active{color:var(--green)}
-.badge{background:var(--green);color:#071006;border-radius:20px;font-size:10px;padding:2px 5px;margin-left:3px}
-.overlay{position:fixed;inset:0;z-index:20;background:#000b;display:none;align-items:flex-end;justify-content:center}
-.overlay.show{display:flex}
-.modal{width:100%;max-width:650px;max-height:90vh;overflow:auto;background:#0e110e;border:1px solid var(--border);border-radius:22px 22px 0 0;padding:20px 16px calc(25px + env(safe-area-inset-bottom))}
-.modalhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.modalhead h2{margin:0;font-size:21px}
-.close{background:var(--panel2);border:1px solid var(--border);color:white;border-radius:10px;padding:8px 12px}
-.field{display:flex;flex-direction:column;gap:7px;margin:13px 0}
-.field label{font-size:13px;color:#b7bfb7}
-.field input,.field select,.field textarea{width:100%;padding:12px;background:var(--panel);border:1px solid var(--border);border-radius:10px;color:white;outline:none}
-.field textarea{min-height:75px;resize:vertical}
-.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.cartline{display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid var(--border);padding:13px 0}
-.muted{font-size:12px;color:var(--muted);margin-top:4px}
-.qty{display:flex;align-items:center;gap:10px}
-.qty button{width:29px;height:29px;border:1px solid var(--border);background:var(--panel2);color:white;border-radius:8px}
-.total{font-size:20px;font-weight:900;color:var(--green)}
-.primary{width:100%;border:0;border-radius:11px;padding:14px;background:var(--green);color:#061006;font-weight:900;margin-top:13px}
-.secondary{width:100%;border:1px solid var(--border);border-radius:11px;padding:12px;background:var(--panel2);color:white;margin-top:8px}
-.notice{padding:12px;background:#141914;border:1px solid var(--border);border-radius:10px;color:#cbd3cb;font-size:13px;line-height:1.5;margin:12px 0}
-.ordercard{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin:10px 0}
-.flavors{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.flavor{background:var(--panel2);border:1px solid var(--border);color:white;border-radius:9px;padding:9px 11px}
-.flavor.selected{border-color:var(--green);color:var(--green)}
-@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.overlay{align-items:center}.modal{border-radius:20px}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kraken Lab</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --card-bg: #1a1d24;
+            --accent: #22c55e;
+            --text-color: #ffffff;
+            --text-secondary: #9ca3af;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 70px;
+        }
+        header {
+            padding: 16px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #262930;
+        }
+        .container {
+            padding: 16px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .btn {
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #262930;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #161920;
+            border-top: 1px solid #262930;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .nav-item.active {
+            color: var(--accent);
+        }
+    </style>
 </head>
 <body>
-<header>
-  <div class="brand">KRAKEN<span>LAB</span></div>
-  <button class="iconbtn" onclick="openCart()">🛒 <span id="headCount">0</span></button>
-</header>
 
-<main>
-  <section class="hero">
-    <h1>WELCOME TO <b>KRAKEN LAB</b></h1>
-    <p>Обери товар, додай до кошика та оформи замовлення у кілька кліків.</p>
-  </section>
+    <header>🐙 KRAKEN LAB</header>
 
-  <section id="catalogPage">
-    <input id="search" class="search" placeholder="🔎 Пошук товару..." oninput="renderProducts()">
-    <div class="categories" id="categories"></div>
-    <div class="section-title"><h2>Каталог</h2><span id="productCount"></span></div>
-    <div id="products" class="grid"><div class="empty">Завантаження каталогу…</div></div>
-  </section>
-
-  <section id="historyPage" hidden>
-    <div class="section-title"><h2>Мої замовлення</h2></div>
-    <div id="historyList"></div>
-  </section>
-
-  <section id="profilePage" hidden>
-    <div class="section-title"><h2>Kraken Lab</h2></div>
-    <div class="notice">💚 Дякуємо, що обираєте Kraken Lab.</div>
-    <div class="ordercard">Менеджер: <a href="https://t.me/telleportt" style="color:var(--green)">@telleportt</a></div>
-    <div class="ordercard">Відгуки: <a href="https://t.me/KRAKENOTZYVVL" style="color:var(--green)">@KRAKENOTZYVVL</a></div>
-  </section>
-</main>
-
-<nav class="bottomnav">
-  <button class="navitem active" onclick="showPage('catalogPage',this)"><strong>⌂</strong>Каталог</button>
-  <button class="navitem" onclick="openCart()"><strong>🛒</strong>Кошик <span id="navCount" class="badge">0</span></button>
-  <button class="navitem" onclick="showHistory(this)"><strong>▤</strong>Замовлення</button>
-  <button class="navitem" onclick="showPage('profilePage',this)"><strong>♙</strong>Профіль</button>
-</nav>
-
-<div id="modalOverlay" class="overlay" onclick="overlayClick(event)">
-  <div class="modal">
-    <div class="modalhead"><h2 id="modalTitle">Кошик</h2><button class="close" onclick="closeModal()">✕</button></div>
-    <div id="modalContent"></div>
-  </div>
-</div>
-
-<script>
-const API_URL = 'https://kraken-lab.onrender.com';
-const CATALOG_SHEET_ID = '1-al9u_eJ1l6GRV0h6A3gxgm_bZSI-AlUHVQWDMMbWJM';
-const CATALOG_CSV_URL = `https://docs.google.com/spreadsheets/d/${CATALOG_SHEET_ID}/gviz/tq?tqx=out:json`;
-
-const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-if (tg) {
-  tg.ready();
-  tg.expand();
-}
-
-const telegramUser = tg?.initDataUnsafe?.user || null;
-
-let products = [];
-let activeCategory = 'Усі';
-let cart = JSON.parse(localStorage.getItem('kraken_cart') || '[]');
-let selectedProduct = null;
-let selectedFlavor = '';
-let isPickup = true;
-
-function saveCart() {
-  localStorage.setItem('kraken_cart', JSON.stringify(cart));
-  updateCartCount();
-}
-
-function updateCartCount() {
-  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  document.getElementById('headCount').textContent = count;
-  document.getElementById('navCount').textContent = count;
-}
-
-function parseGviz(text) {
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start < 0 || end < 0) throw new Error('Невірний формат Google Sheets');
-  return JSON.parse(text.slice(start, end + 1));
-}
-
-async function loadCatalog() {
-  try {
-    const response = await fetch(CATALOG_CSV_URL);
-    if (!response.ok) throw new Error('Не вдалося завантажити каталог');
-
-    const data = parseGviz(await response.text());
-    const rows = data.table?.rows || [];
-
-    products = rows.map((row, index) => {
-      const c = (row.c || []).map(cell => cell ? cell.v : '');
-      return {
-        id: String(c[0] || index + 1),
-        title: String(c[0] || ''),
-        category: String(c[1] || 'Інше'),
-        price: Number(c[2] || 0),
-        flavors: String(c[3] || '').split(/[,;|]/).map(x => x.trim()).filter(Boolean),
-        image: String(c[4] || '')
-      };
-    }).filter(p => p.title && p.price > 0);
-
-    renderCategories();
-    renderProducts();
-  } catch (error) {
-    console.error(error);
-    document.getElementById('products').innerHTML =
-      '<div class="empty">Не вдалося завантажити каталог. Перевір доступ до Google Таблиці та назви колонок.</div>';
-  }
-}
-
-function renderCategories() {
-  const categories = ['Усі', ...new Set(products.map(p => p.category))];
-  document.getElementById('categories').innerHTML = categories.map(category =>
-    `<button class="chip ${category === activeCategory ? 'active' : ''}" onclick="setCategory(${JSON.stringify(category)})">${escapeHtml(category)}</button>`
-  ).join('');
-}
-
-function setCategory(category) {
-  activeCategory = category;
-  renderCategories();
-  renderProducts();
-}
-
-function renderProducts() {
-  const query = document.getElementById('search').value.trim().toLowerCase();
-  const filtered = products.filter(p =>
-    (activeCategory === 'Усі' || p.category === activeCategory) &&
-    `${p.title} ${p.category} ${p.flavors.join(' ')}`.toLowerCase().includes(query)
-  );
-
-  document.getElementById('productCount').textContent = `${filtered.length} товарів`;
-
-  if (!filtered.length) {
-    document.getElementById('products').innerHTML = '<div class="empty">Товарів не знайдено.</div>';
-    return;
-  }
-
-  document.getElementById('products').innerHTML = filtered.map(p => `
-    <article class="card">
-      <div class="product-img">${p.image ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}" loading="lazy" onerror="this.style.display='none'">` : '🐙'}</div>
-      <div class="cardbody">
-        <div class="product-title">${escapeHtml(p.title)}</div>
-        <div class="category">${escapeHtml(p.category)}</div>
-        <div class="price">${formatMoney(p.price)} ₴</div>
-        <button class="add" onclick="openProduct('${escapeAttr(p.id)}')">ОБРАТИ</button>
-      </div>
-    </article>
-  `).join('');
-}
-
-function openProduct(id) {
-  selectedProduct = products.find(p => p.id === id);
-  if (!selectedProduct) return;
-  selectedFlavor = selectedProduct.flavors[0] || '';
-
-  document.getElementById('modalTitle').textContent = selectedProduct.title;
-  const flavors = selectedProduct.flavors.length
-    ? `<div class="field"><label>Смак</label><div class="flavors">${selectedProduct.flavors.map(f =>
-      `<button class="flavor ${f === selectedFlavor ? 'selected' : ''}" onclick="chooseFlavor(${JSON.stringify(f)},this)">${escapeHtml(f)}</button>`
-    ).join('')}</div></div>`
-    : '';
-
-  document.getElementById('modalContent').innerHTML = `
-    <div class="product-title">${escapeHtml(selectedProduct.title)}</div>
-    <div class="muted">${escapeHtml(selectedProduct.category)}</div>
-    ${flavors}
-    <div class="price">${formatMoney(selectedProduct.price)} ₴</div>
-    <button class="primary" onclick="addToCart()">ДОДАТИ ДО КОШИКА</button>
-  `;
-  openModal();
-}
-
-function chooseFlavor(flavor, button) {
-  selectedFlavor = flavor;
-  document.querySelectorAll('.flavor').forEach(el => el.classList.remove('selected'));
-  button.classList.add('selected');
-}
-
-function addToCart() {
-  if (!selectedProduct) return;
-
-  const key = `${selectedProduct.id}__${selectedFlavor}`;
-  const existing = cart.find(item => item.key === key);
-
-  if (existing) existing.quantity += 1;
-  else cart.push({
-    key,
-    id: selectedProduct.id,
-    title: selectedProduct.title,
-    category: selectedProduct.category,
-    flavor: selectedFlavor,
-    price: selectedProduct.price,
-    quantity: 1
-  });
-
-  saveCart();
-  closeModal();
-}
-
-function openCart() {
-  document.getElementById('modalTitle').textContent = 'Кошик';
-  renderCart();
-  openModal();
-}
-
-function renderCart() {
-  const content = document.getElementById('modalContent');
-
-  if (!cart.length) {
-    content.innerHTML = '<div class="empty">Кошик порожній.</div><button class="secondary" onclick="closeModal()">Повернутися до каталогу</button>';
-    return;
-  }
-
-  const lines = cart.map(item => `
-    <div class="cartline">
-      <div>
-        <strong>${escapeHtml(item.title)}</strong>
-        ${item.flavor ? `<div class="muted">${escapeHtml(item.flavor)}</div>` : ''}
-        <div class="muted">${formatMoney(item.price)} ₴ / шт.</div>
-      </div>
-      <div style="text-align:right">
-        <div class="qty">
-          <button onclick="changeQty('${escapeAttr(item.key)}',-1)">−</button>
-          <span>${item.quantity}</span>
-          <button onclick="changeQty('${escapeAttr(item.key)}',1)">+</button>
+    <div class="container">
+        <!-- Вкладка: Головна -->
+        <div id="tab-main" class="tab-content active">
+            <div class="card">
+                <h3>🎁 Реферальне посилання</h3>
+                <p style="color: var(--text-secondary); font-size: 14px;">Запрошуйте друзів та отримуйте бонуси!</p>
+                <input type="text" id="refLink" readonly style="font-size: 12px;" />
+                <button class="btn" onclick="copyRef()">Копіювати посилання</button>
+            </div>
         </div>
-        <div style="color:var(--green);margin-top:8px;font-weight:bold">${formatMoney(item.price * item.quantity)} ₴</div>
-      </div>
+
+        <!-- Вкладка: Каталог -->
+        <div id="tab-catalog" class="tab-content">
+            <h2>Каталог товарів</h2>
+            <div class="card">
+                <h3>Chaser 30ml (Виноград)</h3>
+                <p>Ціна: 300 ₴</p>
+                <button class="btn" onclick="addToCart('Chaser 30ml', 'Виноград', 300)">Додати в кошик</button>
+            </div>
+        </div>
+
+        <!-- Вкладка: Кошик -->
+        <div id="tab-cart" class="tab-content">
+            <h2>Ваш кошик</h2>
+            <div id="cartItems">Кошик порожній</div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h3>Оформлення замовлення</h3>
+                <label>Спосіб доставки:</label>
+                <select id="deliveryMethod">
+                    <option value="Нова Пошта">Нова Пошта</option>
+                    <option value="Самовивіз">Самовивіз</option>
+                </select>
+
+                <label>Телефон:</label>
+                <input type="tel" id="phone" placeholder="+380..." value="+380" />
+
+                <label>Деталі (Місто / Відділення / Коментар):</label>
+                <input type="text" id="address" placeholder="Київ, відд. №1" />
+
+                <h3>До сплати: <span id="totalPrice">0</span> ₴</h3>
+                <button class="btn" onclick="checkout()">ОФОРМИТИ ЗАМОВЛЕННЯ</button>
+            </div>
+        </div>
     </div>
-  `).join('');
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    <!-- Нижня панель навігації -->
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="switchTab('main')">🏠 Головна</button>
+        <button class="nav-item" onclick="switchTab('catalog')">📦 Каталог</button>
+        <button class="nav-item" onclick="switchTab('cart')">🛒 Кошик</button>
+    </nav>
 
-  content.innerHTML = `
-    ${lines}
-    <div class="row" style="padding-top:16px"><strong>Разом</strong><span class="total">${formatMoney(total)} ₴</span></div>
-    <button class="primary" onclick="checkout()">ОФОРМИТИ ЗАМОВЛЕННЯ</button>
-    <button class="secondary" onclick="closeModal()">Продовжити покупки</button>
-  `;
-}
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-function changeQty(key, delta) {
-  const item = cart.find(p => p.key === key);
-  if (!item) return;
+        let cart = [];
+        const user = tg.initDataUnsafe?.user || { id: '1005867951', first_name: 'Vanyok', username: 'Telleportt' };
 
-  item.quantity += delta;
-  if (item.quantity <= 0) cart = cart.filter(p => p.key !== key);
+        // Реферальная ссылка
+        document.getElementById('refLink').value = `https://t.me/KrakenLabBot?start=ref_${user.id}`;
 
-  saveCart();
-  renderCart();
-}
+        function copyRef() {
+            const copyText = document.getElementById("refLink");
+            copyText.select();
+            navigator.clipboard.writeText(copyText.value);
+            alert("Реферальне посилання скопійовано!");
+        }
 
-function checkout() {
-  if (!cart.length) return;
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-  document.getElementById('modalTitle').textContent = 'Оформлення замовлення';
-  document.getElementById('modalContent').innerHTML = `
-    <form id="checkoutForm" onsubmit="submitOrder(event)">
-      <div class="field"><label for="customerName">Ім’я та прізвище</label><input id="customerName" required maxlength="100" value="${escapeAttr([telegramUser?.first_name,telegramUser?.last_name].filter(Boolean).join(' '))}"></div>
-      <div class="field"><label for="phone">Номер телефону</label><input id="phone" type="tel" required maxlength="30" placeholder="+380..." autocomplete="tel"></div>
-      <div class="field"><label>Спосіб отримання</label>
-        <select id="delivery" onchange="toggleDeliveryFields()">
-          <option value="Самовивіз">Самовивіз</option>
-          <option value="Нова Пошта">Нова Пошта</option>
-        </select>
-      </div>
-      <div id="deliveryFields" hidden>
-        <div class="field"><label for="city">Місто</label><input id="city" maxlength="100" placeholder="Місто доставки"></div>
-        <div class="field"><label for="department">Відділення / поштомат</label><input id="department" maxlength="150" placeholder="Номер та адреса відділення"></div>
-      </div>
-      <div class="field"><label for="comment">Коментар (необов’язково)</label><textarea id="comment" maxlength="500"></textarea></div>
-      <div class="notice">Самовивіз: після оформлення напишіть менеджеру @telleportt, щоб узгодити час. Для Нової Пошти вкажіть місто та відділення.</div>
-      <div class="row"><strong>До сплати</strong><span class="total">${formatMoney(cart.reduce((sum,item)=>sum+item.price*item.quantity,0))} ₴</span></div>
-      <button class="primary" id="submitBtn" type="submit">ПІДТВЕРДИТИ ЗАМОВЛЕННЯ</button>
-      <button class="secondary" type="button" onclick="openCart()">Назад до кошика</button>
-    </form>
-  `;
-}
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
 
-function toggleDeliveryFields() {
-  const pickup = document.getElementById('delivery').value === 'Самовивіз';
-  document.getElementById('deliveryFields').hidden = pickup;
-  document.getElementById('city').required = !pickup;
-  document.getElementById('department').required = !pickup;
-}
+        function addToCart(name, flavor, price) {
+            cart.push({ title: name, flavor: flavor, price: price, quantity: 1 });
+            updateCartUI();
+            alert("Товар додано в кошик!");
+        }
 
-async function submitOrder(event) {
-  event.preventDefault();
+        function updateCartUI() {
+            const container = document.getElementById('cartItems');
+            const totalEl = document.getElementById('totalPrice');
+            
+            if (cart.length === 0) {
+                container.innerHTML = 'Кошик порожній';
+                totalEl.innerText = '0';
+                return;
+            }
 
-  if (!cart.length) return;
+            let html = '';
+            let total = 0;
+            cart.forEach((item, index) => {
+                total += item.price * item.quantity;
+                html += `<div style="border-bottom: 1px solid #374151; padding: 8px 0;">
+                    <b>${index + 1}. ${item.title} (${item.flavor})</b> — ${item.quantity} шт. х ${item.price} ₴
+                </div>`;
+            });
+            container.innerHTML = html;
+            totalEl.innerText = total;
+        }
 
-  const button = document.getElementById('submitBtn');
-  button.disabled = true;
-  button.textContent = 'ОФОРМЛЕННЯ…';
+        async function checkout() {
+            if (cart.length === 0) {
+                alert("Кошик порожній!");
+                return;
+            }
 
-  const name = document.getElementById('customerName').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const delivery = document.getElementById('delivery').value;
-  const city = document.getElementById('city').value.trim();
-  const department = document.getElementById('department').value.trim();
-  const comment = document.getElementById('comment').value.trim();
-  const pickup = delivery === 'Самовивіз';
-  const deliveryDetails = pickup
-    ? 'Самовивіз (Київ, вул. Остафія Дашкевича)'
-    : `${city}, ${department}`;
+            const phone = document.getElementById('phone').value;
+            const deliveryMethod = document.getElementById('deliveryMethod').value;
+            const address = document.getElementById('address').value;
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const orderData = {
+                order_id: orderId,
+                customer_name: user.first_name || 'Клієнт',
+                username: user.username || '',
+                user_id: user.id,
+                phone: phone,
+                delivery_method: deliveryMethod,
+                delivery_details: address,
+                items: cart,
+                total_price: total
+            };
 
-  const orderData = {
-    name,
-    phone,
-    user: telegramUser,
-    userId: telegramUser?.id ? String(telegramUser.id) : '',
-    username: telegramUser?.username || '',
-    items: cart.map(item => ({
-      id: item.id,
-      title: item.title,
-      flavor: item.flavor || '',
-      price: Number(item.price),
-      quantity: Number(item.quantity)
-    })),
-    totalPrice: total,
-    deliveryType: delivery,
-    deliveryDetails,
-    address: deliveryDetails,
-    comment
-  };
+            // Вставь сюда URL своего развернутого Google Apps Script
+            const SCRIPT_URL = 'ЗДЕСЬ_ССЫЛКА_НА_GOOGLE_APPS_SCRIPT';
 
-  try {
-    const response = await fetch(`${API_URL}/api/order`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    });
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
 
-    const result = await response.json();
-
-    if (!response.ok || !result.success) {
-      throw new Error(result.error || 'Не вдалося оформити замовлення.');
-    }
-
-    const savedOrder = {
-      id: result.orderId,
-      date: new Date().toLocaleString('uk-UA'),
-      items: cart.map(item => ({...item})),
-      delivery,
-      address: deliveryDetails,
-      total: result.total,
-      status: 'В обробці'
-    };
-
-    const history = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
-    history.unshift(savedOrder);
-    localStorage.setItem('kraken_orders', JSON.stringify(history.slice(0, 50)));
-
-    cart = [];
-    saveCart();
-
-    document.getElementById('modalTitle').textContent = 'Замовлення оформлено';
-    document.getElementById('modalContent').innerHTML = `
-      <div style="font-size:42px;text-align:center;margin:12px">✅</div>
-      <h3 style="text-align:center">Дякуємо за замовлення в KrakenLab!</h3>
-      <div class="notice">📦 Ваше замовлення <b>#${escapeHtml(result.orderId)}</b> успішно оформлено та передано менеджеру.</div>
-      <div class="notice"><b>Товари:</b><br>${escapeHtml(formatItemsForReceipt(savedOrder.items)).replace(/\n/g,'<br>')}</div>
-      <div class="row"><strong>Сума</strong><span class="total">${formatMoney(result.total)} ₴</span></div>
-      <p style="color:#cbd3cb;line-height:1.5">🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом.</p>
-      ${pickup ? '<p style="color:#cbd3cb;line-height:1.5">⏱ Оскільки це самовивіз, напишіть менеджеру <a style="color:var(--green)" href="https://t.me/telleportt">@telleportt</a> для узгодження часу!</p>' : ''}
-      <p style="text-align:center;color:var(--green)">💚 Дякуємо, що обираєте KrakenLab!</p>
-      <button class="primary" onclick="closeModal()">ПРОДОВЖИТИ</button>
-    `;
-
-    if (tg) {
-      try {
-        tg.HapticFeedback?.notificationOccurred('success');
-      } catch (_) {}
-    }
-  } catch (error) {
-    console.error(error);
-    alert(error.message || 'Помилка мережі. Спробуйте ще раз.');
-    button.disabled = false;
-    button.textContent = 'ПІДТВЕРДИТИ ЗАМОВЛЕННЯ';
-  }
-}
-
-function formatItemsForReceipt(items) {
-  return items.map((item, index) =>
-    `${index + 1}. ${item.title}${item.flavor ? ` (${item.flavor})` : ''} — ${item.quantity} шт. х ${item.price} ₴`
-  ).join('\n');
-}
-
-function showHistory(button) {
-  showPage('historyPage', button);
-  renderHistory();
-}
-
-function renderHistory() {
-  const list = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
-  const container = document.getElementById('historyList');
-
-  if (!list.length) {
-    container.innerHTML = '<div class="empty">У вас ще немає замовлень.</div>';
-    return;
-  }
-
-  container.innerHTML = list.map(order => `
-    <article class="ordercard">
-      <div class="row"><strong>#${escapeHtml(order.id)}</strong><span style="color:var(--green)">${formatMoney(order.total)} ₴</span></div>
-      <div class="muted">${escapeHtml(order.date)} · ${escapeHtml(order.delivery)}</div>
-      <div style="margin-top:10px">${(order.items || []).map(item =>
-        `${escapeHtml(item.title)}${item.flavor ? ` (${escapeHtml(item.flavor)})` : ''} × ${item.quantity}`
-      ).join('<br>')}</div>
-      <div class="muted" style="margin-top:10px">Статус: ${escapeHtml(order.status || 'В обробці')}</div>
-      <button class="secondary" onclick="refreshStatus('${escapeAttr(order.id)}')">Оновити статус</button>
-    </article>
-  `).join('');
-}
-
-async function refreshStatus(orderId) {
-  try {
-    const response = await fetch(`${API_URL}/api/order/status/${encodeURIComponent(orderId)}`);
-    const data = await response.json();
-
-    if (!response.ok || !data.success) throw new Error(data.error || 'Статус недоступний');
-
-    const history = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
-    const order = history.find(item => item.id === orderId);
-    if (order) order.status = data.status || 'В обробці';
-
-    localStorage.setItem('kraken_orders', JSON.stringify(history));
-    renderHistory();
-  } catch (error) {
-    alert('Не вдалося оновити статус. Спробуйте пізніше.');
-  }
-}
-
-function showPage(pageId, button) {
-  ['catalogPage','historyPage','profilePage'].forEach(id => {
-    document.getElementById(id).hidden = id !== pageId;
-  });
-
-  document.querySelectorAll('.navitem').forEach(el => el.classList.remove('active'));
-  if (button) button.classList.add('active');
-}
-
-function openModal() {
-  document.getElementById('modalOverlay').classList.add('show');
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('show');
-}
-
-function overlayClick(event) {
-  if (event.target.id === 'modalOverlay') closeModal();
-}
-
-function formatMoney(value) {
-  return Number(value || 0).toLocaleString('uk-UA', {
-    maximumFractionDigits: 2
-  });
-}
-
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, char => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[char]));
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value);
-}
-
-updateCartCount();
-loadCatalog();
-</script>
+                alert("Замовлення успішно оформлено!");
+                cart = [];
+                updateCartUI();
+                tg.close();
+            } catch (err) {
+                console.error(err);
+                alert("Помилка при оформленні замовлення. Спробуйте ще раз.");
+            }
+        }
+    </script>
 </body>
 </html>
