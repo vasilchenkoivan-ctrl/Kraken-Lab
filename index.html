@@ -1,1054 +1,551 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#080808">
-<title>Kraken Lab</title>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+<meta name="theme-color" content="#080908">
+<title>KRAKEN LAB</title>
 <style>
-:root {
-    --bg: #080808;
-    --card: #131313;
-    --green: #39ff14;
-    --text: #f5f5f5;
-    --muted: #929292;
-    --border: #292929;
-}
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
-
-body {
-    margin: 0;
-    padding: 0 0 95px;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-}
-
-button, input, select, textarea {
-    font: inherit;
-}
-
-button {
-    cursor: pointer;
-}
-
-header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    padding: 18px 16px 12px;
-    background: rgba(8,8,8,.96);
-    border-bottom: 1px solid var(--border);
-}
-
-.logo {
-    font-size: 25px;
-    font-weight: 900;
-    letter-spacing: 1px;
-}
-
-.logo span {
-    color: var(--green);
-}
-
-.subtitle {
-    margin-top: 4px;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 2px;
-}
-
-main {
-    max-width: 700px;
-    margin: auto;
-    padding: 16px;
-}
-
-.hero {
-    padding: 22px 18px;
-    border: 1px solid #263b21;
-    border-radius: 18px;
-    background: radial-gradient(circle at top right, #173014, #111 60%);
-    margin-bottom: 20px;
-}
-
-.hero h1 {
-    margin: 0 0 8px;
-    font-size: 25px;
-}
-
-.hero p {
-    margin: 0;
-    color: #b4b4b4;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.section-title {
-    margin: 22px 0 13px;
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.search {
-    width: 100%;
-    padding: 14px;
-    background: #141414;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: white;
-    outline: none;
-    margin-bottom: 12px;
-}
-
-.search:focus, input:focus, textarea:focus, select:focus {
-    border-color: var(--green);
-}
-
-.categories {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
-}
-
-.cat-btn {
-    flex-shrink: 0;
-    padding: 9px 14px;
-    border: 1px solid var(--border);
-    border-radius: 30px;
-    background: #141414;
-    color: #bbb;
-    font-size: 12px;
-}
-
-.cat-btn.active {
-    background: var(--green);
-    border-color: var(--green);
-    color: #000;
-    font-weight: 800;
-}
-
-.products {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.product {
-    overflow: hidden;
-    border-radius: 15px;
-    border: 1px solid var(--border);
-    background: var(--card);
-}
-
-.product-image {
-    height: 150px;
-    background: #1b1b1b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.placeholder {
-    font-size: 44px;
-}
-
-.product-info {
-    padding: 12px;
-}
-
-.product-name {
-    font-size: 14px;
-    font-weight: 800;
-    min-height: 36px;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
-}
-
-.product-category {
-    color: var(--muted);
-    font-size: 10px;
-    margin-top: 5px;
-}
-
-.product-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 5px;
-    margin-top: 13px;
-}
-
-.price {
-    font-size: 15px;
-    font-weight: 900;
-    white-space: nowrap;
-}
-
-.price span {
-    color: var(--green);
-}
-
-.add-btn {
-    border: 0;
-    border-radius: 9px;
-    background: var(--green);
-    color: #000;
-    font-weight: 900;
-    width: 36px;
-    height: 34px;
-    font-size: 22px;
-}
-
-.primary-btn {
-    width: 100%;
-    padding: 15px;
-    border: 0;
-    border-radius: 12px;
-    background: var(--green);
-    color: #000;
-    font-weight: 900;
-    margin-top: 12px;
-}
-
-.secondary-btn {
-    width: 100%;
-    padding: 13px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: #161616;
-    color: white;
-    margin-top: 10px;
-}
-
-.panel {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 15px;
-    padding: 15px;
-    margin-bottom: 14px;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.empty {
-    text-align: center;
-    padding: 35px 15px;
-    color: var(--muted);
-    border: 1px dashed var(--border);
-    border-radius: 15px;
-    grid-column: 1 / -1;
-}
-
-.cart-item {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 13px 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.cart-item:last-child {
-    border-bottom: 0;
-}
-
-.cart-name {
-    font-weight: 700;
-    font-size: 13px;
-}
-
-.cart-sub {
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: 5px;
-}
-
-.quantity {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 9px;
-}
-
-.quantity button {
-    width: 29px;
-    height: 29px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: #222;
-    color: white;
-}
-
-.form-label {
-    display: block;
-    color: #bbb;
-    font-size: 12px;
-    margin: 13px 0 7px;
-}
-
-.field {
-    width: 100%;
-    background: #090909;
-    color: white;
-    padding: 13px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    outline: none;
-}
-
-textarea.field {
-    min-height: 75px;
-    resize: vertical;
-}
-
-.total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 15px;
-    font-size: 17px;
-    font-weight: 900;
-}
-
-.total-row strong {
-    color: var(--green);
-}
-
-.history-item {
-    padding: 14px;
-    background: #101010;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 10px;
-}
-
-.status {
-    color: var(--green);
-    font-size: 12px;
-    margin-top: 8px;
-}
-
-.bottom-nav {
-    position: fixed;
-    z-index: 20;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    background: #101010;
-    border-top: 1px solid var(--border);
-    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-}
-
-.nav-btn {
-    position: relative;
-    border: 0;
-    background: transparent;
-    color: #888;
-    padding: 7px 2px;
-    font-size: 11px;
-}
-
-.nav-btn.active {
-    color: var(--green);
-}
-
-.nav-icon {
-    display: block;
-    font-size: 20px;
-    margin-bottom: 4px;
-}
-
-.badge {
-    position: absolute;
-    top: 0;
-    margin-left: -2px;
-    background: var(--green);
-    color: black;
-    font-size: 10px;
-    font-weight: 900;
-    border-radius: 20px;
-    min-width: 17px;
-    padding: 2px 4px;
-}
-
-.message {
-    padding: 13px;
-    border-radius: 10px;
-    background: #151515;
-    margin-bottom: 12px;
-    color: #ccc;
-    font-size: 13px;
-}
-
-.message.error {
-    color: #ff7b7b;
-    border: 1px solid #542525;
-}
-
-.message.success {
-    color: var(--green);
-    border: 1px solid #244a1b;
-}
-
-@media (max-width: 360px) {
-    main {
-        padding: 12px;
-    }
-
-    .product-image {
-        height: 125px;
-    }
-
-    .product-info {
-        padding: 9px;
-    }
-}
+:root{--bg:#080908;--panel:#111411;--panel2:#171b17;--green:#39ff14;--muted:#929992;--border:#293129;--white:#f4f7f3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,Helvetica,sans-serif;padding-bottom:85px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+header{position:sticky;top:0;z-index:5;background:rgba(8,9,8,.96);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:21px;font-weight:900;letter-spacing:2px;color:var(--green);text-shadow:0 0 12px #39ff1440}
+.brand span{color:white}
+.iconbtn{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px;color:white}
+main{max-width:900px;margin:auto;padding:16px}
+.hero{background:linear-gradient(135deg,#152015,#090b09 65%);border:1px solid #294329;border-radius:20px;padding:23px 18px;margin-bottom:20px}
+.hero h1{margin:0 0 8px;font-size:28px;letter-spacing:1px}
+.hero h1 b{color:var(--green)}
+.hero p{color:#b8c0b8;line-height:1.5;margin:0}
+.search{width:100%;background:var(--panel);color:white;border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:14px;outline:none}
+.search:focus,input:focus,textarea:focus,select:focus{border-color:var(--green)}
+.categories{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px}
+.chip{white-space:nowrap;background:var(--panel);border:1px solid var(--border);color:#cdd2cd;border-radius:20px;padding:9px 14px}
+.chip.active{background:var(--green);color:#071006;border-color:var(--green);font-weight:bold}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:12px 0}
+.section-title h2{font-size:19px;margin:0}
+.section-title span{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:15px;overflow:hidden;min-width:0}
+.product-img{height:155px;background:#161a16;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--green);font-size:34px}
+.product-img img{width:100%;height:100%;object-fit:cover}
+.cardbody{padding:12px}
+.product-title{font-weight:800;line-height:1.3;min-height:35px}
+.category{font-size:12px;color:var(--muted);margin-top:5px}
+.price{font-size:18px;color:var(--green);font-weight:900;margin:11px 0}
+.add{width:100%;background:var(--green);color:#061006;border:0;border-radius:10px;padding:11px;font-weight:900}
+.empty{color:var(--muted);text-align:center;padding:35px 10px}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:8;background:#0d100d;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:9px 4px calc(9px + env(safe-area-inset-bottom))}
+.navitem{background:none;border:0;color:var(--muted);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:60px}
+.navitem strong{font-size:19px}
+.navitem.active{color:var(--green)}
+.badge{background:var(--green);color:#071006;border-radius:20px;font-size:10px;padding:2px 5px;margin-left:3px}
+.overlay{position:fixed;inset:0;z-index:20;background:#000b;display:none;align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.modal{width:100%;max-width:650px;max-height:90vh;overflow:auto;background:#0e110e;border:1px solid var(--border);border-radius:22px 22px 0 0;padding:20px 16px calc(25px + env(safe-area-inset-bottom))}
+.modalhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modalhead h2{margin:0;font-size:21px}
+.close{background:var(--panel2);border:1px solid var(--border);color:white;border-radius:10px;padding:8px 12px}
+.field{display:flex;flex-direction:column;gap:7px;margin:13px 0}
+.field label{font-size:13px;color:#b7bfb7}
+.field input,.field select,.field textarea{width:100%;padding:12px;background:var(--panel);border:1px solid var(--border);border-radius:10px;color:white;outline:none}
+.field textarea{min-height:75px;resize:vertical}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cartline{display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid var(--border);padding:13px 0}
+.muted{font-size:12px;color:var(--muted);margin-top:4px}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{width:29px;height:29px;border:1px solid var(--border);background:var(--panel2);color:white;border-radius:8px}
+.total{font-size:20px;font-weight:900;color:var(--green)}
+.primary{width:100%;border:0;border-radius:11px;padding:14px;background:var(--green);color:#061006;font-weight:900;margin-top:13px}
+.secondary{width:100%;border:1px solid var(--border);border-radius:11px;padding:12px;background:var(--panel2);color:white;margin-top:8px}
+.notice{padding:12px;background:#141914;border:1px solid var(--border);border-radius:10px;color:#cbd3cb;font-size:13px;line-height:1.5;margin:12px 0}
+.ordercard{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin:10px 0}
+.flavors{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.flavor{background:var(--panel2);border:1px solid var(--border);color:white;border-radius:9px;padding:9px 11px}
+.flavor.selected{border-color:var(--green);color:var(--green)}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.overlay{align-items:center}.modal{border-radius:20px}}
 </style>
 </head>
-
 <body>
-
 <header>
-    <div class="logo">KRAKEN <span>LAB</span> 🐙</div>
-    <div class="subtitle">YOUR LAB. YOUR CHOICE.</div>
+  <div class="brand">KRAKEN<span>LAB</span></div>
+  <button class="iconbtn" onclick="openCart()">🛒 <span id="headCount">0</span></button>
 </header>
 
 <main>
-    <section id="catalog-page">
-        <div class="hero">
-            <h1>Ласкаво просимо 🐙</h1>
-            <p>Kraken Lab — обирай свій товар, додавай у кошик та оформлюй замовлення за декілька кліків.</p>
-        </div>
+  <section class="hero">
+    <h1>WELCOME TO <b>KRAKEN LAB</b></h1>
+    <p>Обери товар, додай до кошика та оформи замовлення у кілька кліків.</p>
+  </section>
 
-        <input id="search" class="search" type="search"
-               placeholder="🔍 Пошук товарів..."
-               oninput="renderProducts()">
+  <section id="catalogPage">
+    <input id="search" class="search" placeholder="🔎 Пошук товару..." oninput="renderProducts()">
+    <div class="categories" id="categories"></div>
+    <div class="section-title"><h2>Каталог</h2><span id="productCount"></span></div>
+    <div id="products" class="grid"><div class="empty">Завантаження каталогу…</div></div>
+  </section>
 
-        <div class="categories" id="categories">
-            <button class="cat-btn active" onclick="setCategory('all',this)">Усі товари</button>
-            <button class="cat-btn" onclick="setCategory('liquid',this)">Рідини</button>
-            <button class="cat-btn" onclick="setCategory('cartridge',this)">Картриджі</button>
-            <button class="cat-btn" onclick="setCategory('device',this)">Пристрої</button>
-            <button class="cat-btn" onclick="setCategory('accessory',this)">Аксесуари</button>
-        </div>
+  <section id="historyPage" hidden>
+    <div class="section-title"><h2>Мої замовлення</h2></div>
+    <div id="historyList"></div>
+  </section>
 
-        <div class="section-title">Каталог товарів</div>
-        <div id="catalog-message" class="message hidden"></div>
-        <div id="products" class="products">
-            <div class="empty">⏳ Завантажуємо каталог...</div>
-        </div>
-    </section>
-
-    <section id="cart-page" class="hidden">
-        <div class="section-title">🛒 Кошик</div>
-        <div id="cart-items" class="panel"></div>
-
-        <div id="checkout-panel" class="panel hidden">
-            <div class="section-title" style="margin-top:0">Оформлення замовлення</div>
-
-            <label class="form-label" for="customer-name">Ваше ім’я *</label>
-            <input id="customer-name" class="field" placeholder="Ім’я">
-
-            <label class="form-label" for="customer-phone">Номер телефону *</label>
-            <input id="customer-phone" class="field" type="tel" placeholder="+380...">
-
-            <label class="form-label" for="delivery">Спосіб отримання *</label>
-            <select id="delivery" class="field" onchange="updateAddressLabel()">
-                <option value="Нова пошта">Нова пошта</option>
-                <option value="Самовивіз">Самовивіз</option>
-            </select>
-
-            <label class="form-label" id="address-label" for="address">Місто та відділення *</label>
-            <input id="address" class="field" placeholder="Місто, номер відділення">
-
-            <label class="form-label" for="comment">Коментар до замовлення</label>
-            <textarea id="comment" class="field" placeholder="Необов’язково"></textarea>
-
-            <div id="checkout-message" class="message hidden"></div>
-            <button id="submit-order" class="primary-btn" onclick="submitOrder()">Підтвердити замовлення</button>
-        </div>
-    </section>
-
-    <section id="history-page" class="hidden">
-        <div class="section-title">📦 Історія замовлень</div>
-        <div id="history-items"></div>
-    </section>
+  <section id="profilePage" hidden>
+    <div class="section-title"><h2>Kraken Lab</h2></div>
+    <div class="notice">💚 Дякуємо, що обираєте Kraken Lab.</div>
+    <div class="ordercard">Менеджер: <a href="https://t.me/telleportt" style="color:var(--green)">@telleportt</a></div>
+    <div class="ordercard">Відгуки: <a href="https://t.me/KRAKENOTZYVVL" style="color:var(--green)">@KRAKENOTZYVVL</a></div>
+  </section>
 </main>
 
-<nav class="bottom-nav">
-    <button id="nav-catalog" class="nav-btn active" onclick="switchTab('catalog')">
-        <span class="nav-icon">🏪</span>Каталог
-    </button>
-    <button id="nav-cart" class="nav-btn" onclick="switchTab('cart')">
-        <span class="nav-icon">🛒</span>Кошик <span id="cart-badge" class="badge hidden">0</span>
-    </button>
-    <button id="nav-history" class="nav-btn" onclick="switchTab('history')">
-        <span class="nav-icon">📦</span>Замовлення
-    </button>
+<nav class="bottomnav">
+  <button class="navitem active" onclick="showPage('catalogPage',this)"><strong>⌂</strong>Каталог</button>
+  <button class="navitem" onclick="openCart()"><strong>🛒</strong>Кошик <span id="navCount" class="badge">0</span></button>
+  <button class="navitem" onclick="showHistory(this)"><strong>▤</strong>Замовлення</button>
+  <button class="navitem" onclick="showPage('profilePage',this)"><strong>♙</strong>Профіль</button>
 </nav>
 
+<div id="modalOverlay" class="overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modalhead"><h2 id="modalTitle">Кошик</h2><button class="close" onclick="closeModal()">✕</button></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
 <script>
-'use strict';
-
 const API_URL = 'https://kraken-lab.onrender.com';
-const SPREADSHEET_ID = '1-al9u_eJ1l6GRV0h6A3gxgm_bZSI-AlUHVQWDMMbWJM';
-const SHEET_URL =
-    'https://docs.google.com/spreadsheets/d/' +
-    SPREADSHEET_ID +
-    '/gviz/tq?tqx=out:json';
+const CATALOG_SHEET_ID = '1-al9u_eJ1l6GRV0h6A3gxgm_bZSI-AlUHVQWDMMbWJM';
+const CATALOG_CSV_URL = `https://docs.google.com/spreadsheets/d/${CATALOG_SHEET_ID}/gviz/tq?tqx=out:json`;
 
-const tg = window.Telegram && window.Telegram.WebApp
-    ? window.Telegram.WebApp
-    : null;
-
+const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 if (tg) {
-    tg.ready();
-    tg.expand();
+  tg.ready();
+  tg.expand();
 }
 
-const telegramUser = tg && tg.initDataUnsafe
-    ? tg.initDataUnsafe.user
-    : null;
+const telegramUser = tg?.initDataUnsafe?.user || null;
 
-const userId = telegramUser ? String(telegramUser.id) : '';
+let products = [];
+let activeCategory = 'Усі';
+let cart = JSON.parse(localStorage.getItem('kraken_cart') || '[]');
+let selectedProduct = null;
+let selectedFlavor = '';
+let isPickup = true;
 
-let allProducts = [];
-let selectedCategory = 'all';
-let cart = [];
-
-try {
-    cart = JSON.parse(localStorage.getItem('kraken_cart') || '[]');
-
-    if (!Array.isArray(cart)) {
-        cart = [];
-    }
-} catch (error) {
-    cart = [];
+function saveCart() {
+  localStorage.setItem('kraken_cart', JSON.stringify(cart));
+  updateCartCount();
 }
 
-function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, char => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    })[char]);
+function updateCartCount() {
+  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+  document.getElementById('headCount').textContent = count;
+  document.getElementById('navCount').textContent = count;
 }
 
-function formatPrice(value) {
-    return Number(value || 0).toLocaleString('uk-UA') + ' грн';
+function parseGviz(text) {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start < 0 || end < 0) throw new Error('Невірний формат Google Sheets');
+  return JSON.parse(text.slice(start, end + 1));
 }
 
-function getCell(cell) {
-    if (!cell) return '';
-    return cell.v ?? cell.f ?? '';
-}
+async function loadCatalog() {
+  try {
+    const response = await fetch(CATALOG_CSV_URL);
+    if (!response.ok) throw new Error('Не вдалося завантажити каталог');
 
-function categoryMatches(category, selected) {
-    if (selected === 'all') return true;
+    const data = parseGviz(await response.text());
+    const rows = data.table?.rows || [];
 
-    const value = String(category || '').toLowerCase();
+    products = rows.map((row, index) => {
+      const c = (row.c || []).map(cell => cell ? cell.v : '');
+      return {
+        id: String(c[0] || index + 1),
+        title: String(c[0] || ''),
+        category: String(c[1] || 'Інше'),
+        price: Number(c[2] || 0),
+        flavors: String(c[3] || '').split(/[,;|]/).map(x => x.trim()).filter(Boolean),
+        image: String(c[4] || '')
+      };
+    }).filter(p => p.title && p.price > 0);
 
-    const synonyms = {
-        liquid: ['liquid', 'рідина', 'рідини', 'жидкость', 'жидкости', 'соль', 'salt'],
-        cartridge: ['cartridge', 'картридж', 'картриджі', 'картриджи'],
-        device: ['device', 'пристрій', 'пристрої', 'устройство', 'устройства', 'pod', 'под'],
-        accessory: ['accessory', 'аксесуар', 'аксесуари', 'аксессуар', 'аксессуары']
-    };
-
-    return (synonyms[selected] || []).some(word => value.includes(word));
-}
-
-async function fetchProducts() {
-    const container = document.getElementById('products');
-
-    try {
-        const response = await fetch(SHEET_URL);
-
-        if (!response.ok) {
-            throw new Error('Google Таблиця повернула помилку ' + response.status);
-        }
-
-        const text = await response.text();
-        const start = text.indexOf('{');
-        const end = text.lastIndexOf('}');
-
-        if (start === -1 || end === -1) {
-            throw new Error('Невірна відповідь Google Таблиці');
-        }
-
-        const data = JSON.parse(text.slice(start, end + 1));
-
-        if (data.status === 'error') {
-            throw new Error('Немає доступу до Google Таблиці');
-        }
-
-        const rows = data.table && data.table.rows
-            ? data.table.rows
-            : [];
-
-        allProducts = rows.map((row, index) => {
-            const cells = row.c || [];
-
-            return {
-                id: String(index + 1),
-                title: String(getCell(cells[0])).trim(),
-                category: String(getCell(cells[1])).trim(),
-                price: parsePrice(getCell(cells[2])),
-                flavors: String(getCell(cells[3])).trim(),
-                image: String(getCell(cells[4])).trim()
-            };
-        }).filter(product => product.title);
-
-        if (!allProducts.length) {
-            throw new Error('У таблиці не знайдено товарів. Перевір стовпці A–E.');
-        }
-
-        document.getElementById('catalog-message').classList.add('hidden');
-        renderProducts();
-
-    } catch (error) {
-        console.error('Catalog error:', error);
-
-        container.innerHTML =
-            '<div class="empty">Не вдалося завантажити каталог.<br><br>' +
-            escapeHtml(error.message) +
-            '<br><br><button class="primary-btn" onclick="fetchProducts()">Спробувати ще раз</button></div>';
-    }
-}
-
-function parsePrice(value) {
-    if (typeof value === 'number') return value;
-
-    const normalized = String(value || '')
-        .replace(/\s/g, '')
-        .replace(',', '.')
-        .replace(/[^\d.]/g, '');
-
-    return Number(normalized) || 0;
-}
-
-function setCategory(category, button) {
-    selectedCategory = category;
-
-    document.querySelectorAll('.cat-btn').forEach(item => {
-        item.classList.remove('active');
-    });
-
-    button.classList.add('active');
+    renderCategories();
     renderProducts();
+  } catch (error) {
+    console.error(error);
+    document.getElementById('products').innerHTML =
+      '<div class="empty">Не вдалося завантажити каталог. Перевір доступ до Google Таблиці та назви колонок.</div>';
+  }
+}
+
+function renderCategories() {
+  const categories = ['Усі', ...new Set(products.map(p => p.category))];
+  document.getElementById('categories').innerHTML = categories.map(category =>
+    `<button class="chip ${category === activeCategory ? 'active' : ''}" onclick="setCategory(${JSON.stringify(category)})">${escapeHtml(category)}</button>`
+  ).join('');
+}
+
+function setCategory(category) {
+  activeCategory = category;
+  renderCategories();
+  renderProducts();
 }
 
 function renderProducts() {
-    const container = document.getElementById('products');
-    const query = document.getElementById('search').value.toLowerCase().trim();
+  const query = document.getElementById('search').value.trim().toLowerCase();
+  const filtered = products.filter(p =>
+    (activeCategory === 'Усі' || p.category === activeCategory) &&
+    `${p.title} ${p.category} ${p.flavors.join(' ')}`.toLowerCase().includes(query)
+  );
 
-    const products = allProducts.filter(product => {
-        const matchesCategory = categoryMatches(product.category, selectedCategory);
+  document.getElementById('productCount').textContent = `${filtered.length} товарів`;
 
-        const matchesSearch =
-            product.title.toLowerCase().includes(query) ||
-            product.category.toLowerCase().includes(query) ||
-            product.flavors.toLowerCase().includes(query);
+  if (!filtered.length) {
+    document.getElementById('products').innerHTML = '<div class="empty">Товарів не знайдено.</div>';
+    return;
+  }
 
-        return matchesCategory && matchesSearch;
+  document.getElementById('products').innerHTML = filtered.map(p => `
+    <article class="card">
+      <div class="product-img">${p.image ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}" loading="lazy" onerror="this.style.display='none'">` : '🐙'}</div>
+      <div class="cardbody">
+        <div class="product-title">${escapeHtml(p.title)}</div>
+        <div class="category">${escapeHtml(p.category)}</div>
+        <div class="price">${formatMoney(p.price)} ₴</div>
+        <button class="add" onclick="openProduct('${escapeAttr(p.id)}')">ОБРАТИ</button>
+      </div>
+    </article>
+  `).join('');
+}
+
+function openProduct(id) {
+  selectedProduct = products.find(p => p.id === id);
+  if (!selectedProduct) return;
+  selectedFlavor = selectedProduct.flavors[0] || '';
+
+  document.getElementById('modalTitle').textContent = selectedProduct.title;
+  const flavors = selectedProduct.flavors.length
+    ? `<div class="field"><label>Смак</label><div class="flavors">${selectedProduct.flavors.map(f =>
+      `<button class="flavor ${f === selectedFlavor ? 'selected' : ''}" onclick="chooseFlavor(${JSON.stringify(f)},this)">${escapeHtml(f)}</button>`
+    ).join('')}</div></div>`
+    : '';
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="product-title">${escapeHtml(selectedProduct.title)}</div>
+    <div class="muted">${escapeHtml(selectedProduct.category)}</div>
+    ${flavors}
+    <div class="price">${formatMoney(selectedProduct.price)} ₴</div>
+    <button class="primary" onclick="addToCart()">ДОДАТИ ДО КОШИКА</button>
+  `;
+  openModal();
+}
+
+function chooseFlavor(flavor, button) {
+  selectedFlavor = flavor;
+  document.querySelectorAll('.flavor').forEach(el => el.classList.remove('selected'));
+  button.classList.add('selected');
+}
+
+function addToCart() {
+  if (!selectedProduct) return;
+
+  const key = `${selectedProduct.id}__${selectedFlavor}`;
+  const existing = cart.find(item => item.key === key);
+
+  if (existing) existing.quantity += 1;
+  else cart.push({
+    key,
+    id: selectedProduct.id,
+    title: selectedProduct.title,
+    category: selectedProduct.category,
+    flavor: selectedFlavor,
+    price: selectedProduct.price,
+    quantity: 1
+  });
+
+  saveCart();
+  closeModal();
+}
+
+function openCart() {
+  document.getElementById('modalTitle').textContent = 'Кошик';
+  renderCart();
+  openModal();
+}
+
+function renderCart() {
+  const content = document.getElementById('modalContent');
+
+  if (!cart.length) {
+    content.innerHTML = '<div class="empty">Кошик порожній.</div><button class="secondary" onclick="closeModal()">Повернутися до каталогу</button>';
+    return;
+  }
+
+  const lines = cart.map(item => `
+    <div class="cartline">
+      <div>
+        <strong>${escapeHtml(item.title)}</strong>
+        ${item.flavor ? `<div class="muted">${escapeHtml(item.flavor)}</div>` : ''}
+        <div class="muted">${formatMoney(item.price)} ₴ / шт.</div>
+      </div>
+      <div style="text-align:right">
+        <div class="qty">
+          <button onclick="changeQty('${escapeAttr(item.key)}',-1)">−</button>
+          <span>${item.quantity}</span>
+          <button onclick="changeQty('${escapeAttr(item.key)}',1)">+</button>
+        </div>
+        <div style="color:var(--green);margin-top:8px;font-weight:bold">${formatMoney(item.price * item.quantity)} ₴</div>
+      </div>
+    </div>
+  `).join('');
+
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  content.innerHTML = `
+    ${lines}
+    <div class="row" style="padding-top:16px"><strong>Разом</strong><span class="total">${formatMoney(total)} ₴</span></div>
+    <button class="primary" onclick="checkout()">ОФОРМИТИ ЗАМОВЛЕННЯ</button>
+    <button class="secondary" onclick="closeModal()">Продовжити покупки</button>
+  `;
+}
+
+function changeQty(key, delta) {
+  const item = cart.find(p => p.key === key);
+  if (!item) return;
+
+  item.quantity += delta;
+  if (item.quantity <= 0) cart = cart.filter(p => p.key !== key);
+
+  saveCart();
+  renderCart();
+}
+
+function checkout() {
+  if (!cart.length) return;
+
+  document.getElementById('modalTitle').textContent = 'Оформлення замовлення';
+  document.getElementById('modalContent').innerHTML = `
+    <form id="checkoutForm" onsubmit="submitOrder(event)">
+      <div class="field"><label for="customerName">Ім’я та прізвище</label><input id="customerName" required maxlength="100" value="${escapeAttr([telegramUser?.first_name,telegramUser?.last_name].filter(Boolean).join(' '))}"></div>
+      <div class="field"><label for="phone">Номер телефону</label><input id="phone" type="tel" required maxlength="30" placeholder="+380..." autocomplete="tel"></div>
+      <div class="field"><label>Спосіб отримання</label>
+        <select id="delivery" onchange="toggleDeliveryFields()">
+          <option value="Самовивіз">Самовивіз</option>
+          <option value="Нова Пошта">Нова Пошта</option>
+        </select>
+      </div>
+      <div id="deliveryFields" hidden>
+        <div class="field"><label for="city">Місто</label><input id="city" maxlength="100" placeholder="Місто доставки"></div>
+        <div class="field"><label for="department">Відділення / поштомат</label><input id="department" maxlength="150" placeholder="Номер та адреса відділення"></div>
+      </div>
+      <div class="field"><label for="comment">Коментар (необов’язково)</label><textarea id="comment" maxlength="500"></textarea></div>
+      <div class="notice">Самовивіз: після оформлення напишіть менеджеру @telleportt, щоб узгодити час. Для Нової Пошти вкажіть місто та відділення.</div>
+      <div class="row"><strong>До сплати</strong><span class="total">${formatMoney(cart.reduce((sum,item)=>sum+item.price*item.quantity,0))} ₴</span></div>
+      <button class="primary" id="submitBtn" type="submit">ПІДТВЕРДИТИ ЗАМОВЛЕННЯ</button>
+      <button class="secondary" type="button" onclick="openCart()">Назад до кошика</button>
+    </form>
+  `;
+}
+
+function toggleDeliveryFields() {
+  const pickup = document.getElementById('delivery').value === 'Самовивіз';
+  document.getElementById('deliveryFields').hidden = pickup;
+  document.getElementById('city').required = !pickup;
+  document.getElementById('department').required = !pickup;
+}
+
+async function submitOrder(event) {
+  event.preventDefault();
+
+  if (!cart.length) return;
+
+  const button = document.getElementById('submitBtn');
+  button.disabled = true;
+  button.textContent = 'ОФОРМЛЕННЯ…';
+
+  const name = document.getElementById('customerName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const delivery = document.getElementById('delivery').value;
+  const city = document.getElementById('city').value.trim();
+  const department = document.getElementById('department').value.trim();
+  const comment = document.getElementById('comment').value.trim();
+  const pickup = delivery === 'Самовивіз';
+  const deliveryDetails = pickup
+    ? 'Самовивіз (Київ, вул. Остафія Дашкевича)'
+    : `${city}, ${department}`;
+
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const orderData = {
+    name,
+    phone,
+    user: telegramUser,
+    userId: telegramUser?.id ? String(telegramUser.id) : '',
+    username: telegramUser?.username || '',
+    items: cart.map(item => ({
+      id: item.id,
+      title: item.title,
+      flavor: item.flavor || '',
+      price: Number(item.price),
+      quantity: Number(item.quantity)
+    })),
+    totalPrice: total,
+    deliveryType: delivery,
+    deliveryDetails,
+    address: deliveryDetails,
+    comment
+  };
+
+  try {
+    const response = await fetch(`${API_URL}/api/order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
     });
 
-    if (!products.length) {
-        container.innerHTML =
-            '<div class="empty">Товарів не знайдено.</div>';
-        return;
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Не вдалося оформити замовлення.');
     }
 
-    container.innerHTML = products.map(product => {
-        const image = product.image
-            ? '<img src="' + escapeHtml(product.image) +
-              '" alt="' + escapeHtml(product.title) +
-              '" onerror="this.parentElement.innerHTML=\'<div class=&quot;placeholder&quot;>🐙</div>\'">'
-            : '<div class="placeholder">🐙</div>';
+    const savedOrder = {
+      id: result.orderId,
+      date: new Date().toLocaleString('uk-UA'),
+      items: cart.map(item => ({...item})),
+      delivery,
+      address: deliveryDetails,
+      total: result.total,
+      status: 'В обробці'
+    };
 
-        return `
-            <article class="product">
-                <div class="product-image">${image}</div>
-                <div class="product-info">
-                    <div class="product-name">${escapeHtml(product.title)}</div>
-                    <div class="product-category">${escapeHtml(product.category)}</div>
-                    ${product.flavors
-                        ? `<div class="product-category">Смаки: ${escapeHtml(product.flavors)}</div>`
-                        : ''}
-                    <div class="product-bottom">
-                        <div class="price"><span>${formatPrice(product.price)}</span></div>
-                        <button class="add-btn" onclick="addToCart('${escapeHtml(product.id)}')">+</button>
-                    </div>
-                </div>
-            </article>
-        `;
-    }).join('');
-}
+    const history = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
+    history.unshift(savedOrder);
+    localStorage.setItem('kraken_orders', JSON.stringify(history.slice(0, 50)));
 
-function addToCart(id) {
-    const product = allProducts.find(item => item.id === String(id));
-
-    if (!product) return;
-
-    let flavor = '';
-
-    if (product.flavors) {
-        const flavors = product.flavors
-            .split(/[,;\n]/)
-            .map(item => item.trim())
-            .filter(Boolean);
-
-        if (flavors.length > 1) {
-            flavor = prompt(
-                'Оберіть смак:\n' + flavors.join('\n'),
-                flavors[0]
-            );
-
-            if (flavor === null) return;
-
-            flavor = flavor.trim();
-
-            if (!flavors.some(item => item.toLowerCase() === flavor.toLowerCase())) {
-                alert('Оберіть смак зі списку.');
-                return;
-            }
-        } else {
-            flavor = flavors[0] || product.flavors;
-        }
-    }
-
-    const existing = cart.find(item =>
-        item.id === product.id && item.flavor === flavor
-    );
-
-    if (existing) {
-        existing.quantity++;
-    } else {
-        cart.push({
-            id: product.id,
-            title: product.title,
-            price: product.price,
-            flavor,
-            quantity: 1
-        });
-    }
-
+    cart = [];
     saveCart();
-    updateCartUI();
-}
 
-function saveCart() {
-    localStorage.setItem('kraken_cart', JSON.stringify(cart));
-}
-
-function cartTotal() {
-    return cart.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-    );
-}
-
-function cartCount() {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-}
-
-function changeQuantity(index, amount) {
-    if (!cart[index]) return;
-
-    cart[index].quantity += amount;
-
-    if (cart[index].quantity <= 0) {
-        cart.splice(index, 1);
-    }
-
-    saveCart();
-    updateCartUI();
-}
-
-function updateCartUI() {
-    const container = document.getElementById('cart-items');
-    const checkout = document.getElementById('checkout-panel');
-    const badge = document.getElementById('cart-badge');
-    const count = cartCount();
-
-    badge.textContent = count;
-    badge.classList.toggle('hidden', count === 0);
-
-    if (!cart.length) {
-        container.innerHTML =
-            '<div class="empty">🛒<br><br>Кошик поки порожній.</div>';
-
-        checkout.classList.add('hidden');
-        return;
-    }
-
-    container.innerHTML = cart.map((item, index) => `
-        <div class="cart-item">
-            <div>
-                <div class="cart-name">${escapeHtml(item.title)}</div>
-                ${item.flavor
-                    ? `<div class="cart-sub">Смак: ${escapeHtml(item.flavor)}</div>`
-                    : ''}
-                <div class="cart-sub">${formatPrice(item.price)} за шт.</div>
-                <div class="quantity">
-                    <button onclick="changeQuantity(${index},-1)">−</button>
-                    <strong>${item.quantity}</strong>
-                    <button onclick="changeQuantity(${index},1)">+</button>
-                </div>
-            </div>
-            <strong>${formatPrice(item.price * item.quantity)}</strong>
-        </div>
-    `).join('') + `
-        <div class="total-row">
-            <span>Разом</span>
-            <strong>${formatPrice(cartTotal())}</strong>
-        </div>
+    document.getElementById('modalTitle').textContent = 'Замовлення оформлено';
+    document.getElementById('modalContent').innerHTML = `
+      <div style="font-size:42px;text-align:center;margin:12px">✅</div>
+      <h3 style="text-align:center">Дякуємо за замовлення в KrakenLab!</h3>
+      <div class="notice">📦 Ваше замовлення <b>#${escapeHtml(result.orderId)}</b> успішно оформлено та передано менеджеру.</div>
+      <div class="notice"><b>Товари:</b><br>${escapeHtml(formatItemsForReceipt(savedOrder.items)).replace(/\n/g,'<br>')}</div>
+      <div class="row"><strong>Сума</strong><span class="total">${formatMoney(result.total)} ₴</span></div>
+      <p style="color:#cbd3cb;line-height:1.5">🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом.</p>
+      ${pickup ? '<p style="color:#cbd3cb;line-height:1.5">⏱ Оскільки це самовивіз, напишіть менеджеру <a style="color:var(--green)" href="https://t.me/telleportt">@telleportt</a> для узгодження часу!</p>' : ''}
+      <p style="text-align:center;color:var(--green)">💚 Дякуємо, що обираєте KrakenLab!</p>
+      <button class="primary" onclick="closeModal()">ПРОДОВЖИТИ</button>
     `;
 
-    checkout.classList.remove('hidden');
+    if (tg) {
+      try {
+        tg.HapticFeedback?.notificationOccurred('success');
+      } catch (_) {}
+    }
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Помилка мережі. Спробуйте ще раз.');
+    button.disabled = false;
+    button.textContent = 'ПІДТВЕРДИТИ ЗАМОВЛЕННЯ';
+  }
 }
 
-function updateAddressLabel() {
-    const delivery = document.getElementById('delivery').value;
-    const label = document.getElementById('address-label');
-    const input = document.getElementById('address');
-
-    if (delivery === 'Самовивіз') {
-        label.textContent = 'Коментар щодо отримання';
-        input.placeholder = 'Уточніть деталі отримання';
-        input.required = false;
-    } else {
-        label.textContent = 'Місто та відділення *';
-        input.placeholder = 'Місто, номер відділення';
-        input.required = true;
-    }
+function formatItemsForReceipt(items) {
+  return items.map((item, index) =>
+    `${index + 1}. ${item.title}${item.flavor ? ` (${item.flavor})` : ''} — ${item.quantity} шт. х ${item.price} ₴`
+  ).join('\n');
 }
 
-function switchTab(tab) {
-    const pages = {
-        catalog: 'catalog-page',
-        cart: 'cart-page',
-        history: 'history-page'
-    };
-
-    Object.entries(pages).forEach(([key, id]) => {
-        document.getElementById(id).classList.toggle('hidden', key !== tab);
-
-        const nav = document.getElementById('nav-' + key);
-        nav.classList.toggle('active', key === tab);
-    });
-
-    if (tab === 'cart') updateCartUI();
-    if (tab === 'history') renderHistory();
-}
-
-function showCheckoutMessage(message, type) {
-    const element = document.getElementById('checkout-message');
-
-    element.textContent = message;
-    element.className = 'message ' + type;
-    element.classList.remove('hidden');
-}
-
-async function submitOrder() {
-    if (!cart.length) {
-        alert('Кошик порожній.');
-        return;
-    }
-
-    const name = document.getElementById('customer-name').value.trim();
-    const phone = document.getElementById('customer-phone').value.trim();
-    const delivery = document.getElementById('delivery').value;
-    const address = document.getElementById('address').value.trim();
-    const comment = document.getElementById('comment').value.trim();
-    const button = document.getElementById('submit-order');
-
-    if (!name || !phone) {
-        showCheckoutMessage('Вкажіть ім’я та номер телефону.', 'error');
-        return;
-    }
-
-    if (delivery === 'Нова пошта' && !address) {
-        showCheckoutMessage('Вкажіть місто та відділення Нової пошти.', 'error');
-        return;
-    }
-
-    if (!/^[+\d()\-\s]{7,20}$/.test(phone)) {
-        showCheckoutMessage('Перевірте номер телефону.', 'error');
-        return;
-    }
-
-    button.disabled = true;
-    button.textContent = 'Відправляємо замовлення...';
-
-    const orderPayload = {
-        name,
-        phone,
-        delivery,
-        address,
-        comment,
-        userId,
-        items: cart.map(item => ({
-            title: item.title,
-            flavor: item.flavor,
-            price: item.price,
-            quantity: item.quantity
-        }))
-    };
-
-    try {
-        const response = await fetch(API_URL + '/api/order', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(orderPayload)
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || 'Не вдалося оформити замовлення.');
-        }
-
-        const order = {
-            id: result.orderId,
-            name,
-            phone,
-            delivery,
-            address,
-            comment,
-            items: orderPayload.items,
-            total: result.total || cartTotal(),
-            status: 'Прийнято',
-            createdAt: new Date().toISOString()
-        };
-
-        let history = [];
-
-        try {
-            history = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
-
-            if (!Array.isArray(history)) history = [];
-        } catch (error) {
-            history = [];
-        }
-
-        history.unshift(order);
-
-        localStorage.setItem(
-            'kraken_orders',
-            JSON.stringify(history.slice(0, 50))
-        );
-
-        cart = [];
-        saveCart();
-        updateCartUI();
-
-        document.getElementById('customer-name').value = name;
-        document.getElementById('customer-phone').value = phone;
-        document.getElementById('address').value = '';
-        document.getElementById('comment').value = '';
-
-        alert(
-            '🐙 Замовлення оформлено!\n\n' +
-            'Номер: ' + order.id + '\n' +
-            'Сума: ' + formatPrice(order.total)
-        );
-
-        switchTab('history');
-
-        if (tg && tg.HapticFeedback) {
-            tg.HapticFeedback.notificationOccurred('success');
-        }
-
-    } catch (error) {
-        console.error('Order error:', error);
-
-        showCheckoutMessage(
-            error.message || 'Помилка. Спробуйте ще раз.',
-            'error'
-        );
-
-    } finally {
-        button.disabled = false;
-        button.textContent = 'Підтвердити замовлення';
-    }
+function showHistory(button) {
+  showPage('historyPage', button);
+  renderHistory();
 }
 
 function renderHistory() {
-    const container = document.getElementById('history-items');
+  const list = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
+  const container = document.getElementById('historyList');
 
-    let history = [];
+  if (!list.length) {
+    container.innerHTML = '<div class="empty">У вас ще немає замовлень.</div>';
+    return;
+  }
 
-    try {
-        history = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
-
-        if (!Array.isArray(history)) history = [];
-    } catch (error) {
-        history = [];
-    }
-
-    if (!history.length) {
-        container.innerHTML =
-            '<div class="empty">📦<br><br>Тут з’являться ваші замовлення.</div>';
-        return;
-    }
-
-    container.innerHTML = history.map(order => {
-        const date = order.createdAt
-            ? new Date(order.createdAt).toLocaleString('uk-UA')
-            : '';
-
-        const items = (order.items || []).map(item =>
-            escapeHtml(item.title) +
-            (item.flavor ? ' (' + escapeHtml(item.flavor) + ')' : '') +
-            ' × ' + Number(item.quantity || 1)
-        ).join('<br>');
-
-        return `
-            <div class="history-item">
-                <strong>Замовлення ${escapeHtml(order.id)}</strong>
-                <div class="cart-sub">${escapeHtml(date)}</div>
-                <div style="margin-top:12px;font-size:13px;line-height:1.8">${items}</div>
-                <div class="total-row">
-                    <span>Сума</span>
-                    <strong>${formatPrice(order.total)}</strong>
-                </div>
-                <div class="status">● ${escapeHtml(order.status || 'Прийнято')}</div>
-            </div>
-        `;
-    }).join('');
+  container.innerHTML = list.map(order => `
+    <article class="ordercard">
+      <div class="row"><strong>#${escapeHtml(order.id)}</strong><span style="color:var(--green)">${formatMoney(order.total)} ₴</span></div>
+      <div class="muted">${escapeHtml(order.date)} · ${escapeHtml(order.delivery)}</div>
+      <div style="margin-top:10px">${(order.items || []).map(item =>
+        `${escapeHtml(item.title)}${item.flavor ? ` (${escapeHtml(item.flavor)})` : ''} × ${item.quantity}`
+      ).join('<br>')}</div>
+      <div class="muted" style="margin-top:10px">Статус: ${escapeHtml(order.status || 'В обробці')}</div>
+      <button class="secondary" onclick="refreshStatus('${escapeAttr(order.id)}')">Оновити статус</button>
+    </article>
+  `).join('');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    updateCartUI();
-    fetchProducts();
-    updateAddressLabel();
-});
-</script>
+async function refreshStatus(orderId) {
+  try {
+    const response = await fetch(`${API_URL}/api/order/status/${encodeURIComponent(orderId)}`);
+    const data = await response.json();
 
+    if (!response.ok || !data.success) throw new Error(data.error || 'Статус недоступний');
+
+    const history = JSON.parse(localStorage.getItem('kraken_orders') || '[]');
+    const order = history.find(item => item.id === orderId);
+    if (order) order.status = data.status || 'В обробці';
+
+    localStorage.setItem('kraken_orders', JSON.stringify(history));
+    renderHistory();
+  } catch (error) {
+    alert('Не вдалося оновити статус. Спробуйте пізніше.');
+  }
+}
+
+function showPage(pageId, button) {
+  ['catalogPage','historyPage','profilePage'].forEach(id => {
+    document.getElementById(id).hidden = id !== pageId;
+  });
+
+  document.querySelectorAll('.navitem').forEach(el => el.classList.remove('active'));
+  if (button) button.classList.add('active');
+}
+
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function overlayClick(event) {
+  if (event.target.id === 'modalOverlay') closeModal();
+}
+
+function formatMoney(value) {
+  return Number(value || 0).toLocaleString('uk-UA', {
+    maximumFractionDigits: 2
+  });
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[char]));
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
+}
+
+updateCartCount();
+loadCatalog();
+</script>
 </body>
 </html>
