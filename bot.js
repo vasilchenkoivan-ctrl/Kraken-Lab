@@ -42,7 +42,7 @@ app.post('/api/order', async (req, res) => {
 
         const orderId = orderData.orderId || body.orderId || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
         
-        // ПОКУПАТЕЛЬ
+        // --- ПОКУПАТЕЛЬ ---
         const userObj = orderData.user || body.user || orderData.userInfo || body.userInfo || {};
         const name = orderData.name || body.name || orderData.userName || body.userName || userObj.first_name || userObj.name || 'Покупець';
         
@@ -55,7 +55,7 @@ app.post('/api/order', async (req, res) => {
         const userId = orderData.userId || body.userId || orderData.telegramId || body.telegramId || userObj.id || '';
         const phone = orderData.phone || body.phone || orderData.userPhone || body.userPhone || 'не вказано';
 
-        // ДОСТАВКА
+        // --- ДОСТАВКА ---
         const rawDelivery = orderData.deliveryMethod || orderData.deliveryType || orderData.delivery || body.deliveryMethod || body.deliveryType || body.delivery || 'Самовивіз';
         const deliveryLower = String(rawDelivery).toLowerCase();
         const isPickup = deliveryLower.includes('самов') || deliveryLower.includes('pickup');
@@ -64,39 +64,35 @@ app.post('/api/order', async (req, res) => {
         let deliveryDetails = '';
 
         if (isPickup) {
-            deliveryDetails = 'Самовивіз (Клієнт напише для узгодження часу)';
+            deliveryDetails = 'Самовивіз (Київ, вул. Остафія Дашкевича)';
         } else {
             let rawDetails = orderData.deliveryDetails || orderData.details || orderData.comment || orderData.address || body.deliveryDetails || body.details || body.comment || body.address || '';
-            if (!rawDetails && (orderData.city || body.city || orderData.warehouse || body.warehouse)) {
-                const city = orderData.city || body.city || '';
-                const warehouse = orderData.warehouse || body.warehouse || orderData.novaPoshta || body.novaPoshta || '';
-                rawDetails = `${city}, відд. ${warehouse}`;
-            }
             rawDetails = rawDetails.replace(/Нова Пошта\s*/gi, '').replace(/[()]/g, '').trim();
             deliveryDetails = rawDetails ? `(${rawDetails})` : '(деталі не вказано)';
         }
 
-        // ТОВАРЫ
-        const totalPrice = orderData.totalPrice || orderData.total || body.totalPrice || body.total || 0;
-        let itemsFormattedText = orderData.itemsFormatted || body.itemsFormatted || '';
-
-        if (!itemsFormattedText) {
-            let rawItems = orderData.items || body.items || [];
-            if (Array.isArray(rawItems) && rawItems.length > 0) {
-                itemsFormattedText = rawItems.map((it, idx) => {
-                    if (typeof it === 'string') return `${idx + 1}. ${it}`;
-                    const title = it.title || it.name || it.productName || 'Товар';
-                    const flavor = it.flavor || it.taste ? ` (${it.flavor || it.taste})` : '';
-                    const qty = it.quantity || it.count || 1;
-                    const price = it.price || 0;
-                    return `${idx + 1}. ${title}${flavor} — ${qty} шт. х ${price} ₴`;
-                }).join('\n');
-            } else {
-                itemsFormattedText = `1. Товар з магазину — 1 шт. х ${totalPrice} ₴`;
-            }
+        // --- ТОВАРЫ ---
+        let rawItems = orderData.items || orderData.cart || orderData.cartItems || orderData.products || body.items || body.cart || [];
+        if (typeof rawItems === 'string') {
+            try { rawItems = JSON.parse(rawItems); } catch (e) { rawItems = []; }
         }
 
-        // СООБЩЕНИЕ АДМИНИСТРАТОРУ
+        const totalPrice = orderData.totalPrice || orderData.total || body.totalPrice || body.total || 0;
+        let itemsFormattedText = '';
+
+        if (Array.isArray(rawItems) && rawItems.length > 0) {
+            itemsFormattedText = rawItems.map((it, idx) => {
+                if (typeof it === 'string') return `${idx + 1}. ${it}`;
+                const title = it.title || it.name || it.productName || it.product || 'Товар';
+                const qty = it.quantity || it.count || it.qty || 1;
+                const price = it.price || it.cost || 0;
+                return `${idx + 1}. ${title} x ${qty} — ${price * qty} ₴`;
+            }).join('\n');
+        } else {
+            itemsFormattedText = `1. Товар з магазину — 1 шт. х ${totalPrice} ₴`;
+        }
+
+        // --- СООБЩЕНИЕ ДЛЯ АДМИНА ---
         let adminMessage = `🛍 **НОВЕ ЗАМОВЛЕННЯ #${orderId}**\n\n`;
         adminMessage += `👤 **Покупець:** ${name} ${usernameStr}\n`;
         adminMessage += `🆔 **ID:** ${userId || 'не вказано'}\n`;
@@ -114,7 +110,7 @@ app.post('/api/order', async (req, res) => {
             });
         }
 
-        // СООБЩЕНИЕ КЛИЕНТУ
+        // --- СООБЩЕНИЕ ДЛЯ КЛИЕНТА ---
         if (userId) {
             try {
                 let clientMessage = `✅ **Дякуємо за замовлення в KrakenLab!**\n\n`;
