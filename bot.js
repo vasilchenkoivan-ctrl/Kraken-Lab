@@ -1,239 +1,176 @@
+// bot.js
 const express = require('express');
 const { Telegraf, Markup } = require('telegraf');
 
 const app = express();
-
 app.use(express.json({ limit: '1mb' }));
+
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const ADMIN_CHAT_ID = String(process.env.ADMIN_CHAT_ID || '1005867951');
+const WEB_APP_URL = process.env.WEB_APP_URL || 'https://krakenlab.vercel.app';
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
+
+if (!BOT_TOKEN) throw new Error('Set BOT_TOKEN in Render environment variables');
+if (!GOOGLE_SCRIPT_URL) throw new Error('Set GOOGLE_SCRIPT_URL in Render environment variables');
+
+const bot = new Telegraf(BOT_TOKEN);
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept'
-  );
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET, POST, OPTIONS'
-  );
-
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1005867951';
-const WEB_APP_URL =
-  process.env.WEB_APP_URL || 'https://krakenlab.vercel.app';
-const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
-
-if (!BOT_TOKEN) {
-  throw new Error('Не задан BOT_TOKEN в Render');
-}
-
-if (!GOOGLE_SCRIPT_URL) {
-  throw new Error('Не задан GOOGLE_SCRIPT_URL в Render');
-}
-
-const bot = new Telegraf(BOT_TOKEN);
 const waitingForCost = new Map();
 
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function statusKeyboard(orderId) {
-  return Markup.inlineKeyboard([
-    [
-      Markup.button.callback(
-        '⏳ В обробці',
-        `status_proc_${orderId}`
-      ),
-      Markup.button.callback(
-        '✅ Виконано',
-        `status_done_${orderId}`
-      )
-    ],
-    [
-      Markup.button.callback(
-        '❌ Скасувати',
-        `status_canc_${orderId}`
-      )
-    ],
-    [
-      Markup.button.callback(
-        '💸 Вказати собівартість',
-        `cost_${orderId}`
-      )
-    ]
-  ]);
+    .replace(/>/g, '&gt;');
 }
 
 async function postToSheet(payload) {
   const response = await fetch(GOOGLE_SCRIPT_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(20000)
   });
 
-  const text = await response.text();
+  const result = await response.text();
 
-  if (!response.ok || !text.toLowerCase().includes('success')) {
-    throw new Error(
-      `Google Apps Script: HTTP ${response.status}; ${text}`
-    );
+  if (!response.ok || !/success/i.test(result)) {
+    throw new Error(`Google Sheets error: HTTP ${response.status}: ${result}`);
   }
 
-  return text;
+  return result;
 }
 
 function formatItems(items) {
   return items.map((item, index) => {
-    const flavor = item.flavor
-      ? ` (${item.flavor})`
-      : '';
+    const title = String(item.title || item.name || 'Товар');
+    const flavor = item.flavor ? ` (${item.flavor})` : '';
+    const quantity = Number(item.quantity);
+    const price = Number(item.price);
 
-    return (
-      `${index + 1}. ${item.title}${flavor} — ` +
-      `${item.quantity} шт. х ${item.price} ₴`
-    );
+    return `${index + 1}. ${title}${flavor} — ${quantity} шт. х ${price} ₴`;
   }).join('\n');
 }
 
-function makeOrderId() {
-  return 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+function orderKeyboard(orderId) {
+  return Markup.inlineKeyboard([
+    [
+      Markup.button.callback('⏳ В обробці', `status_proc_${orderId}`),
+      Markup.button.callback('✅ Виконано', `status_done_${orderId}`)
+    ],
+    [
+      Markup.button.callback('❌ Скасувати', `status_canc_${orderId}`),
+      Markup.button.callback('💸 Собівартість', `cost_${orderId}`)
+    ]
+  ]);
 }
 
-app.get('/', (req, res) => {
-  res.send('🐙 Kraken Lab API працює');
+app.get('/', (_req, res) => {
+  res.status(200).send('Kraken Lab API працює.');
 });
 
-app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    service: 'Kraken Lab',
-    status: 'online'
-  });
+app.get('/health', (_req, res) => {
+  res.json({ success: true, service: 'Kraken Lab', status: 'online' });
 });
 
-// Отримання статусу замовлення для історії на сайті.
 app.get('/api/order/status/:orderId', async (req, res) => {
   try {
     const url = new URL(GOOGLE_SCRIPT_URL);
-
     url.searchParams.set('action', 'status');
     url.searchParams.set('order_id', req.params.orderId);
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(15000)
+    });
     const text = await response.text();
 
     let data;
-
     try {
       data = JSON.parse(text);
     } catch {
-      data = {
-        success: false,
-        status: 'В обробці'
-      };
+      throw new Error(`Invalid status response: ${text}`);
     }
 
     res.status(response.ok ? 200 : 502).json(data);
-
   } catch (error) {
-    console.error('Помилка отримання статусу:', error);
-
-    res.status(500).json({
+    console.error('Status lookup error:', error.message);
+    res.status(502).json({
       success: false,
-      status: 'В обробці'
+      error: 'Не вдалося отримати статус замовлення.'
     });
   }
 });
 
-// Створення замовлення.
 app.post('/api/order', async (req, res) => {
   try {
-    const body = req.body || {};
+    const data = req.body?.order || req.body || {};
+    const user = data.user || data.userInfo || {};
 
-    const user = body.user || {};
     const name = String(
-      body.name ||
-      body.customer_name ||
-      user.first_name ||
+      data.name ||
+      data.customer_name ||
+      [user.first_name, user.last_name].filter(Boolean).join(' ') ||
       'Покупець'
     ).trim();
 
-    const userId = String(
-      body.userId ||
-      body.user_id ||
-      user.id ||
-      ''
-    );
-
-    const rawUsername = String(
-      body.username ||
-      user.username ||
-      ''
-    );
-
-    const username = rawUsername
-      ? '@' + rawUsername.replace(/^@/, '')
-      : '';
-
-    const phone = String(body.phone || '').trim();
+    const userId = String(data.userId || data.user_id || user.id || '');
+    const usernameRaw = String(data.username || user.username || '').replace(/^@/, '');
+    const username = usernameRaw ? `@${usernameRaw}` : '';
+    const phone = String(data.phone || data.userPhone || '').trim();
 
     const deliveryRaw = String(
-      body.deliveryType ||
-      body.deliveryMethod ||
-      body.delivery ||
-      ''
+      data.deliveryType || data.deliveryMethod || data.delivery || 'Самовивіз'
     );
 
     const isPickup = /самовивіз|pickup/i.test(deliveryRaw);
     const delivery = isPickup ? 'Самовивіз' : 'Нова Пошта';
 
     const address = String(
-      body.deliveryDetails ||
-      body.address ||
-      ''
+      data.deliveryDetails || data.address || data.comment || ''
     ).trim();
 
-    const rawItems = Array.isArray(body.items) ? body.items : [];
-
-    if (!name || !phone || !deliveryRaw || !rawItems.length) {
+    if (!name || !phone) {
       return res.status(400).json({
         success: false,
-        error: 'Перевірте ім’я, телефон, доставку та товари.'
+        error: 'Вкажіть ім’я та номер телефону.'
       });
     }
 
-    const items = rawItems.map(item => ({
-      title: String(item.title || item.name || 'Товар'),
-      flavor: String(item.flavor || ''),
-      quantity: Math.max(
-        1,
-        Math.min(99, Number(item.quantity || item.count) || 1)
-      ),
-      price: Math.max(0, Number(item.price) || 0)
-    }));
+    if (!Array.isArray(data.items) || data.items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Кошик порожній.'
+      });
+    }
 
-    const subtotal = items.reduce(
+    const items = data.items.map(item => {
+      const title = String(item.title || item.name || '').trim();
+      const flavor = String(item.flavor || item.taste || '').trim();
+      const price = Number(item.price);
+      const quantity = Number(item.quantity || item.count || 1);
+
+      if (!title || !Number.isFinite(price) || price < 0) {
+        throw new Error('Некоректні дані товару.');
+      }
+
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+        throw new Error('Некоректна кількість товару.');
+      }
+
+      return { title, flavor, price, quantity };
+    });
+
+    const total = items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
-    );
-
-    // Сайт передає вже розраховану суму з урахуванням знижки.
-    const total = Math.max(
-      0,
-      Number(body.totalPrice || body.total_price || body.total || subtotal)
     );
 
     if (total <= 0) {
@@ -243,121 +180,108 @@ app.post('/api/order', async (req, res) => {
       });
     }
 
-    const orderId = makeOrderId();
-    const itemsFormatted = formatItems(items);
+    const orderId = `ORD-${String(
+      Math.floor(100000 + Math.random() * 900000)
+    )}`;
 
-    // Спочатку зберігаємо замовлення в таблиці.
+    const itemsText = formatItems(items);
+    const createdAt = new Date().toISOString();
+
     await postToSheet({
       action: 'new_order',
       order_id: orderId,
-      orderId: orderId,
+      orderId,
       customer_name: name,
-      name: name,
+      name,
       user_id: userId,
-      username: username,
-      phone: phone,
+      username,
+      phone,
       delivery_method: delivery,
-      delivery: delivery,
       delivery_details: address,
-      address: address,
-      items: items,
-      items_formatted: itemsFormatted,
+      items,
+      items_formatted: itemsText,
       total_price: total,
-      totalPrice: total
+      totalPrice: total,
+      status: 'В обробці',
+      created_at: createdAt
     });
 
     const adminMessage =
-      `🛍 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}</b>\n\n` +
-      `👤 <b>Покупець:</b> ${escapeHtml(name)} ` +
-      `${escapeHtml(username)}\n` +
+      `🛍 <b>НОВЕ ЗАМОВЛЕННЯ #${escapeHtml(orderId)}</b>\n\n` +
+      `👤 <b>Покупець:</b> ${escapeHtml(name)} ${escapeHtml(username)}\n` +
       `🆔 <b>ID:</b> ${escapeHtml(userId || 'Не вказано')}\n` +
       `📞 <b>Телефон:</b> ${escapeHtml(phone)}\n` +
       `🚚 <b>Спосіб:</b> ${escapeHtml(delivery)}\n` +
       `📍 <b>Деталі:</b> ${escapeHtml(address || 'Не вказано')}\n\n` +
-      `📦 <b>Товари:</b>\n${escapeHtml(itemsFormatted)}\n\n` +
+      `📦 <b>Товари:</b>\n${escapeHtml(itemsText)}\n\n` +
       `💰 <b>Сума:</b> ${total} грн\n\n` +
       `📌 <b>Поточний статус:</b> В обробці`;
 
-    await bot.telegram.sendMessage(
-      ADMIN_CHAT_ID,
-      adminMessage,
-      {
-        parse_mode: 'HTML',
-        ...statusKeyboard(orderId)
-      }
-    );
+    await bot.telegram.sendMessage(ADMIN_CHAT_ID, adminMessage, {
+      parse_mode: 'HTML',
+      ...orderKeyboard(orderId)
+    });
 
-    // Пишемо покупцю в Telegram, якщо він відкрив бота.
     if (userId) {
       try {
-        let customerMessage =
+        let clientMessage =
           `✅ <b>Дякуємо за замовлення в KrakenLab!</b>\n\n` +
-          `📦 Ваше замовлення успішно оформлено та передано менеджеру.\n\n` +
-          `🛒 <b>Товари:</b>\n${escapeHtml(itemsFormatted)}\n\n` +
-          `🕐 Очікуйте на підтвердження — менеджер зв’яжеться ` +
-          `з вами найближчим часом для уточнення деталей.`;
+          `📦 Ваше замовлення <b>#${escapeHtml(orderId)}</b> успішно оформлено та передано менеджеру.\n\n` +
+          `🛒 <b>Товари:</b>\n${escapeHtml(itemsText)}\n\n` +
+          `💰 <b>Сума:</b> ${total} ₴\n\n` +
+          `🕐 Очікуйте на підтвердження — менеджер зв’яжеться з вами найближчим часом.`;
 
         if (isPickup) {
-          customerMessage +=
-            '\n\n⏱ Оскільки це самовивіз, будь ласка, ' +
-            'напишіть менеджеру @telleportt для узгодження часу!';
+          clientMessage +=
+            '\n\n⏱ Оскільки це самовивіз, напишіть менеджеру @telleportt для узгодження часу!';
         }
 
-        customerMessage += '\n\n💚 Дякуємо, що обираєте KrakenLab!';
+        clientMessage += '\n\n💚 Дякуємо, що обираєте KrakenLab!';
 
-        await bot.telegram.sendMessage(
-          userId,
-          customerMessage,
-          { parse_mode: 'HTML' }
-        );
-
+        await bot.telegram.sendMessage(userId, clientMessage, {
+          parse_mode: 'HTML'
+        });
       } catch (error) {
-        console.error(
-          'Не вдалося повідомити покупця:',
-          error.message
-        );
+        console.error('Customer notification failed:', error.message);
       }
     }
 
-    return res.json({
+    res.json({
       success: true,
-      orderId: orderId,
-      total: total
+      orderId,
+      total,
+      status: 'В обробці'
     });
-
   } catch (error) {
-    console.error('Помилка оформлення замовлення:', error);
+    console.error('Order processing error:', error);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      error: 'Не вдалося оформити замовлення. Перевірте сервер і Google Таблицю.'
+      error: 'Не вдалося оформити замовлення. Спробуйте пізніше.'
     });
   }
 });
 
-// Зміна статусу менеджером.
 bot.action(/^status_(proc|done|canc)_(.+)$/, async ctx => {
-  if (String(ctx.chat.id) !== String(ADMIN_CHAT_ID)) {
-    return ctx.answerCbQuery(
-      'Ця дія доступна лише адміністратору',
-      { show_alert: true }
-    );
-  }
-
-  const action = ctx.match[1];
-  const orderId = ctx.match[2];
-
-  const status = action === 'done'
-    ? 'Виконано'
-    : action === 'canc'
-      ? 'Скасовано'
-      : 'В обробці';
-
   try {
+    if (String(ctx.chat.id) !== ADMIN_CHAT_ID) {
+      return ctx.answerCbQuery('Немає доступу', { show_alert: true });
+    }
+
+    const action = ctx.match[1];
+    const orderId = ctx.match[2];
+
+    const status = {
+      proc: 'В обробці',
+      done: 'Виконано',
+      canc: 'Скасовано'
+    }[action];
+
     await postToSheet({
       action: 'update_status',
       order_id: orderId,
-      status: status
+      orderId,
+      status
     });
 
     const oldText = ctx.callbackQuery.message.text || '';
@@ -370,84 +294,31 @@ bot.action(/^status_(proc|done|canc)_(.+)$/, async ctx => {
       `${baseText}\n📌 <b>Поточний статус:</b> ${escapeHtml(status)}`,
       {
         parse_mode: 'HTML',
-        ...statusKeyboard(orderId)
+        reply_markup: ctx.callbackQuery.message.reply_markup
       }
     );
 
     await ctx.answerCbQuery(`Статус: ${status}`);
-
   } catch (error) {
-    console.error('Помилка зміни статусу:', error);
-
-    await ctx.answerCbQuery(
-      'Не вдалося змінити статус',
-      { show_alert: true }
-    );
+    console.error('Status update error:', error.message);
+    await ctx.answerCbQuery('Не вдалося оновити статус.', {
+      show_alert: true
+    });
   }
 });
 
-// Запит собівартості.
 bot.action(/^cost_(.+)$/, async ctx => {
-  if (String(ctx.chat.id) !== String(ADMIN_CHAT_ID)) {
-    return ctx.answerCbQuery(
-      'Ця дія доступна лише адміністратору',
-      { show_alert: true }
-    );
+  if (String(ctx.chat.id) !== ADMIN_CHAT_ID) {
+    return ctx.answerCbQuery('Немає доступу', { show_alert: true });
   }
 
   const orderId = ctx.match[1];
-
   waitingForCost.set(String(ctx.chat.id), orderId);
 
   await ctx.answerCbQuery();
-
   await ctx.reply(
     `Введи загальну собівартість замовлення #${orderId} числом у гривнях.`
   );
-});
-
-bot.on('text', async (ctx, next) => {
-  const chatId = String(ctx.chat.id);
-  const orderId = waitingForCost.get(chatId);
-
-  if (!orderId) return next();
-  if (chatId !== String(ADMIN_CHAT_ID)) return;
-
-  if (ctx.message.text === '/cancelcost') {
-    waitingForCost.delete(chatId);
-    return ctx.reply('Введення собівартості скасовано.');
-  }
-
-  const cost = Number(
-    String(ctx.message.text).replace(',', '.').trim()
-  );
-
-  if (!Number.isFinite(cost) || cost < 0) {
-    return ctx.reply(
-      'Введи число, наприклад 350. Для скасування: /cancelcost'
-    );
-  }
-
-  try {
-    await postToSheet({
-      action: 'update_cost',
-      order_id: orderId,
-      cost_price: cost
-    });
-
-    waitingForCost.delete(chatId);
-
-    await ctx.reply(
-      `✅ Собівартість замовлення #${orderId} збережена: ${cost} грн.`
-    );
-
-  } catch (error) {
-    console.error('Помилка собівартості:', error);
-
-    await ctx.reply(
-      'Не вдалося зберегти собівартість. Перевір GOOGLE_SCRIPT_URL.'
-    );
-  }
 });
 
 bot.command('cancelcost', async ctx => {
@@ -455,36 +326,57 @@ bot.command('cancelcost', async ctx => {
   await ctx.reply('Введення собівартості скасовано.');
 });
 
-bot.start(async ctx => {
-  await ctx.reply(
-    '🐙 Вітаємо в Kraken Lab!\n\n' +
-    '👥 Відгуки: @KRAKENOTZYVVL\n' +
-    '💬 Менеджер: @telleportt\n\n' +
-    '🛒 Відкривай магазин, обирай товари та оформлюй замовлення!',
-    Markup.inlineKeyboard([
-      [
-        Markup.button.webApp(
-          '🛒 Відкрити магазин',
-          WEB_APP_URL
-        )
-      ]
-    ])
-  );
+bot.on('text', async (ctx, next) => {
+  const chatId = String(ctx.chat.id);
+  const orderId = waitingForCost.get(chatId);
+
+  if (!orderId || chatId !== ADMIN_CHAT_ID) return next();
+
+  const cost = Number(ctx.message.text.replace(',', '.').trim());
+
+  if (!Number.isFinite(cost) || cost < 0) {
+    return ctx.reply(
+      'Введи суму числом, наприклад 350. Для скасування: /cancelcost'
+    );
+  }
+
+  try {
+    await postToSheet({
+      action: 'update_cost',
+      order_id: orderId,
+      orderId,
+      cost_price: cost
+    });
+
+    waitingForCost.delete(chatId);
+    await ctx.reply(`✅ Собівартість замовлення #${orderId}: ${cost} грн.`);
+  } catch (error) {
+    console.error('Cost update error:', error.message);
+    await ctx.reply('❌ Не вдалося зберегти собівартість.');
+  }
 });
 
-bot.catch(error => {
-  console.error('Telegram bot error:', error);
-});
+bot.start(ctx => ctx.reply(
+  '🐙 Вітаємо в Kraken Lab!\n\n' +
+  '👥 Відгуки: @KRAKENOTZYVVL\n' +
+  '💬 Менеджер: @telleportt\n\n' +
+  '🛒 Відкривайте магазин за кнопкою нижче.',
+  Markup.inlineKeyboard([[
+    Markup.button.webApp('🛒 Відкрити магазин', WEB_APP_URL)
+  ]])
+));
 
-const PORT = process.env.PORT || 3000;
+bot.catch(error => console.error('Telegram error:', error));
+
+const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Kraken Lab server running on port ${PORT}`);
 });
 
-bot.launch()
+bot.launch({ dropPendingUpdates: true })
   .then(() => console.log('Kraken Lab bot started'))
-  .catch(error => console.error('Bot launch error:', error));
+  .catch(error => console.error('Bot launch error:', error.message));
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
