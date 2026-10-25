@@ -31,12 +31,6 @@
         .container {
             padding: 16px;
         }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
         .card {
             background-color: var(--card-bg);
             border-radius: 12px;
@@ -65,28 +59,6 @@
             color: #fff;
             box-sizing: border-box;
         }
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: #161920;
-            border-top: 1px solid #262930;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
-        .nav-item {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 12px;
-            cursor: pointer;
-        }
-        .nav-item.active {
-            color: var(--accent);
-        }
     </style>
 </head>
 <body>
@@ -94,57 +66,34 @@
     <header>🐙 KRAKEN LAB</header>
 
     <div class="container">
-        <!-- Вкладка: Головна -->
-        <div id="tab-main" class="tab-content active">
-            <div class="card">
-                <h3>🎁 Реферальне посилання</h3>
-                <p style="color: var(--text-secondary); font-size: 14px;">Запрошуйте друзів та отримуйте бонуси!</p>
-                <input type="text" id="refLink" readonly style="font-size: 12px;" />
-                <button class="btn" onclick="copyRef()">Копіювати посилання</button>
-            </div>
+        <h2>Каталог товарів</h2>
+        <div class="card">
+            <h3>Chaser 30ml (Виноград)</h3>
+            <p>Ціна: 300 ₴</p>
+            <button class="btn" onclick="addToCart('Chaser 30ml', 'Виноград', 300)">Додати в кошик</button>
         </div>
 
-        <!-- Вкладка: Каталог -->
-        <div id="tab-catalog" class="tab-content">
-            <h2>Каталог товарів</h2>
-            <div class="card">
-                <h3>Chaser 30ml (Виноград)</h3>
-                <p>Ціна: 300 ₴</p>
-                <button class="btn" onclick="addToCart('Chaser 30ml', 'Виноград', 300)">Додати в кошик</button>
-            </div>
-        </div>
-
-        <!-- Вкладка: Кошик -->
-        <div id="tab-cart" class="tab-content">
-            <h2>Ваш кошик</h2>
+        <div class="card" style="margin-top: 20px;">
+            <h3>Ваш кошик</h3>
             <div id="cartItems">Кошик порожній</div>
             
-            <div class="card" style="margin-top: 20px;">
-                <h3>Оформлення замовлення</h3>
-                <label>Спосіб доставки:</label>
-                <select id="deliveryMethod">
-                    <option value="Нова Пошта">Нова Пошта</option>
-                    <option value="Самовивіз">Самовивіз</option>
-                </select>
+            <h3 style="margin-top: 15px;">Оформлення замовлення</h3>
+            <label>Спосіб доставки:</label>
+            <select id="deliveryMethod">
+                <option value="Нова Пошта">Нова Пошта</option>
+                <option value="Самовивіз">Самовивіз</option>
+            </select>
 
-                <label>Телефон:</label>
-                <input type="tel" id="phone" placeholder="+380..." value="+380" />
+            <label>Телефон:</label>
+            <input type="tel" id="phone" placeholder="+380..." value="+380" />
 
-                <label>Деталі (Місто / Відділення / Коментар):</label>
-                <input type="text" id="address" placeholder="Київ, відд. №1" />
+            <label>Деталі (Місто / Відділення):</label>
+            <input type="text" id="address" placeholder="Київ, відд. №1" />
 
-                <h3>До сплати: <span id="totalPrice">0</span> ₴</h3>
-                <button class="btn" onclick="checkout()">ОФОРМИТИ ЗАМОВЛЕННЯ</button>
-            </div>
+            <h3>До сплати: <span id="totalPrice">0</span> ₴</h3>
+            <button class="btn" onclick="checkout()">ОФОРМИТИ ЗАМОВЛЕННЯ</button>
         </div>
     </div>
-
-    <!-- Нижня панель навігації -->
-    <nav class="nav-bar">
-        <button class="nav-item active" onclick="switchTab('main')">🏠 Головна</button>
-        <button class="nav-item" onclick="switchTab('catalog')">📦 Каталог</button>
-        <button class="nav-item" onclick="switchTab('cart')">🛒 Кошик</button>
-    </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -152,24 +101,6 @@
 
         let cart = [];
         const user = tg.initDataUnsafe?.user || { id: '1005867951', first_name: 'Vanyok', username: 'Telleportt' };
-
-        // Реферальная ссылка
-        document.getElementById('refLink').value = `https://t.me/KrakenLabBot?start=ref_${user.id}`;
-
-        function copyRef() {
-            const copyText = document.getElementById("refLink");
-            copyText.select();
-            navigator.clipboard.writeText(copyText.value);
-            alert("Реферальне посилання скопійовано!");
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-
-            document.getElementById('tab-' + tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
 
         function addToCart(name, flavor, price) {
             cart.push({ title: name, flavor: flavor, price: price, quantity: 1 });
@@ -213,35 +144,38 @@
             const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
             const orderData = {
-                order_id: orderId,
-                customer_name: user.first_name || 'Клієнт',
+                orderId: orderId,
+                name: user.first_name || 'Клієнт',
                 username: user.username || '',
-                user_id: user.id,
+                userId: user.id,
                 phone: phone,
-                delivery_method: deliveryMethod,
-                delivery_details: address,
+                deliveryMethod: deliveryMethod,
+                deliveryDetails: address,
                 items: cart,
-                total_price: total
+                totalPrice: total
             };
 
-            // Вставь сюда URL своего развернутого Google Apps Script
-            const SCRIPT_URL = 'ЗДЕСЬ_ССЫЛКА_НА_GOOGLE_APPS_SCRIPT';
+            // Прямой адрес на Render бэкенд
+            const RENDER_URL = 'https://kraken-lab-backend.onrender.com/api/order';
 
             try {
-                const response = await fetch(SCRIPT_URL, {
+                const response = await fetch(RENDER_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 });
 
-                alert("Замовлення успішно оформлено!");
-                cart = [];
-                updateCartUI();
-                tg.close();
+                if (response.ok) {
+                    alert("Замовлення успішно оформлено!");
+                    cart = [];
+                    updateCartUI();
+                    tg.close();
+                } else {
+                    alert("Помилка при оформленні замовлення. Спробуйте ще раз.");
+                }
             } catch (err) {
                 console.error(err);
-                alert("Помилка при оформленні замовлення. Спробуйте ще раз.");
+                alert("Помилка зв'язку з сервером.");
             }
         }
     </script>
