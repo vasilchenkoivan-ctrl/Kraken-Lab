@@ -1,2 +1,2 @@
- # Kraken-Lab
-    KRAKEN LAB Telegram Mini App
+ # Kraken-ieufgje
+    KRAKEN LAB Telegram Min
